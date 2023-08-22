@@ -10,15 +10,8 @@ base {
 	archivesName = project.archives_base_name
 }
 
-repositories {
-	// Add repositories to retrieve artifacts from in here.
-	// You should only use this when depending on other mods because
-	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
-	// for more information about repositories.
-}
-
 loom {
+	accessWidenerPath = file("src/main/resources/playroom.accesswidener")
     splitEnvironmentSourceSets()
 
 	mods {
@@ -51,6 +44,21 @@ sourceSets {
 		}
 	}
 }
+
+repositories {
+	maven { url "https://maven.wispforest.io" } //owo-lib
+	maven { url "https://jitpack.io" } //Mixin extras & Renderer
+	maven { url "https://maven.firstdarkdev.xyz/snapshots" }
+	maven { url "https://maven.shedaniel.me/" }
+	maven { url "https://masa.dy.fi/maven" }
+	maven {
+		url "https://cursemaven.com"
+		content {
+			includeGroup "curse.maven"
+		}
+	}
+}
+
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -59,11 +67,22 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-	
-	// Uncomment the following line to enable the deprecated Fabric API modules. 
-	// These are included in the Fabric API production distribution and allow you to update your mod to the latest modules at a later more convenient time.
 
-	// modImplementation "net.fabricmc.fabric-api:fabric-api-deprecated:${project.fabric_version}"
+	modImplementation "io.wispforest:owo-lib:${project.owo_version}"
+	include "io.wispforest:owo-sentinel:${project.owo_version}"
+
+	include modImplementation("com.github.KrLite.Equator-v2:build:${project.equator_version}")
+	include modImplementation("com.github.0x3C50:Renderer:${project.renderer_version}") {
+		exclude group: "xml-apis", module: "xml-apis"
+		exclude group: "commons-io", module: "commons-io"
+		exclude group: "io.github.ladysnake", module: "satin"
+	}
+
+	include(implementation(annotationProcessor("com.github.llamalad7.mixinextras:mixinextras-fabric:${project.mixin_extras}")))
+
+	//Compatibility
+	modCompileOnly "curse.maven:project-297344:4623488" //Tweakeroo 0.17.1
+	modCompileOnly "fi.dy.masa.malilib:malilib-fabric-${project.minecraft_version}:0.16.0"
 }
 
 processResources {

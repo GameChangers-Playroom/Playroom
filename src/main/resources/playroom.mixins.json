@@ -1,10 +1,16 @@
 {
-	"required": true,
-	"package": "io.github.flameyheart.playroom.mixin",
-	"compatibilityLevel": "JAVA_17",
-	"mixins": [
-	],
-	"injectors": {
-		"defaultRequire": 1
+    "required": true,
+    "package": "io.github.flameyheart.playroom.mixin",
+    "compatibilityLevel": "JAVA_17",
+    "mixins": [
+        "EntityAccessor",
+        "EntityMixin",
+        "LivingEntityMixin",
+        "PlayerEntityMixin",
+        "PlayroomEntity",
+        "ServerPlayerEntityMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
 	}
 }
