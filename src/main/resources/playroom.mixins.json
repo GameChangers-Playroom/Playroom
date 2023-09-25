@@ -9,6 +9,7 @@
         "LivingEntityMixin",
         "PlayerEntityMixin",
         "PlayroomEntity",
+        "ServerLoginNetworkHandlerAccessor",
         "ServerLoginNetworkHandlerMixin",
         "ServerPlayerEntityMixin"
     ],

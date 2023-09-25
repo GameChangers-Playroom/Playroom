@@ -23,6 +23,9 @@
 		],
 		"fabric-datagen": [
 			"io.github.flameyheart.playroom.PlayroomDataGenerator"
+		],
+		"modmenu": [
+			"io.github.flameyheart.playroom.config.ui.ModMenuImpl"
 		]
 	},
 	"mixins": [
@@ -34,10 +37,11 @@
 	],
 	"depends": {
 		"fabricloader": ">=0.14.21",
-		"minecraft": "~1.20",
+		"minecraft": ">=1.20 <=1.20.1",
 		"java": ">=17",
 		"fabric-api": "*",
-		"owo": ">=0.11.1"
+		"owo": ">=0.11.1",
+		"yet_another_config_lib_v3": ">=3.2.0+1.20"
 	},
 	"suggests": {
 		"modmenu": "*"

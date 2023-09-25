@@ -14,6 +14,7 @@ import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.duck.ExpandedServerLoginNetworkHandler;
 import io.github.flameyheart.playroom.event.EntityTickEvents;
 import io.github.flameyheart.playroom.mixin.GsonConfigSerializerAccessor;
+import io.github.flameyheart.playroom.mixin.ServerLoginNetworkHandlerAccessor;
 import io.github.flameyheart.playroom.registry.Items;
 import io.github.flameyheart.playroom.registry.Particles;
 import io.wispforest.owo.registration.reflect.FieldRegistrationHandler;
@@ -47,6 +48,7 @@ public class Playroom implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		ServerConfig.INSTANCE.serializer().load();
 		FieldRegistrationHandler.register(Items.class, MOD_ID, false);
 		FieldRegistrationHandler.register(Particles.class, MOD_ID, false);
 		Items.ITEM_GROUP.initialize();
@@ -149,11 +151,13 @@ public class Playroom implements ModInitializer {
 				return;
 			}
 
+			boolean isOp = server.getPlayerManager().isOperator(((ServerLoginNetworkHandlerAccessor) handler).getProfile());
+
 			HANDSHAKE_QUEUE.put(handler, future);
 
 			synchronizer.waitFor(future);
 			PacketByteBuf byteBuf = PacketByteBufs.create();
-			byteBuf.writeString(serializeConfig());
+			byteBuf.writeString(serializeConfig(isOp));
 			sender.sendPacket(id("handshake"), byteBuf);
 		});
 	}

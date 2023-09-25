@@ -5,14 +5,13 @@ import dev.isxander.yacl3.config.v2.api.SerialEntry;
 import dev.isxander.yacl3.config.v2.api.serializer.GsonConfigSerializerBuilder;
 import dev.isxander.yacl3.platform.YACLPlatform;
 import io.github.flameyheart.playroom.Playroom;
-import io.github.flameyheart.playroom.config.annotations.Category;
 import io.github.flameyheart.playroom.config.annotations.SendToClient;
 
 public class ServerConfig {
     public static ConfigClassHandler<ServerConfig> INSTANCE = ConfigClassHandler.createBuilder(ServerConfig.class)
         .id(Playroom.id("config"))
         .serializer(config -> GsonConfigSerializerBuilder.create(config)
-            .setPath(YACLPlatform.getConfigDir().resolve("playroom/server.json5"))
+            .setPath(YACLPlatform.getConfigDir().resolve("playroom/common.json5"))
             .setJson5(true)
             .build()
         ).build();
@@ -21,26 +20,33 @@ public class ServerConfig {
         return INSTANCE.instance();
     }
 
-    @Category("networking")
-    @SerialEntry(comment = "Whether or not to allow vanilla players to join the server")
+    public static ServerConfig defaults() {
+        return INSTANCE.defaults();
+    }
+
+    //region NETWORKING
+    @SerialEntry(comment = "Allows vanilla players to join the server")
     public boolean allowVanillaPlayers = false;
 
-    @Category("networking")
     @SerialEntry(comment = "Will kick players with mismatching protocol versions")
     public boolean requireMatchingProtocol = false;
+    //endregion
 
+    //region LASER GUN
     @SendToClient
-    @Category("laser")
-    @SerialEntry(comment = "The laser reload time when it hits a player")
+    @SerialEntry(comment = "The laser reload time when it hits a player\n[Min: 0, Max: 32767, Default: 3600]")
     public short laserHitReloadTime = 3600;
 
     @SendToClient
-    @Category("laser")
-    @SerialEntry(comment = "The laser reload time when it doesn't hit a player")
+    @SerialEntry(comment = "The laser reload time when it doesn't hit a player\n[Min: 0, Max: 32767, Default: 1200]")
     public short laserMissReloadTime = 1200;
 
     @SendToClient
-    @Category("laser")
-    @SerialEntry(comment = "The speedup of when you use the quick shot mode")
+    @SerialEntry(comment = "The laser reach\n[Min: 0, Max: 127, Default: 12]")
+    public byte laserReach = 12;
+
+    @SendToClient
+    @SerialEntry(comment = "The speedup of when you use the quick shot mode\n[Min: 0, Default: 2]")
     public float quickShotSpeedup = 2;
+    //endregion
 }

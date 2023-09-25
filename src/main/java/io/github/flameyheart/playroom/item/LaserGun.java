@@ -38,11 +38,11 @@ public class LaserGun extends Item implements Vanishable {
 
         Vec3d start = user.getCameraPosVec(0).add(0, -0.4, 0);
 
-        if (stack.getOrCreateNbt().getLong("cooldownExpires") > Playroom.getServer().getOverworld().getTime()) {
+        if (stack.getOrCreateNbt().getLong("cooldown") > Playroom.getServer().getOverworld().getTime()) {
             return TypedActionResult.fail(stack);
         }
 
-        HitResult raycast = Raycast.raycast(world, user, 12, false, true);
+        HitResult raycast = Raycast.raycast(world, user, ServerConfig.instance().laserReach, false, true);
 
         int cooldownTime;
         if (raycast.getType() == HitResult.Type.ENTITY && ((EntityHitResult) raycast).getEntity() instanceof PlayerEntity target) {
@@ -53,7 +53,7 @@ public class LaserGun extends Item implements Vanishable {
             cooldownTime = ServerConfig.instance().laserMissReloadTime;
         }
 
-        stack.getOrCreateNbt().putLong("cooldownExpires", Playroom.getServer().getOverworld().getTime() + cooldownTime);
+        stack.getOrCreateNbt().putLong("cooldown", Playroom.getServer().getOverworld().getTime() + cooldownTime);
 
         if (world instanceof ServerWorld serverWorld) {
             double distance = Math.sqrt(raycast.getPos().squaredDistanceTo(start));
@@ -72,7 +72,7 @@ public class LaserGun extends Item implements Vanishable {
         return TypedActionResult.pass(stack);
     }
 
-    protected  <T extends ParticleEffect> int spawnParticles(ServerWorld world, T particle, double x, double y, double z, int count, double deltaX, double deltaY, double deltaZ, double speed) {
+    protected <T extends ParticleEffect> int spawnParticles(ServerWorld world, T particle, double x, double y, double z, int count, double deltaX, double deltaY, double deltaZ, double speed) {
         ParticleS2CPacket particleS2CPacket = new ParticleS2CPacket(particle, true, x, y, z, (float)deltaX, (float)deltaY, (float)deltaZ, (float)speed, count);
         int i = 0;
         for (int j = 0; j < world.getPlayers().size(); ++j) {
