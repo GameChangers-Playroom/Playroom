@@ -1,28 +1,52 @@
 package io.github.flameyheart.playroom;
 
+import com.google.gson.Gson;
+import dev.isxander.yacl3.config.v2.api.ConfigClassHandler;
+import dev.isxander.yacl3.config.v2.api.ConfigField;
+import dev.isxander.yacl3.impl.utils.YACLConstants;
 import fi.dy.masa.malilib.hotkeys.IHotkeyCallback;
 import fi.dy.masa.malilib.hotkeys.KeybindMulti;
 import fi.dy.masa.tweakeroo.config.FeatureToggle;
 import io.github.flameyheart.playroom.compat.ModOptional;
+import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
+import io.github.flameyheart.playroom.duck.client.ExpandedClientLoginNetworkHandler;
 import io.github.flameyheart.playroom.event.LivingEntityEvents;
 import io.github.flameyheart.playroom.freeze.CameraEntity;
 import io.github.flameyheart.playroom.mixin.EntityAccessor;
+import io.github.flameyheart.playroom.mixin.GsonConfigSerializerAccessor;
 import io.github.flameyheart.playroom.registry.Particles;
 import io.github.flameyheart.playroom.render.hud.HudRenderer;
 import io.github.flameyheart.playroom.render.particle.TestParticle;
 import io.github.flameyheart.playroom.render.world.WorldRenderer;
+import io.github.flameyheart.playroom.toast.WarningToast;
 import io.github.flameyheart.playroom.util.ClientUtils;
 import me.x150.renderer.event.RenderEvents;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientLoginNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.minecraft.client.gui.screen.MessageScreen;
+import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.realms.gui.screen.RealmsMainScreen;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
+import org.quiltmc.parsers.json.JsonReader;
+import org.quiltmc.parsers.json.gson.GsonReader;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class PlayroomClient implements ClientModInitializer {
     public static boolean cameraEnabled = false;
@@ -31,17 +55,14 @@ public class PlayroomClient implements ClientModInitializer {
     private final KeyBinding devKeybind1 = ClientUtils.addKeybind("dev1", GLFW.GLFW_KEY_F4);
     private final KeyBinding devKeybind2 = ClientUtils.addKeybind("dev2", GLFW.GLFW_KEY_F6);
     private final KeyBinding devKeybind3 = ClientUtils.addKeybind("dev3", GLFW.GLFW_KEY_F7);
+    private final KeyBinding devKeybind4 = ClientUtils.addKeybind("dev4", GLFW.GLFW_KEY_KP_6);
 
     @Override
     public void onInitializeClient() {
         ParticleFactoryRegistry.getInstance().register(Particles.TEST_PARTICLE, TestParticle.Factory::new);
 
-        RenderEvents.WORLD.register(WorldRenderer::render);
-        RenderEvents.HUD.register(HudRenderer::render);
-
-        ClientUtils.listenKeybind(devKeybind1, (client) -> CameraEntity.setCameraState(cameraEnabled = !cameraEnabled));
-        ClientUtils.listenKeybind(devKeybind2, (client) -> forceCamera = !forceCamera);
-        ClientUtils.listenKeybind(devKeybind3, (client) -> ClientPlayNetworking.send(Playroom.id("dev/freeze_player"), PacketByteBufs.create()));
+        registerEventListeners();
+        handleLoginPackets();
 
         ModOptional.ifPresent("tweakeroo", () -> {
             KeybindMulti keybind = (KeybindMulti) FeatureToggle.TWEAK_FREE_CAMERA.getKeybind();
@@ -51,6 +72,18 @@ public class PlayroomClient implements ClientModInitializer {
                 return callback.onKeyAction(action, key);
             });
         });
+    }
+
+    private void registerEventListeners() {
+        ClientUtils.listenKeybind(devKeybind1, (client) -> CameraEntity.setCameraState(cameraEnabled = !cameraEnabled));
+        ClientUtils.listenKeybind(devKeybind2, (client) -> forceCamera = !forceCamera);
+        ClientUtils.listenKeybind(devKeybind3, (client) -> ClientPlayNetworking.send(Playroom.id("dev/freeze_player"), PacketByteBufs.create()));
+        ClientUtils.listenKeybind(devKeybind4, (client) -> {
+            client.getToastManager().add(new WarningToast(Text.translatable("playroom.warning.protocol.title"), Text.translatable("playroom.warning.protocol.message")));
+        });
+
+        RenderEvents.WORLD.register(WorldRenderer::render);
+        RenderEvents.HUD.register(HudRenderer::render);
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player != null) {
@@ -76,6 +109,7 @@ public class PlayroomClient implements ClientModInitializer {
                     player.setVelocity(player.getVelocity().multiply(0.8, 1, 0.8));
                     ((EntityAccessor) player).callScheduleVelocityUpdate();
                 }
+
                 player.getWorld().getProfiler().pop();
             }
         });
@@ -138,5 +172,65 @@ public class PlayroomClient implements ClientModInitializer {
             RenderSystem.disableBlend();
             RenderSystem.disableDepthTest();
         });*/
+    }
+
+    private void handleLoginPackets() {
+
+        ClientLoginNetworking.registerGlobalReceiver(Playroom.id("handshake"), (client, handler, buf, listenerAdder) -> {
+            CompletableFuture<PacketByteBuf> future = new CompletableFuture<>();
+            String serverConfig = buf.readString();
+
+            client.execute(() -> {
+                ConfigClassHandler<ServerConfig> config = ServerConfig.INSTANCE;
+                Gson gson = ((GsonConfigSerializerAccessor) config.serializer()).getGson();
+                try (JsonReader jsonReader = JsonReader.json5(serverConfig)) {
+
+                    GsonReader gsonReader = new GsonReader(jsonReader);
+
+                    Map<String, ConfigField<?>> fieldMap = Arrays.stream(config.fields())
+                        .filter(field -> field.serial().isPresent())
+                        .collect(Collectors.toMap(f -> f.serial().orElseThrow().serialName(), Function.identity()));
+
+                    jsonReader.beginObject();
+
+                    while (jsonReader.hasNext()) {
+                        String name = jsonReader.nextName();
+                        ConfigField<?> field = fieldMap.get(name);
+                        if (field == null) {
+                            Playroom.LOGGER.error("Unknown config field '{}' sent from server!", name);
+                            ((ExpandedClientLoginNetworkHandler) handler).playroom$disconnect(Text.translatable("playroom.multiplayer.disconnect.invalid_config"));
+                            jsonReader.skipValue();
+                            return;
+                        }
+
+                        try {
+                            field.access().set(gson.fromJson(gsonReader, field.access().type()));
+                        } catch (Exception e) {
+                            Playroom.LOGGER.error("Failed to deserialize config field '{}'.", name, e);
+                            jsonReader.skipValue();
+                        }
+                    }
+
+                    jsonReader.endObject();
+
+                    PacketByteBuf byteBuf = PacketByteBufs.create();
+                    byteBuf.writeByte(Constants.PROTOCOL_VERSION);
+
+                    future.complete(byteBuf);
+                } catch (IOException e) {
+                    Playroom.LOGGER.error("Failed to decode server config!", e);
+                    ((ExpandedClientLoginNetworkHandler) handler).playroom$disconnect(Text.translatable("playroom.multiplayer.disconnect.invalid_config"));
+                }
+            });
+            return future;
+        });
+
+        ClientLoginNetworking.registerGlobalReceiver(Playroom.id("warning/mismatch/protocol"), (client, handler, buf, responseSender) -> {
+            client.execute(() -> {
+                client.getToastManager().add(new WarningToast(Text.translatable("playroom.warning.protocol.title"), Text.translatable("playroom.warning.protocol.message")));
+            });
+
+            return CompletableFuture.completedFuture(PacketByteBufs.create());
+        });
     }
 }

@@ -5,9 +5,11 @@
     "mixins": [
         "EntityAccessor",
         "EntityMixin",
+        "GsonConfigSerializerAccessor",
         "LivingEntityMixin",
         "PlayerEntityMixin",
         "PlayroomEntity",
+        "ServerLoginNetworkHandlerMixin",
         "ServerPlayerEntityMixin"
     ],
     "injectors": {

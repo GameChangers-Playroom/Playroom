@@ -6,7 +6,15 @@ public interface ExpandedEntityData {
     void playroom$setGunFreezeTicks(int frozenTicks);
 
     default boolean playroom$isFrozen() {
+        return playroom$getGunFreezeTicks() > 0;
+    }
+
+    default boolean playroom$showIce() {
         return playroom$getGunFreezeTicks() > playroom$slowdownTime();
+    }
+
+    default float playroom$iceMeltProgress() {
+        return Math.max((playroom$getGunFreezeTicks() - playroom$slowdownTime()) / (float) playroom$iceTime(), 0);
     }
 
     default boolean playroom$isSlowedDown() {
@@ -14,7 +22,7 @@ public interface ExpandedEntityData {
     }
 
     default boolean playroom$isFrozenDelayed() {
-        return playroom$getGunFreezeTicks() > 0 && playroom$getGunFreezeTicks() < playroom$maxFrozenTime();
+        return playroom$getGunFreezeTicks() > 0 && playroom$getGunFreezeTicks() < playroom$freezeTime();
     }
 
     default int playroom$slowdownTime() {
@@ -26,10 +34,10 @@ public interface ExpandedEntityData {
     }
 
     default int playroom$zoomStart() {
-        return 20;
+        return playroom$freezeTime() - 20;
     }
 
-    default int playroom$maxFrozenTime() {
+    default int playroom$freezeTime() {
         return playroom$iceTime() + playroom$slowdownTime();
     }
 }

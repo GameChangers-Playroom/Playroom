@@ -47,7 +47,7 @@ public abstract class GameRendererMixin {
             playroom$lastScale = scale;
 
             //Make it smoother by using tick delta to interpolate between the current fov and the fov scale
-            return fov * MathHelper.lerp(tickDelta, prevScale, MathHelper.lerp(MinecraftClient.getInstance().getLastFrameDuration(), prevScale, scale));
+            return fov * MathHelper.lerp(MinecraftClient.getInstance().getLastFrameDuration(), prevScale, scale);
         } else if (PlayroomClient.cameraEnabled && !PlayroomClient.forceCamera) {
             return 0.001;
         }

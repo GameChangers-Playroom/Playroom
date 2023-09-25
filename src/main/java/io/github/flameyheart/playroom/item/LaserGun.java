@@ -1,6 +1,7 @@
 package io.github.flameyheart.playroom.item;
 
 import io.github.flameyheart.playroom.Playroom;
+import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.util.Raycast;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -45,17 +46,13 @@ public class LaserGun extends Item implements Vanishable {
 
         int cooldownTime;
         if (raycast.getType() == HitResult.Type.ENTITY && ((EntityHitResult) raycast).getEntity() instanceof PlayerEntity target) {
-            cooldownTime = 36;
-            EntityHitResult hitResult = (EntityHitResult) raycast;
-
-            //target.damage(world.getDamageSources().generic(), 100);
+            cooldownTime = ServerConfig.instance().laserHitReloadTime;
 
             target.setFrozenTicks(target.getMinFreezeDamageTicks() + 200);
         } else {
-            cooldownTime = 12;
+            cooldownTime = ServerConfig.instance().laserMissReloadTime;
         }
 
-        stack.getOrCreateNbt().putLong("cooldown", cooldownTime);
         stack.getOrCreateNbt().putLong("cooldownExpires", Playroom.getServer().getOverworld().getTime() + cooldownTime);
 
         if (world instanceof ServerWorld serverWorld) {

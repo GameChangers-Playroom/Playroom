@@ -1,0 +1,9 @@
+{
+    "playroom.multiplayer.disconnect.unsupported_client": "Unsupported client \nPlayroom is required to join the server",
+    "playroom.multiplayer.disconnect.unexpected_handshake": "Unexpected handshake packet from client",
+    "playroom.multiplayer.disconnect.unexpected_query_start": "Unexpected query start from client",
+    "playroom.multiplayer.disconnect.protocol_mismatch": "Mismatching protocol version",
+    "playroom.multiplayer.disconnect.invalid_config": "Server sent invalid config",
+    "playroom.warning.protocol.title": "Mismatching protocol version",
+    "playroom.warning.protocol.message": "Playroom may behave weirdly"
+}

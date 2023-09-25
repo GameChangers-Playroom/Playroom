@@ -1,23 +1,24 @@
 {
-  "required": true,
-  "package": "io.github.flameyheart.playroom.mixin.client",
-  "compatibilityLevel": "JAVA_17",
-  "client": [
-    "freeze.camera.ClientPlayerEntityMixin",
-    "freeze.camera.ClientPlayerInteractionManagerMixin",
-    "freeze.camera.EntityMixin",
-    "freeze.camera.GameRendererMixin",
-    "freeze.camera.InGameHudMixin",
-    "freeze.camera.LivingEntityRendererMixin",
-    "freeze.camera.PerspectiveMixin",
-    "freeze.camera.WorldRendererMixin",
-    "freeze.render.BipedEntityModelMixin",
-    "freeze.render.InGameHud$HeartTypeMixin",
-    "freeze.render.InGameHudMixin",
-    "freeze.render.LivingEntityRendererMixin",
-    "freeze.render.PlayerEntityRendererMixin"
-  ],
-  "injectors": {
-    "defaultRequire": 1
+    "required": true,
+    "package": "io.github.flameyheart.playroom.mixin.client",
+    "compatibilityLevel": "JAVA_17",
+    "client": [
+        "ClientLoginNetworkHandlerMixin",
+        "freeze.camera.ClientPlayerEntityMixin",
+        "freeze.camera.ClientPlayerInteractionManagerMixin",
+        "freeze.camera.EntityMixin",
+        "freeze.camera.GameRendererMixin",
+        "freeze.camera.InGameHudMixin",
+        "freeze.camera.LivingEntityRendererMixin",
+        "freeze.camera.PerspectiveMixin",
+        "freeze.camera.WorldRendererMixin",
+        "freeze.render.BipedEntityModelMixin",
+        "freeze.render.InGameHud$HeartTypeMixin",
+        "freeze.render.InGameHudMixin",
+        "freeze.render.LivingEntityRendererMixin",
+        "freeze.render.PlayerEntityRendererMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
   }
 }
