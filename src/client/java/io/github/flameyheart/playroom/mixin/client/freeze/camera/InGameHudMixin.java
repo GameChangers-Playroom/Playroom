@@ -18,8 +18,8 @@ public class InGameHudMixin {
 
     @Inject(method = "getCameraPlayer", at = @At("HEAD"), cancellable = true)
     private void overridePlayerForRendering(CallbackInfoReturnable<PlayerEntity> cir) {
-        // Fix the hotbar rendering in the Free Camera mode by using the actual player
-        if (PlayroomClient.cameraEnabled && this.client.player != null) {
+        // Fix the hotbar rendering in the orbit mode by using the actual player
+        if (PlayroomClient.orbitCameraEnabled && this.client.player != null) {
             cir.setReturnValue(this.client.player);
         }
     }

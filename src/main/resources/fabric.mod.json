@@ -26,6 +26,9 @@
 		],
 		"modmenu": [
 			"io.github.flameyheart.playroom.config.ui.ModMenuImpl"
+		],
+		"mm:early_risers": [
+			"io.github.flameyheart.playroom.asm.PlayroomAsm"
 		]
 	},
 	"mixins": [

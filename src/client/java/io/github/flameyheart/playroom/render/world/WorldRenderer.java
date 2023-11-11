@@ -1,6 +1,5 @@
 package io.github.flameyheart.playroom.render.world;
 
-import net.krlite.equator.visual.color.AccurateColor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.Camera;
@@ -53,7 +52,7 @@ public class WorldRenderer {
         matrixStack.pop();*/
     }
 
-    private static void renderVertex(BufferBuilder builder, MatrixStack matrix, Vec3d vertex, AccurateColor color) {
+    /*private static void renderVertex(BufferBuilder builder, MatrixStack matrix, Vec3d vertex, AccurateColor color) {
         builder.vertex(matrix.peek().getPositionMatrix(), (float) vertex.getX(), (float) vertex.getY(), (float) vertex.getZ())
             .color(color.redAsFloat(), color.greenAsFloat(), color.blueAsFloat(), color.opacityAsFloat())
             .next();
@@ -63,5 +62,5 @@ public class WorldRenderer {
         Camera camera = MinecraftClient.getInstance().gameRenderer.getCamera();
         Vec3d camPos = camera.getPos();
         return in.subtract(camPos);
-    }
+    }*/
 }

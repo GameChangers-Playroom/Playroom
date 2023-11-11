@@ -16,7 +16,7 @@ public class WorldRendererMixin {
     //Allow rendering the client player entity by spoofing one of the entity rendering conditions
     @WrapOperation(method = "render", require = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;getFocusedEntity()Lnet/minecraft/entity/Entity;", ordinal = 3))
     private Entity allowRenderingClientPlayer(Camera camera, Operation<Entity> original) {
-        if (PlayroomClient.cameraEnabled) {
+        if (PlayroomClient.orbitCameraEnabled) {
             return MinecraftClient.getInstance().player;
         }
 

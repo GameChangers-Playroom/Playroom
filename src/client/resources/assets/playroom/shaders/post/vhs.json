@@ -1,0 +1,14 @@
+{
+  "targets": [
+  ],
+  "passes": [
+    {
+      "name": "playroom:vhs",
+      "intarget": "playroom:input",
+      "outtarget": "playroom:output",
+      "auxtargets": [
+        {"id":"minecraft:main", "name":"Background"}
+      ]
+    }
+  ]
+}

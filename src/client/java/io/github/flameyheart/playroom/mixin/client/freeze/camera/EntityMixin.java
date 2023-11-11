@@ -13,7 +13,7 @@ public class EntityMixin {
 
     @Inject(method = "changeLookDirection", at = @At("HEAD"), cancellable = true)
     private void updateCameraRotation(double yawChange, double pitchChange, CallbackInfo ci) {
-        if (PlayroomClient.cameraEnabled) {
+        if (PlayroomClient.orbitCameraEnabled) {
             CameraEntity camera = CameraEntity.getCamera();
 
             if (camera != null) {

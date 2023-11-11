@@ -5,5 +5,13 @@
     "playroom.multiplayer.disconnect.protocol_mismatch": "Mismatching protocol version",
     "playroom.multiplayer.disconnect.invalid_config": "Server sent invalid config",
     "playroom.warning.protocol.title": "Mismatching protocol version",
-    "playroom.warning.protocol.message": "Playroom may behave weirdly"
+    "playroom.warning.protocol.message": "Playroom may behave weirdly",
+
+    "config.playroom.category.general": "General",
+    "config.playroom.category.networking": "Networking",
+
+    "config.playroom.option.networking.allowVanillaPlayers": "Allow vanilla players",
+    "config.playroom.option.networking.allowVanillaPlayers.description": "Allow vanilla players to join the server",
+    "config.playroom.option.networking.requireMatchingProtocol": "Require matching protocol",
+    "config.playroom.option.networking.requireMatchingProtocol.description": "Require clients to have the same mod protocol version as the server"
 }

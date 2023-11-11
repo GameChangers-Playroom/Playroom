@@ -12,21 +12,21 @@ public class PerspectiveMixin {
 
     @Inject(method = "isFirstPerson", at = @At("HEAD"), cancellable = true)
     private void force3rdPerson(CallbackInfoReturnable<Boolean> cir) {
-        if (PlayroomClient.cameraEnabled) {
+        if (PlayroomClient.orbitCameraEnabled) {
             cir.setReturnValue(false);
         }
     }
 
     @Inject(method = "isFrontView", at = @At("HEAD"), cancellable = true)
     private void forceBackView(CallbackInfoReturnable<Boolean> cir) {
-        if (PlayroomClient.cameraEnabled) {
+        if (PlayroomClient.orbitCameraEnabled) {
             cir.setReturnValue(false);
         }
     }
 
     @Inject(method = "next", at = @At("HEAD"), cancellable = true)
     private void disableCycling(CallbackInfoReturnable<Perspective> cir) {
-        if (PlayroomClient.cameraEnabled) {
+        if (PlayroomClient.orbitCameraEnabled) {
             cir.setReturnValue((Perspective) (Object) this);
         }
     }

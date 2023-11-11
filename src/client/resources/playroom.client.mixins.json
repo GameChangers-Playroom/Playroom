@@ -16,9 +16,17 @@
         "freeze.render.InGameHud$HeartTypeMixin",
         "freeze.render.InGameHudMixin",
         "freeze.render.LivingEntityRendererMixin",
-        "freeze.render.PlayerEntityRendererMixin"
+        "freeze.render.PlayerEntityRendererMixin",
+        "geo.AnimTriggerPacketMixin",
+        "geo.AutoGlowingTextureAccessor",
+        "laserGun.AbstractClientPlayerEntityMixin",
+        "laserGun.BipedEntityModelMixin",
+        "laserGun.GameRendererMixin",
+        "laserGun.HeldItemRendererMixin",
+        "laserGun.MinecraftClientMixin",
+        "laserGun.PlayerEntityRendererMixin"
     ],
     "injectors": {
         "defaultRequire": 1
-  }
+    }
 }

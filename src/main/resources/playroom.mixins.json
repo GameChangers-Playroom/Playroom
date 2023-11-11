@@ -11,7 +11,8 @@
         "PlayroomEntity",
         "ServerLoginNetworkHandlerAccessor",
         "ServerLoginNetworkHandlerMixin",
-        "ServerPlayerEntityMixin"
+        "ServerPlayerEntityMixin",
+        "geo.AnimationControllerAccessor"
     ],
     "injectors": {
         "defaultRequire": 1

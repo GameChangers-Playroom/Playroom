@@ -22,21 +22,21 @@ public class ClientPlayerEntityMixin {
 
     @Inject(method = "swingHand", at = @At("HEAD"), cancellable = true)
     private void preventHandSwing(Hand hand, CallbackInfo ci) {
-        if (PlayroomClient.cameraEnabled) {
+        if (PlayroomClient.orbitCameraEnabled) {
             ci.cancel();
         }
     }
 
     @Inject(method = "isCamera", at = @At("HEAD"), cancellable = true)
     private void allowPlayerMovementInFreeCameraMode(CallbackInfoReturnable<Boolean> cir) {
-        if (PlayroomClient.cameraEnabled && CameraEntity.originalCameraWasPlayer()) {
+        if (PlayroomClient.orbitCameraEnabled && CameraEntity.originalCameraWasPlayer()) {
             cir.setReturnValue(true);
         }
     }
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void disableMovementInputsPre(CallbackInfo ci) {
-        if (PlayroomClient.cameraEnabled) {
+        if (PlayroomClient.orbitCameraEnabled) {
             this.playroom$realInput = this.input;
             this.input = this.playroom$dummyMovementInput;
         }

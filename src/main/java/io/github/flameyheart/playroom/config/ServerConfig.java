@@ -48,5 +48,9 @@ public class ServerConfig {
     @SendToClient
     @SerialEntry(comment = "The speedup of when you use the quick shot mode\n[Min: 0, Default: 2]")
     public float quickShotSpeedup = 2;
+
+    @SendToClient
+    @SerialEntry(comment = "The cooldown applied to when the player swaps the gun mode\n[Min: 0, Default: 10]")
+    public short swapModeCooldown = 10;
     //endregion
 }

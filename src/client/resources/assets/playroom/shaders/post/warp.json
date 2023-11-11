@@ -1,0 +1,14 @@
+{
+  "targets": [
+  ],
+  "passes": [
+    {
+      "name": "playroom:warp",
+      "intarget": "minecraft:main",
+      "outtarget": "playroom:output",
+      "auxtargets": [
+        {"id":"playroom:input", "name":"WarpImage"}
+      ]
+    }
+  ]
+}

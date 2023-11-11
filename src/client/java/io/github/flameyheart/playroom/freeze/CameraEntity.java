@@ -133,7 +133,7 @@ public class CameraEntity extends ClientPlayerEntity {
 
     private static void removeCamera(MinecraftClient mc) {
         if (mc.world != null && camera != null) {
-            // Re-fetch the player entity, in case the player died while in Free Camera mode and the instance changed
+            // Re-fetch the player entity, in case the player died while in orbit mode and the instance changed
             mc.setCameraEntity(originalCameraWasPlayer ? mc.player : originalCameraEntity);
             mc.chunkCullingEnabled = cullChunksOriginal;
         }
