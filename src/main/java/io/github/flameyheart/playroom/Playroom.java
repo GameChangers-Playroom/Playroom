@@ -75,8 +75,8 @@ public class Playroom implements ModInitializer {
 					entity.dropShoulderEntities();
 
 					if (entity.isOnFire()) {
+						eEntity.playroom$setGunFreezeTicks(Math.max(0, freezeTicks - entity.getFireTicks()));
 						entity.setFireTicks(0);
-						eEntity.playroom$setGunFreezeTicks(Math.max(0, freezeTicks - 100));
 					}
 
 					eEntity.playroom$setGunFreezeTicks(Math.max(0, freezeTicks - 1));
