@@ -54,4 +54,9 @@ public abstract class PlayroomEntity implements ExpandedEntityData {
         this.dataTracker.set(playroom$GUN_FREEZE_TICKS, frozenTicks);
         if (hasVehicle()) stopRiding();
     }
+
+    @Override
+    public void playroom$addGunFreezeTicks(int frozenTicks) {
+        playroom$setGunFreezeTicks(Math.max(0, playroom$getGunFreezeTicks() + frozenTicks));
+    }
 }

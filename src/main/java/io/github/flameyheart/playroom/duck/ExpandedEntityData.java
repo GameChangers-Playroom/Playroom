@@ -4,6 +4,7 @@ public interface ExpandedEntityData {
 
     int playroom$getGunFreezeTicks();
     void playroom$setGunFreezeTicks(int frozenTicks);
+    void playroom$addGunFreezeTicks(int frozenTicks);
 
     default boolean playroom$isFrozen() {
         return playroom$getGunFreezeTicks() > 0;
