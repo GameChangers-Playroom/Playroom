@@ -1,4 +1,7 @@
 {
+    "item.playroom.laser_gun": "Flamey's super cool laser gun",
+    "item.playroom.laser_gun.tooltip": "Natural regeneration is disabled when held",
+
     "playroom.multiplayer.disconnect.unsupported_client": "Unsupported client \nPlayroom is required to join the server",
     "playroom.multiplayer.disconnect.unexpected_handshake": "Unexpected handshake packet from client",
     "playroom.multiplayer.disconnect.unexpected_query_start": "Unexpected query start from client",
