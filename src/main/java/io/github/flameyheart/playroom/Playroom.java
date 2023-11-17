@@ -15,6 +15,7 @@ import io.github.flameyheart.playroom.duck.ExpandedServerLoginNetworkHandler;
 import io.github.flameyheart.playroom.event.EntityTickEvents;
 import io.github.flameyheart.playroom.mixin.GsonConfigSerializerAccessor;
 import io.github.flameyheart.playroom.mixin.ServerLoginNetworkHandlerAccessor;
+import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Items;
 import io.github.flameyheart.playroom.registry.Particles;
 import io.wispforest.owo.registration.reflect.FieldRegistrationHandler;
@@ -51,6 +52,7 @@ public class Playroom implements ModInitializer {
 		ServerConfig.INSTANCE.serializer().load();
 		FieldRegistrationHandler.register(Items.class, MOD_ID, false);
 		FieldRegistrationHandler.register(Particles.class, MOD_ID, false);
+		FieldRegistrationHandler.register(Entities.class, MOD_ID, false);
 		Items.ITEM_GROUP.initialize();
 
 		registerEventListeners();
@@ -59,7 +61,10 @@ public class Playroom implements ModInitializer {
 	}
 
 	private void registerEventListeners() {
-		ServerLifecycleEvents.SERVER_STARTING.register(server -> Playroom.server = server);
+		ServerLifecycleEvents.SERVER_STARTING.register(server -> {
+			ServerConfig.INSTANCE.serializer().load();
+			Playroom.server = server;
+		});
 
 		EntityTickEvents.END_BASE_TICK.register(baseEntity -> {
 			if (baseEntity instanceof PlayerEntity entity) {
@@ -84,6 +89,10 @@ public class Playroom implements ModInitializer {
 				entity.getWorld().getProfiler().pop();
 			}
 		});
+
+		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
+			ServerConfig.INSTANCE.serializer().load();
+		});
 	}
 
 	private void handlePlayPackets() {
@@ -94,17 +103,15 @@ public class Playroom implements ModInitializer {
 				return;
 			}
 			ExpandedEntityData entity = (ExpandedEntityData) player;
-			entity.playroom$setGunFreezeTicks(entity.playroom$freezeTime());
+			entity.playroom$freeze();
 		});
 
 		ServerPlayNetworking.registerGlobalReceiver(id("config/update"), (server, player, handler, buf, responseSender) -> {
 			if (!Permissions.check(player, "playroom.admin.server.update_config", 4)) {
 				LOGGER.warn("Player {} tried to update the server config without permission!", player.getName());
-
 				return;
 			}
-			ExpandedEntityData entity = (ExpandedEntityData) player;
-			entity.playroom$setGunFreezeTicks(entity.playroom$freezeTime());
+			//TODO: update the configs at the client side
 		});
 	}
 
@@ -191,7 +198,7 @@ public class Playroom implements ModInitializer {
 		}
 
 		try {
-			//Use custom writer to minify the JSON, we don't want to send unnecessary data to the client
+			//Use a custom writer to minify the JSON, we don't want to send unnecessary data to the client
 			StringWriter writer = new StringWriter();
 			JsonWriter jsonWriter = gson.newJsonWriter(Streams.writerForAppendable(writer));
 			jsonWriter.setIndent("");

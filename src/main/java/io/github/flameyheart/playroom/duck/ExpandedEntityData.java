@@ -41,4 +41,8 @@ public interface ExpandedEntityData {
     default int playroom$freezeTime() {
         return playroom$iceTime() + playroom$slowdownTime();
     }
+
+    default void playroom$freeze() {
+        playroom$setGunFreezeTicks(playroom$freezeTime());
+    }
 }

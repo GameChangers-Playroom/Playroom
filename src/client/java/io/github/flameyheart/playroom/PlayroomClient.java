@@ -19,8 +19,10 @@ import io.github.flameyheart.playroom.item.Aimable;
 import io.github.flameyheart.playroom.item.LaserGun;
 import io.github.flameyheart.playroom.mixin.EntityAccessor;
 import io.github.flameyheart.playroom.mixin.GsonConfigSerializerAccessor;
+import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Items;
 import io.github.flameyheart.playroom.registry.Particles;
+import io.github.flameyheart.playroom.render.entity.IceSpearRenderer;
 import io.github.flameyheart.playroom.render.hud.HudRenderer;
 import io.github.flameyheart.playroom.render.item.LaserGunRenderer;
 import io.github.flameyheart.playroom.render.particle.TestParticle;
@@ -35,6 +37,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientLoginNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
@@ -64,14 +67,17 @@ public class PlayroomClient implements ClientModInitializer {
     public static boolean orbitCameraEnabled = false;
     public static boolean forceOrbitCamera = false;
     public static float kbdInc = 0;
+    public static int kbdInx = 0;
     public static Runnable kbd4Func = () -> {};
     public static Runnable kbd5Func = () -> {};
 
     private final KeyBinding devKeybind1 = ClientUtils.addKeybind("dev1", GLFW.GLFW_KEY_F4);
     private final KeyBinding devKeybind2 = ClientUtils.addKeybind("dev2", GLFW.GLFW_KEY_F6);
     private final KeyBinding devKeybind3 = ClientUtils.addKeybind("dev3", GLFW.GLFW_KEY_F7);
+
     private final KeyBinding devKeybind4 = ClientUtils.addKeybind("dev4", GLFW.GLFW_KEY_UP);
     private final KeyBinding devKeybind5 = ClientUtils.addKeybind("dev5", GLFW.GLFW_KEY_DOWN);
+    private final KeyBinding devKeybind6 = ClientUtils.addKeybind("dev6", GLFW.GLFW_KEY_PAGE_UP);
 
     public static boolean isAiming(Item item) {
         return item instanceof Aimable && MinecraftClient.getInstance().options.attackKey.isPressed();
@@ -91,6 +97,7 @@ public class PlayroomClient implements ClientModInitializer {
         });
 
         ParticleFactoryRegistry.getInstance().register(Particles.TEST_PARTICLE, TestParticle.Factory::new);
+        EntityRendererRegistry.register(Entities.ICE_SPEAR, IceSpearRenderer::new);
 
         registerEventListeners();
         handleLoginPackets();
@@ -111,11 +118,30 @@ public class PlayroomClient implements ClientModInitializer {
         ClientUtils.listenKeybind(devKeybind3, (client) -> ClientPlayNetworking.send(Playroom.id("dev/freeze_player"), PacketByteBufs.create()));
         ClientUtils.listenKeybind(devKeybind4, (client) -> {
             kbd4Func.run();
-            ClientConfig.INSTANCE.serializer().save();
         });
         ClientUtils.listenKeybind(devKeybind5, (client) -> {
             kbd5Func.run();
-            ClientConfig.INSTANCE.serializer().save();
+        });
+        ClientUtils.listenKeybind(devKeybind6, (client) -> {
+            switch (kbdInx++) {
+                case 0 -> {
+                    kbd4Func = () -> IceSpearRenderer.x += kbdInc;
+                    kbd5Func = () -> IceSpearRenderer.x -= kbdInc;
+                }
+                case 1 -> {
+                    kbd4Func = () -> IceSpearRenderer.y += kbdInc;
+                    kbd5Func = () -> IceSpearRenderer.y -= kbdInc;
+                }
+                case 2 -> {
+                    kbd4Func = () -> IceSpearRenderer.z += kbdInc;
+                    kbd5Func = () -> IceSpearRenderer.z -= kbdInc;
+                }
+                default -> {
+                    kbdInx = 1;
+                    kbd4Func = () -> IceSpearRenderer.x += kbdInc;
+                    kbd5Func = () -> IceSpearRenderer.x -= kbdInc;
+                }
+            }
         });
 
         RenderEvents.WORLD.register(WorldRenderer::render);

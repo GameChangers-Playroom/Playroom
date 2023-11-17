@@ -26,105 +26,6 @@ public class YACLScreen {
         ConfigCategory.Builder general = ConfigCategory.createBuilder()
             .name(Text.translatable("config.playroom.category.general"));
 
-        general.option(
-          Option.<Float>createBuilder()
-            .name(Text.literal("Value 1"))
-            .binding(clientDefaults.value1, () -> clientConfig.value1, newVal -> clientConfig.value1 = newVal)
-            .controller(floatOption -> FloatFieldControllerBuilder.create(floatOption)
-              .min(-Float.MAX_VALUE)
-                .max(Float.MAX_VALUE)
-            )
-            .build()
-        );
-
-        general.option(
-          Option.<Float>createBuilder()
-            .name(Text.literal("Value 2"))
-            .binding(clientDefaults.value2, () -> clientConfig.value2, newVal -> clientConfig.value2 = newVal)
-            .controller(floatOption -> FloatFieldControllerBuilder.create(floatOption)
-              .min(-Float.MAX_VALUE)
-              .max(Float.MAX_VALUE)
-            )
-            .build()
-        );
-
-        general.option(
-          Option.<Float>createBuilder()
-            .name(Text.literal("Value 3"))
-            .binding(clientDefaults.value3, () -> clientConfig.value3, newVal -> clientConfig.value3 = newVal)
-            .controller(floatOption -> FloatFieldControllerBuilder.create(floatOption)
-              .min(-Float.MAX_VALUE)
-              .max(Float.MAX_VALUE)
-            )
-            .build()
-        );
-
-        general.option(
-          Option.<Float>createBuilder()
-            .name(Text.literal("Value 4"))
-            .binding(clientDefaults.value4, () -> clientConfig.value4, newVal -> clientConfig.value4 = newVal)
-            .controller(floatOption -> FloatFieldControllerBuilder.create(floatOption)
-              .min(-Float.MAX_VALUE)
-              .max(Float.MAX_VALUE)
-            )
-            .build()
-        );
-
-        general.option(
-          Option.<Float>createBuilder()
-            .name(Text.literal("Value 5"))
-            .binding(clientDefaults.value5, () -> clientConfig.value5, newVal -> clientConfig.value5 = newVal)
-            .controller(floatOption -> FloatFieldControllerBuilder.create(floatOption)
-              .min(-Float.MAX_VALUE)
-              .max(Float.MAX_VALUE)
-            )
-            .build()
-        );
-
-        general.option(
-          Option.<Float>createBuilder()
-            .name(Text.literal("Value 6"))
-            .binding(clientDefaults.value6, () -> clientConfig.value6, newVal -> clientConfig.value6 = newVal)
-            .controller(floatOption -> FloatFieldControllerBuilder.create(floatOption)
-              .min(-Float.MAX_VALUE)
-              .max(Float.MAX_VALUE)
-            )
-            .build()
-        );
-
-        general.option(
-          Option.<Float>createBuilder()
-            .name(Text.literal("Value 7"))
-            .binding(clientDefaults.value7, () -> clientConfig.value7, newVal -> clientConfig.value7 = newVal)
-            .controller(floatOption -> FloatFieldControllerBuilder.create(floatOption)
-              .min(-Float.MAX_VALUE)
-              .max(Float.MAX_VALUE)
-            )
-            .build()
-        );
-
-        general.option(
-          Option.<Float>createBuilder()
-            .name(Text.literal("Value 8"))
-            .binding(clientDefaults.value8, () -> clientConfig.value8, newVal -> clientConfig.value8 = newVal)
-            .controller(floatOption -> FloatFieldControllerBuilder.create(floatOption)
-              .min(-Float.MAX_VALUE)
-              .max(Float.MAX_VALUE)
-            )
-            .build()
-        );
-
-        general.option(
-          Option.<Float>createBuilder()
-            .name(Text.literal("Value 9"))
-            .binding(clientDefaults.value9, () -> clientConfig.value9, newVal -> clientConfig.value9 = newVal)
-            .controller(floatOption -> FloatFieldControllerBuilder.create(floatOption)
-              .min(-Float.MAX_VALUE)
-              .max(Float.MAX_VALUE)
-            )
-            .build()
-        );
-
         ConfigCategory.Builder networking = ConfigCategory.createBuilder()
             .name(Text.translatable("config.playroom.category.networking"));
 
@@ -145,6 +46,9 @@ public class YACLScreen {
                 .controller(TickBoxControllerBuilder::create)
                 .build()
         );
+
+        ConfigCategory.Builder server = ConfigCategory.createBuilder()
+          .name(Text.translatable("config.playroom.category.server"));
 
         builder.category(general.build());
         builder.category(networking.build());

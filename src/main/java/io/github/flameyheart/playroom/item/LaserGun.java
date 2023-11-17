@@ -2,10 +2,10 @@ package io.github.flameyheart.playroom.item;
 
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ServerConfig;
+import io.github.flameyheart.playroom.duck.ExpandedEntityData;
+import io.github.flameyheart.playroom.entity.IceSpearEntity;
 import io.github.flameyheart.playroom.mixin.geo.AnimationControllerAccessor;
 import io.github.flameyheart.playroom.util.Raycast;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.item.v1.FabricItem;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.item.TooltipContext;
@@ -16,7 +16,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Vanishable;
 import net.minecraft.network.packet.s2c.play.ParticleS2CPacket;
-import net.minecraft.particle.DustParticleEffect;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -74,9 +73,13 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
         super.inventoryTick(stack, world, entity, slot, selected);
 
         if (world instanceof ServerWorld serverWorld) {
-            boolean rapid = getPlayroomTag(stack).getBoolean("RapidFire");
+            boolean rapidFire = getPlayroomTag(stack).getBoolean("RapidFire");
 
-            if (rapid) {
+            if (rapidFire) {
+                if (getPlayroomTag(stack).getByte("Amo") <= 0 && isCooldownExpired(stack)) {
+                    getPlayroomTag(stack).putByte("Amo", ServerConfig.instance().laserRapidFireAmo);
+                }
+
                 long geoId = GeoItem.getOrAssignId(stack, serverWorld);
                 AnimationController<GeoAnimatable> controller = getAnimatableInstanceCache().getManagerForId(geoId).getAnimationControllers().get("controller");
                 if (((AnimationControllerAccessor) controller).getTriggeredAnimation() == null) {
@@ -109,33 +112,48 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
 
         Vec3d start = player.getCameraPosVec(0).add(0, -0.05, 0);
 
-        if (getCooldownTag(stack).getLong("ExpireTick") > Playroom.getServer().getOverworld().getTime()) {
+        if (!isCooldownExpired(stack)) {
             return TypedActionResult.fail(stack);
         }
+
+        boolean rapidFire = getPlayroomTag(stack).getBoolean("RapidFire");
 
         HitResult raycast = Raycast.raycast(world, player, ServerConfig.instance().laserReach, false, true);
 
         short cooldownTime;
-        boolean rapid = getPlayroomTag(stack).getBoolean("RapidFire");
         if (player.isSneaking()) {
-            getPlayroomTag(stack).putBoolean("RapidFire", !rapid);
-            cooldownTime = ServerConfig.instance().swapModeCooldown;
+            getPlayroomTag(stack).putBoolean("RapidFire", !rapidFire);
+            cooldownTime = ServerConfig.instance().laserSwapModeCooldown;
 
+        } else {
+            if (rapidFire) {
+                byte amo = getPlayroomTag(stack).getByte("Amo");
+                getPlayroomTag(stack).putByte("Amo", (byte) (amo - 1));
+
+                if (amo - 1 <= 0) {
+                    cooldownTime = ServerConfig.instance().laserHitReloadTime;
+                } else {
+                    cooldownTime = 0;
+                }
+            } else {
+                if (raycast.getType() == HitResult.Type.ENTITY && ((EntityHitResult) raycast).getEntity() instanceof ExpandedEntityData target) {
+                    cooldownTime = ServerConfig.instance().laserHitReloadTime;
+                    target.playroom$freeze();
+                } else {
+                    cooldownTime = ServerConfig.instance().laserMissReloadTime;
+                }
+            }
+        }
+
+        if (cooldownTime > 0) {
             getCooldownTag(stack).putShort("Duration", cooldownTime);
             getCooldownTag(stack).putLong("ExpireTick", Playroom.getServer().getOverworld().getTime() + cooldownTime);
-        }/* else {
-            if (raycast.getType() == HitResult.Type.ENTITY && ((EntityHitResult) raycast).getEntity() instanceof PlayerEntity target) {
-                cooldownTime = ServerConfig.instance().laserHitReloadTime;
-                target.setFrozenTicks(target.getMinFreezeDamageTicks() + 200);
-            } else {
-                cooldownTime = ServerConfig.instance().laserMissReloadTime;
-            }
-        }*/
+        }
 
         if (world instanceof ServerWorld serverWorld) {
             if (player.isSneaking()) {
                 long geoId = GeoItem.getOrAssignId(player.getStackInHand(hand), serverWorld);
-                if (rapid) {
+                if (rapidFire) {
                     triggerAnim(player, geoId, "controller", "range_mode");
                 } else {
                     triggerAnim(player, geoId, "controller", "rapidfire_mode");
@@ -143,15 +161,22 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
                 return TypedActionResult.pass(stack);
             }
 
-            /*double distance = Math.sqrt(raycast.getPos().squaredDistanceTo(start));
+            if (rapidFire) {
+                //TODO
+            } else {
+                IceSpearEntity iceSpear = IceSpearEntity.create(world, player);
+                iceSpear.setVelocity(player, player.getPitch(), player.getHeadYaw(), 0.0f, ServerConfig.instance().laserRangedBulletSpeed, ServerConfig.instance().laserRangedDivergence);
+                world.spawnEntity(iceSpear);
+            }
 
-            Vec3d direction = player.getRotationVec(0);
+            //double distance = Math.sqrt(raycast.getPos().squaredDistanceTo(start));
 
-            for (double i = 0; i < distance; i += 0.01 * distance) {
+            //Vec3d direction = player.getRotationVec(0);
+
+            /*for (double i = 0; i < distance; i += 0.01 * distance) {
                 Vec3d end = start.add(direction.x * i, direction.y * i, direction.z * i);
                 spawnParticles(serverWorld, new DustParticleEffect(Vec3d.unpackRgb(0xFF0000).toVector3f(), 1.0f),
                   end.x, end.y, end.z, 1, 0, 0, 0, 1);
-
             }*/
             //player.swingHand(hand, true);
         }
@@ -175,6 +200,10 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
         long time = Playroom.getServer().getOverworld().getTime();
         long timeLeft = cooldownExpires - time;
 
+        if (timeLeft <= 0 && getPlayroomTag(stack).getBoolean("RapidFire")) {
+            return Math.round(getPlayroomTag(stack).getByte("Amo") * 13.0F / (float) ServerConfig.instance().laserRapidFireAmo);
+        }
+
         return Math.round(13.0F - timeLeft * 13.0F / (float) cooldown);
     }
 
@@ -185,6 +214,8 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
         long time = Playroom.getServer().getOverworld().getTime();
         long timeLeft = cooldownExpires - time;
 
+        if (timeLeft <= 0 && getPlayroomTag(stack).getBoolean("RapidFire")) return 0x0000FF;
+
         float f = Math.max(0f, ((float) cooldown - timeLeft) / (float) cooldown);
 
         return MathHelper.hsvToRgb(f / 3.0F, 1.0F, 1.0F);
@@ -192,7 +223,11 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
 
     @Override
     public boolean isItemBarVisible(@NotNull ItemStack stack) {
-        return getCooldownTag(stack).getLong("ExpireTick") > Playroom.getServer().getOverworld().getTime();
+        if (getPlayroomTag(stack).getBoolean("RapidFire") && isCooldownExpired(stack)) {
+            return getPlayroomTag(stack).getByte("Amo") > 0;
+        }
+
+        return !isCooldownExpired(stack);
     }
 
     @Override
@@ -235,5 +270,9 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return animationCache;
+    }
+
+    public boolean isCooldownExpired(ItemStack stack) {
+        return getCooldownTag(stack).getLong("ExpireTick") < Playroom.getServer().getOverworld().getTime();
     }
 }
