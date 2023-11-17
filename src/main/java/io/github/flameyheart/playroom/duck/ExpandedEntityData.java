@@ -1,7 +1,6 @@
 package io.github.flameyheart.playroom.duck;
 
 public interface ExpandedEntityData {
-
     int playroom$getGunFreezeTicks();
     void playroom$setGunFreezeTicks(int frozenTicks);
     void playroom$addGunFreezeTicks(int frozenTicks);

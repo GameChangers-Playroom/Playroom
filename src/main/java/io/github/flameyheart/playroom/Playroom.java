@@ -14,6 +14,7 @@ import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.duck.ExpandedServerLoginNetworkHandler;
 import io.github.flameyheart.playroom.event.EntityTickEvents;
 import io.github.flameyheart.playroom.mixin.GsonConfigSerializerAccessor;
+import io.github.flameyheart.playroom.mixin.PlayerEntityInvoker;
 import io.github.flameyheart.playroom.mixin.ServerLoginNetworkHandlerAccessor;
 import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Items;
@@ -22,7 +23,10 @@ import io.wispforest.owo.registration.reflect.FieldRegistrationHandler;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.networking.v1.*;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerLoginConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerLoginNetworking;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketByteBuf;
@@ -37,7 +41,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class Playroom implements ModInitializer {
@@ -77,7 +80,7 @@ public class Playroom implements ModInitializer {
 					if (entity.hasPassengers()) entity.removeAllPassengers();
 					if (entity.hasVehicle()) entity.stopRiding();
 					if (entity.isFallFlying()) entity.stopFallFlying();
-					entity.dropShoulderEntities();
+					((PlayerEntityInvoker) entity).invokeDropShoulderEntities();
 
 					if (entity.isOnFire()) {
 						eEntity.playroom$setGunFreezeTicks(Math.max(0, freezeTicks - entity.getFireTicks()));

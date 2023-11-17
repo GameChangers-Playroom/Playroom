@@ -16,7 +16,6 @@ import io.github.flameyheart.playroom.duck.client.ExpandedClientLoginNetworkHand
 import io.github.flameyheart.playroom.event.LivingEntityEvents;
 import io.github.flameyheart.playroom.freeze.CameraEntity;
 import io.github.flameyheart.playroom.item.Aimable;
-import io.github.flameyheart.playroom.item.LaserGun;
 import io.github.flameyheart.playroom.mixin.EntityAccessor;
 import io.github.flameyheart.playroom.mixin.GsonConfigSerializerAccessor;
 import io.github.flameyheart.playroom.registry.Entities;
@@ -121,27 +120,6 @@ public class PlayroomClient implements ClientModInitializer {
         });
         ClientUtils.listenKeybind(devKeybind5, (client) -> {
             kbd5Func.run();
-        });
-        ClientUtils.listenKeybind(devKeybind6, (client) -> {
-            switch (kbdInx++) {
-                case 0 -> {
-                    kbd4Func = () -> IceSpearRenderer.x += kbdInc;
-                    kbd5Func = () -> IceSpearRenderer.x -= kbdInc;
-                }
-                case 1 -> {
-                    kbd4Func = () -> IceSpearRenderer.y += kbdInc;
-                    kbd5Func = () -> IceSpearRenderer.y -= kbdInc;
-                }
-                case 2 -> {
-                    kbd4Func = () -> IceSpearRenderer.z += kbdInc;
-                    kbd5Func = () -> IceSpearRenderer.z -= kbdInc;
-                }
-                default -> {
-                    kbdInx = 1;
-                    kbd4Func = () -> IceSpearRenderer.x += kbdInc;
-                    kbd5Func = () -> IceSpearRenderer.x -= kbdInc;
-                }
-            }
         });
 
         RenderEvents.WORLD.register(WorldRenderer::render);
