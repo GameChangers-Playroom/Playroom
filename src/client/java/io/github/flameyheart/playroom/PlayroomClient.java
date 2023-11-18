@@ -21,7 +21,7 @@ import io.github.flameyheart.playroom.mixin.GsonConfigSerializerAccessor;
 import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Items;
 import io.github.flameyheart.playroom.registry.Particles;
-import io.github.flameyheart.playroom.render.entity.IceSpearRenderer;
+import io.github.flameyheart.playroom.render.entity.LaserProjectileRenderer;
 import io.github.flameyheart.playroom.render.hud.HudRenderer;
 import io.github.flameyheart.playroom.render.item.LaserGunRenderer;
 import io.github.flameyheart.playroom.render.particle.TestParticle;
@@ -96,7 +96,7 @@ public class PlayroomClient implements ClientModInitializer {
         });
 
         ParticleFactoryRegistry.getInstance().register(Particles.TEST_PARTICLE, TestParticle.Factory::new);
-        EntityRendererRegistry.register(Entities.ICE_SPEAR, IceSpearRenderer::new);
+        EntityRendererRegistry.register(Entities.LASER_SHOT, LaserProjectileRenderer::new);
 
         registerEventListeners();
         handleLoginPackets();

@@ -59,8 +59,6 @@ public class ServerConfig {
     @SerialEntry(comment = "The divergence of the ranged mode ice shot\n[Min: 0, Default: 0] [DECIMAL SUPPORTED]")
     public float laserRangedDivergence = 0;
 
-    @SerialEntry(comment = "The maximum life time of a shot, this is to avoid eternal items on the sky\n[Min: 0, Default: 0] [DECIMAL SUPPORTED]")
-    public float laserRangedLifeTime = 300;
 
     @SerialEntry(comment = "The speed of the rapid fire mode ice shot\n[Min: 0.1, Default: 3] [DECIMAL SUPPORTED]")
     public float laserRapidBulletSpeed = 3;

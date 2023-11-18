@@ -3,7 +3,7 @@ package io.github.flameyheart.playroom.item;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
-import io.github.flameyheart.playroom.entity.IceSpearEntity;
+import io.github.flameyheart.playroom.entity.LaserProjectileEntity;
 import io.github.flameyheart.playroom.mixin.geo.AnimationControllerAccessor;
 import io.github.flameyheart.playroom.util.Raycast;
 import net.fabricmc.fabric.api.item.v1.FabricItem;
@@ -161,13 +161,9 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
                 return TypedActionResult.pass(stack);
             }
 
-            if (rapidFire) {
-                //TODO
-            } else {
-                IceSpearEntity iceSpear = IceSpearEntity.create(world, player);
-                iceSpear.setVelocity(player, player.getPitch(), player.getHeadYaw(), 0.0f, ServerConfig.instance().laserRangedBulletSpeed, ServerConfig.instance().laserRangedDivergence);
-                world.spawnEntity(iceSpear);
-            }
+            LaserProjectileEntity laserShot = LaserProjectileEntity.create(world, player, rapidFire);
+            laserShot.setVelocity(player, player.getPitch(), player.getHeadYaw(), 0.0f, getProjectileSpeed(rapidFire), getProjectileDivergence(rapidFire));
+            serverWorld.spawnEntity(laserShot);
 
             //double distance = Math.sqrt(raycast.getPos().squaredDistanceTo(start));
 
@@ -274,5 +270,13 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
 
     public boolean isCooldownExpired(ItemStack stack) {
         return getCooldownTag(stack).getLong("ExpireTick") < Playroom.getServer().getOverworld().getTime();
+    }
+
+    private float getProjectileSpeed(boolean rapidFire) {
+        return rapidFire ? ServerConfig.instance().laserRapidBulletSpeed : ServerConfig.instance().laserRangedBulletSpeed;
+    }
+
+    private float getProjectileDivergence(boolean rapidFire) {
+        return rapidFire ? ServerConfig.instance().laserRapidDivergence : ServerConfig.instance().laserRangedDivergence;
     }
 }

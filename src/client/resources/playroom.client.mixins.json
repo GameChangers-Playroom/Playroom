@@ -4,6 +4,7 @@
     "compatibilityLevel": "JAVA_17",
     "client": [
         "ClientLoginNetworkHandlerMixin",
+        "ProjectileEntityRendererMixin",
         "freeze.camera.ClientPlayerEntityMixin",
         "freeze.camera.ClientPlayerInteractionManagerMixin",
         "freeze.camera.EntityMixin",
