@@ -83,6 +83,9 @@
     "config.playroom.option.laser_gun.laserFireReloadTime": "Fire reload time",
     "config.playroom.option.laser_gun.laserFireReloadTime.description": "The laser reload time for the gun cooldown",
 
+    "config.playroom.option.laser_gun.laserRangeChargeTime": "Ranged mode charge time",
+    "config.playroom.option.laser_gun.laserRangeChargeTime.description": "The laser charge time for the ranged more",
+
     "config.playroom.option.laser_gun.laserSwapModeCooldown": "Laser Gun mode swap cooldown",
     "config.playroom.option.laser_gun.laserSwapModeCooldown.description": "The cooldown applied to when the player swaps the gun mode",
 

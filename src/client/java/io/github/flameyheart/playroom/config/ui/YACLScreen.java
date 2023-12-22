@@ -95,6 +95,15 @@ public class YACLScreen {
                 .name(Text.translatable("config.playroom.option.laser_gun.laserFireReloadTime"))
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserFireReloadTime.description")))
                 .binding((int) serverDefaults.laserFireReloadTime, () -> (int) serverConfig.laserFireReloadTime, newVal -> serverConfig.laserFireReloadTime = newVal.shortValue())
+                .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 200).step(5))
+                .build()
+            );
+
+            laserGun.option(
+              Option.<Integer>createBuilder()
+                .name(Text.translatable("config.playroom.option.laser_gun.laserRangeChargeTime"))
+                .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRangeChargeTime.description")))
+                .binding((int) serverDefaults.laserRangeChargeTime, () -> (int) serverConfig.laserRangeChargeTime, newVal -> serverConfig.laserRangeChargeTime = newVal.shortValue())
                 .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 3600).step(20))
                 .build()
             );
