@@ -1,23 +1,17 @@
 package io.github.flameyheart.playroom;
 
 import com.chocohead.mm.api.ClassTinkerers;
-import com.google.gson.Gson;
-import dev.isxander.yacl3.config.v2.api.ConfigClassHandler;
-import dev.isxander.yacl3.config.v2.api.ConfigField;
 import fi.dy.masa.malilib.hotkeys.IHotkeyCallback;
 import fi.dy.masa.malilib.hotkeys.KeybindMulti;
 import fi.dy.masa.tweakeroo.config.FeatureToggle;
 import io.github.flameyheart.playroom.compat.ModOptional;
 import io.github.flameyheart.playroom.config.ClientConfig;
-import io.github.flameyheart.playroom.config.ServerConfig;
-import io.github.flameyheart.playroom.config.TestCommand;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.duck.client.ExpandedClientLoginNetworkHandler;
 import io.github.flameyheart.playroom.event.LivingEntityEvents;
 import io.github.flameyheart.playroom.freeze.CameraEntity;
 import io.github.flameyheart.playroom.item.Aimable;
 import io.github.flameyheart.playroom.mixin.EntityAccessor;
-import io.github.flameyheart.playroom.mixin.GsonConfigSerializerAccessor;
 import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Items;
 import io.github.flameyheart.playroom.registry.Particles;
@@ -25,12 +19,14 @@ import io.github.flameyheart.playroom.render.entity.LaserProjectileRenderer;
 import io.github.flameyheart.playroom.render.hud.HudRenderer;
 import io.github.flameyheart.playroom.render.item.LaserGunRenderer;
 import io.github.flameyheart.playroom.render.particle.TestParticle;
+import io.github.flameyheart.playroom.render.screen.DonationListScreen;
 import io.github.flameyheart.playroom.render.world.WorldRenderer;
+import io.github.flameyheart.playroom.tiltify.Donation;
 import io.github.flameyheart.playroom.toast.WarningToast;
 import io.github.flameyheart.playroom.util.ClientUtils;
 import me.x150.renderer.event.RenderEvents;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientLoginNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -39,53 +35,51 @@ import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.item.BuiltinModelItemRenderer;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
-import org.quiltmc.parsers.json.JsonReader;
-import org.quiltmc.parsers.json.gson.GsonReader;
 import software.bernie.geckolib.animatable.client.RenderProvider;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class PlayroomClient implements ClientModInitializer {
     public static final Map<Long, Double> animationStartTick = new HashMap<>();
     public static final BipedEntityModel.ArmPose LASER_GUN_POSE = ClassTinkerers.getEnum(BipedEntityModel.ArmPose.class, "LASER_GUN");
+    public static final Map<UUID, Donation> DONATIONS = new LinkedHashMap<>();
 
     public static boolean orbitCameraEnabled = false;
     public static boolean forceOrbitCamera = false;
-    public static float kbdInc = 0;
-    public static int kbdInx = 0;
-    public static Runnable kbd4Func = () -> {};
-    public static Runnable kbd5Func = () -> {};
+    public static boolean stopTicking = false;
+
+    public static boolean wasFrozen = false;
+
+    private final KeyBinding donationsScreenKeybind = ClientUtils.addKeybind("donations_screen", GLFW.GLFW_KEY_H);
 
     private final KeyBinding devKeybind1 = ClientUtils.addKeybind("dev1", GLFW.GLFW_KEY_F4);
     private final KeyBinding devKeybind2 = ClientUtils.addKeybind("dev2", GLFW.GLFW_KEY_F6);
     private final KeyBinding devKeybind3 = ClientUtils.addKeybind("dev3", GLFW.GLFW_KEY_F7);
+    private final KeyBinding devKeybind4 = ClientUtils.addKeybind("dev4", GLFW.GLFW_KEY_F9);
 
-    private final KeyBinding devKeybind4 = ClientUtils.addKeybind("dev4", GLFW.GLFW_KEY_UP);
-    private final KeyBinding devKeybind5 = ClientUtils.addKeybind("dev5", GLFW.GLFW_KEY_DOWN);
-    private final KeyBinding devKeybind6 = ClientUtils.addKeybind("dev6", GLFW.GLFW_KEY_PAGE_UP);
+    private final KeyBinding devKeybind5 = ClientUtils.addKeybind("dev5", GLFW.GLFW_KEY_UP);
+    private final KeyBinding devKeybind6 = ClientUtils.addKeybind("dev6", GLFW.GLFW_KEY_DOWN);
 
-    public static boolean isAiming(Item item) {
-        return item instanceof Aimable && MinecraftClient.getInstance().options.attackKey.isPressed();
+    public static boolean isAiming(ItemStack stack) {
+        Item item = stack.getItem();
+        return item instanceof Aimable aimable && aimable.canAim(stack) && MinecraftClient.getInstance().options.attackKey.isPressed();
     }
 
     @Override
     public void onInitializeClient() {
-        ClientConfig.INSTANCE.serializer().load();
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> TestCommand.register(dispatcher));
+        ClientConfig.INSTANCE.load();
+
         Items.LASER_GUN.setRenderer(new RenderProvider() {
             private final LaserGunRenderer renderer = new LaserGunRenderer();
 
@@ -99,6 +93,7 @@ public class PlayroomClient implements ClientModInitializer {
         EntityRendererRegistry.register(Entities.LASER_SHOT, LaserProjectileRenderer::new);
 
         registerEventListeners();
+        handlePlayPackets();
         handleLoginPackets();
 
         ModOptional.ifPresent("tweakeroo", () -> {
@@ -112,26 +107,34 @@ public class PlayroomClient implements ClientModInitializer {
     }
 
     private void registerEventListeners() {
+        ClientUtils.listenKeybind(donationsScreenKeybind, (client) -> client.setScreen(new DonationListScreen()));
+
         ClientUtils.listenKeybind(devKeybind1, (client) -> CameraEntity.setCameraState(orbitCameraEnabled = !orbitCameraEnabled));
         ClientUtils.listenKeybind(devKeybind2, (client) -> forceOrbitCamera = !forceOrbitCamera);
         ClientUtils.listenKeybind(devKeybind3, (client) -> ClientPlayNetworking.send(Playroom.id("dev/freeze_player"), PacketByteBufs.create()));
         ClientUtils.listenKeybind(devKeybind4, (client) -> {
-            kbd4Func.run();
+            ClientPlayNetworking.send(Playroom.id("dev/toggle_ticking"), PacketByteBufs.create());
+            stopTicking = !stopTicking;
         });
-        ClientUtils.listenKeybind(devKeybind5, (client) -> {
-            kbd5Func.run();
-        });
+
+        ClientUtils.listenKeybind(devKeybind5, (client) -> ClientPlayNetworking.send(Playroom.id("dev/freeze_player/add"), PacketByteBufs.create()));
+        ClientUtils.listenKeybind(devKeybind6, (client) -> ClientPlayNetworking.send(Playroom.id("dev/freeze_player/rem"), PacketByteBufs.create()));
 
         RenderEvents.WORLD.register(WorldRenderer::render);
         RenderEvents.HUD.register(HudRenderer::render);
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player != null) {
+                ExpandedEntityData player = (ExpandedEntityData) client.player;
+                boolean showIce = player.playroom$showIce();
+                if (!showIce) {
+                    wasFrozen = false;
+                }
                 if (!forceOrbitCamera) {
-                    if (!orbitCameraEnabled && ((ExpandedEntityData) client.player).playroom$getGunFreezeTicks() > 0) {
+                    if (!orbitCameraEnabled && player.playroom$showIce()) {
                         CameraEntity.setCameraState(orbitCameraEnabled = true);
                         client.player.input.sneaking = false;
-                    } else if (orbitCameraEnabled && ((ExpandedEntityData) client.player).playroom$getGunFreezeTicks() <= 0) {
+                    } else if (orbitCameraEnabled && !player.playroom$showIce()) {
                         CameraEntity.setCameraState(orbitCameraEnabled = false);
                     }
                 }
@@ -158,109 +161,61 @@ public class PlayroomClient implements ClientModInitializer {
             CameraEntity.setCameraState(orbitCameraEnabled = false);
         });
 
-        //Test code for rendering a texture that always faces the camera
-        /*WorldRenderEvents.END.register(context -> {
-            Camera camera = context.camera();
-            float tickDelta = context.tickDelta();
+        ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
+            Items.LASER_GUN.setShowAdvancedTooltip(Screen::hasShiftDown);
+        });
+    }
 
-            Vec3d targetPosition = new Vec3d(0, 152, 0);
-            Vec3d targetPosition2 = new Vec3d(0.5, 152.5, 0.5);
-            Vec3d transformedPosition = targetPosition.subtract(camera.getPos());
+    private void handlePlayPackets() {
+        ClientPlayNetworking.registerGlobalReceiver(Playroom.id("config/sync"), (client, handler, buf, responseSender) -> {
+            String serverConfig = buf.readString();
 
-            MatrixStack matrixStack = new MatrixStack();
-            matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
-            matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(camera.getYaw() + 180.0F));
-            matrixStack.translate(transformedPosition.x, transformedPosition.y, transformedPosition.z);
-            matrixStack.translate(0.5, 0.5, 0.5);
+            client.execute(() -> deserializeConfig(serverConfig));
+        });
 
-            Vec3d vec3d = camera.getPos();
-            double d = targetPosition2.x - vec3d.x;
-            double e = targetPosition2.y - vec3d.y;
-            double f = targetPosition2.z - vec3d.z;
-            double g = Math.sqrt(d * d + f * f);
-            float h = MathHelper.wrapDegrees((float) (-(MathHelper.atan2(e, g) * 57.2957763671875)));
-            float i = MathHelper.wrapDegrees((float) (MathHelper.atan2(f, d) * 57.2957763671875) - 90.0f);
+        ClientPlayNetworking.registerGlobalReceiver(Playroom.id("donation/add"), (client, handler, buf, responseSender) -> {
+            UUID id = buf.readUuid();
+            String donorName = buf.readString();
+            String message = buf.readString();
+            float amount = buf.readFloat();
+            String currency = buf.readString();
+            boolean autoApproved = buf.readBoolean();
 
-            Quaternionf quaternionf = new Quaternionf(camera.getRotation());
-            quaternionf.rotationYXZ(-i * ((float) Math.PI / 180), h * ((float) Math.PI / 180), 0.0f);
-            quaternionf.rotateZ(MathHelper.lerp(tickDelta, 0, 0));
+            client.execute(() -> {
+                DONATIONS.put(id, new Donation(id, donorName, message, amount, currency, autoApproved));
+            });
+        });
 
-            matrixStack.multiply(quaternionf);
-            matrixStack.translate(-0.5, -0.5, -0.5);
+        ClientPlayNetworking.registerGlobalReceiver(Playroom.id("donation/update"), (client, handler, buf, responseSender) -> {
+            UUID id = buf.readUuid();
+            Donation.Status status = buf.readEnumConstant(Donation.Status.class);
 
-            Matrix4f positionMatrix = matrixStack.peek().getPositionMatrix();
-            Tessellator tessellator = Tessellator.getInstance();
-            BufferBuilder buffer = tessellator.getBuffer();
-
-            buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR_TEXTURE);
-            buffer.vertex(positionMatrix, 0, 1, 0).color(1f, 1f, 1f, 1f).texture(0f, 0f).next();
-            buffer.vertex(positionMatrix, 0, 0, 0).color(1f, 1f, 1f, 1f).texture(0f, 1f).next();
-            buffer.vertex(positionMatrix, 1, 0, 0).color(1f, 1f, 1f, 1f).texture(1f, 1f).next();
-            buffer.vertex(positionMatrix, 1, 1, 0).color(1f, 1f, 1f, 1f).texture(1f, 0f).next();
-
-            RenderSystem.setShader(GameRenderer::getPositionColorTexProgram);
-            RenderSystem.setShaderTexture(0, Playroom.id("textures/item/gradient.png"));
-            RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-            RenderSystem.disableCull();
-            RenderSystem.depthFunc(GL11.GL_LEQUAL);
-            RenderSystem.enableBlend();
-            RenderSystem.enableDepthTest();
-
-            tessellator.draw();
-
-            RenderSystem.enableCull();
-            RenderSystem.disableBlend();
-            RenderSystem.disableDepthTest();
-        });*/
+            client.execute(() -> {
+                Donation donation = DONATIONS.get(id);
+                if (donation != null) {
+                    donation.updateStatus(status);
+                } else {
+                    Playroom.LOGGER.warn("Received donation update for unknown donation with id {}", id);
+                }
+            });
+        });
     }
 
     private void handleLoginPackets() {
-
         ClientLoginNetworking.registerGlobalReceiver(Playroom.id("handshake"), (client, handler, buf, listenerAdder) -> {
             CompletableFuture<PacketByteBuf> future = new CompletableFuture<>();
             String serverConfig = buf.readString();
 
             client.execute(() -> {
-                ConfigClassHandler<ServerConfig> config = ServerConfig.INSTANCE;
-                Gson gson = ((GsonConfigSerializerAccessor) config.serializer()).getGson();
-                try (JsonReader jsonReader = JsonReader.json5(serverConfig)) {
-
-                    GsonReader gsonReader = new GsonReader(jsonReader);
-
-                    Map<String, ConfigField<?>> fieldMap = Arrays.stream(config.fields())
-                        .filter(field -> field.serial().isPresent())
-                        .collect(Collectors.toMap(f -> f.serial().orElseThrow().serialName(), Function.identity()));
-
-                    jsonReader.beginObject();
-
-                    while (jsonReader.hasNext()) {
-                        String name = jsonReader.nextName();
-                        ConfigField<?> field = fieldMap.get(name);
-                        if (field == null) {
-                            Playroom.LOGGER.error("Unknown config field '{}' sent from server!", name);
-                            ((ExpandedClientLoginNetworkHandler) handler).playroom$disconnect(Text.translatable("playroom.multiplayer.disconnect.invalid_config"));
-                            jsonReader.skipValue();
-                            return;
-                        }
-
-                        try {
-                            field.access().set(gson.fromJson(gsonReader, field.access().type()));
-                        } catch (Exception e) {
-                            Playroom.LOGGER.error("Failed to deserialize config field '{}'.", name, e);
-                            jsonReader.skipValue();
-                        }
-                    }
-
-                    jsonReader.endObject();
-
-                    PacketByteBuf byteBuf = PacketByteBufs.create();
-                    byteBuf.writeByte(Constants.PROTOCOL_VERSION);
-
-                    future.complete(byteBuf);
-                } catch (IOException e) {
-                    Playroom.LOGGER.error("Failed to decode server config!", e);
+                if (!deserializeConfig(serverConfig)) {
                     ((ExpandedClientLoginNetworkHandler) handler).playroom$disconnect(Text.translatable("playroom.multiplayer.disconnect.invalid_config"));
+                    return;
                 }
+
+                PacketByteBuf byteBuf = PacketByteBufs.create();
+                byteBuf.writeByte(Constants.PROTOCOL_VERSION);
+
+                future.complete(byteBuf);
             });
             return future;
         });
@@ -272,5 +227,13 @@ public class PlayroomClient implements ClientModInitializer {
 
             return CompletableFuture.completedFuture(PacketByteBufs.create());
         });
+    }
+
+    public static boolean deserializeConfig(String data) {
+        if (MinecraftClient.getInstance().isInSingleplayer()) {
+            return true;
+        }
+
+        return Playroom.deserializeConfig(data);
     }
 }

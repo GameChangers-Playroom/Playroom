@@ -2,10 +2,9 @@ package io.github.flameyheart.playroom.item;
 
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ServerConfig;
-import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.entity.LaserProjectileEntity;
 import io.github.flameyheart.playroom.mixin.geo.AnimationControllerAccessor;
-import io.github.flameyheart.playroom.util.Raycast;
+import io.github.flameyheart.playroom.registry.Sounds;
 import net.fabricmc.fabric.api.item.v1.FabricItem;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.item.TooltipContext;
@@ -15,19 +14,16 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Vanishable;
-import net.minecraft.network.packet.s2c.play.ParticleS2CPacket;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.UseAction;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,10 +31,14 @@ import software.bernie.geckolib.animatable.GeoItem;
 import software.bernie.geckolib.animatable.SingletonGeoAnimatable;
 import software.bernie.geckolib.core.animatable.GeoAnimatable;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.core.animation.*;
+import software.bernie.geckolib.core.animation.AnimatableManager;
+import software.bernie.geckolib.core.animation.AnimationController;
+import software.bernie.geckolib.core.animation.AnimationState;
+import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -49,18 +49,46 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     private static final RawAnimation RAPIDFIRE_CHARGE_ANIMATION = RawAnimation.begin().thenPlay("animation.model.rapidfire.fire");
     private final AnimatableInstanceCache animationCache = GeckoLibUtil.createInstanceCache(this);
     private final Supplier<Object> renderProvider = GeoItem.makeRenderer(this);
+    private final List<TooltipProvider> tooltipProvider = new ArrayList<>();
+    private Supplier<Boolean> showAdvancedTooltip = () -> false;
     private Object renderer = null;
 
     public LaserGun(Settings settings) {
         super(settings);
         SingletonGeoAnimatable.registerSyncedAnimatable(this);
+        tooltipProvider.add((stack, world, tooltip, context) -> {
+           if (showAdvancedTooltip.get()) {
+               if (isCooldownExpired(stack)) {
+                   if (isRapidFire(stack)) {
+                       tooltip.add(Text.translatable("item.playroom.laser_gun.tooltip.amo", getAmo(stack)));
+                   } else {
+                       tooltip.add(Text.translatable("item.playroom.laser_gun.tooltip.ready"));
+                   }
+               } else {
+                   int cooldown = getCooldownLeft(stack);
+                   Object timeLeft;
+                   if (getCooldownLeft(stack) < 20) {
+                       timeLeft = (float) Math.floor((cooldown / 20f) * 10) / 10;
+                   } else {
+                       timeLeft = cooldown / 20;
+                   }
+                   tooltip.add(Text.translatable("item.playroom.laser_gun.tooltip.cooldown", timeLeft));
+               }
+           }
+        });
+
+        tooltipProvider.add((stack, world, tooltip, context) -> {
+            if (!showAdvancedTooltip.get()) {
+                tooltip.add(Text.translatable("item.playroom.laser_gun.tooltip.more"));
+            }
+        });
     }
 
     @Override
     public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
         super.appendTooltip(stack, world, tooltip, context);
-        tooltip.add(Text.empty());
-        tooltip.add(Text.translatable("item.playroom.laser_gun.tooltip"));
+        tooltip.add(Text.translatable("item.playroom.laser_gun.tooltip.regen"));
+        tooltipProvider.forEach(provider -> provider.appendTooltip(stack, world, tooltip, context));
     }
 
     @Override
@@ -91,11 +119,15 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
 
     @Override
     public void onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
-        //user.sendMessage(Text.literal("message.playroom.laser_gun"));
+        if (remainingUseTicks < 72000 - 20 && !isRapidFire(stack)) {
+            handleRangedMode(stack, world, (PlayerEntity) user, Hand.MAIN_HAND);
+        }
+        getPlayroomTag(stack).putInt("Charge", 0);
+        super.onStoppedUsing(stack, world, user, remainingUseTicks);
     }
 
     public int getMaxUseTime(ItemStack stack) {
-        return 72000;
+        return isRapidFire(stack) ? 0 : 72000;
     }
 
     @Override
@@ -103,90 +135,112 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
         return UseAction.NONE;
     }
 
+    public int getUseTime(ItemStack stack, int remainingUseTicks) {
+        return this.getMaxUseTime(stack) - remainingUseTicks;
+    }
+
+    @Override
+    public void usageTick(World world, LivingEntity user, ItemStack stack, int remainingUseTicks) {
+        if (user instanceof PlayerEntity player && canFire(stack, Hand.MAIN_HAND, player)) {
+            if (isRapidFire(stack)) {
+                handleRapidFire(world, player, Hand.MAIN_HAND, stack);
+            } else {
+                int charge = MathHelper.clamp(getUseTime(stack, remainingUseTicks) * 4, 0, 100);
+                getPlayroomTag(stack).putLong("Charge", charge);
+            }
+        }
+        super.usageTick(world, user, stack, remainingUseTicks);
+    }
+
     @Override
     public TypedActionResult<ItemStack> use(World world, @NotNull PlayerEntity player, Hand hand) {
         ItemStack stack = player.getStackInHand(hand);
-        if (hand == Hand.OFF_HAND) {
+        if (!canUse(stack, hand)) {
             return TypedActionResult.fail(stack);
-        }
-
-        Vec3d start = player.getCameraPosVec(0).add(0, -0.05, 0);
-
-        if (!isCooldownExpired(stack)) {
-            return TypedActionResult.fail(stack);
-        }
-
-        boolean rapidFire = getPlayroomTag(stack).getBoolean("RapidFire");
-
-        HitResult raycast = Raycast.raycast(world, player, ServerConfig.instance().laserReach, false, true);
-
-        short cooldownTime;
-        if (player.isSneaking()) {
-            getPlayroomTag(stack).putBoolean("RapidFire", !rapidFire);
-            cooldownTime = ServerConfig.instance().laserSwapModeCooldown;
-
         } else {
-            if (rapidFire) {
-                byte amo = getPlayroomTag(stack).getByte("Amo");
-                getPlayroomTag(stack).putByte("Amo", (byte) (amo - 1));
-
-                if (amo - 1 <= 0) {
-                    cooldownTime = ServerConfig.instance().laserHitReloadTime;
+            if (!player.isSneaking()) {
+                if (isRapidFire(stack)) {
+                    handleRapidFire(world, player, hand, stack);
                 } else {
-                    cooldownTime = 0;
-                }
-            } else {
-                if (raycast.getType() == HitResult.Type.ENTITY && ((EntityHitResult) raycast).getEntity() instanceof ExpandedEntityData target) {
-                    cooldownTime = ServerConfig.instance().laserHitReloadTime;
-                    target.playroom$freeze();
-                } else {
-                    cooldownTime = ServerConfig.instance().laserMissReloadTime;
+                    playSound(world, player, Sounds.LASER_GUN_CHARGE);
                 }
             }
-        }
 
-        if (cooldownTime > 0) {
-            getCooldownTag(stack).putShort("Duration", cooldownTime);
-            getCooldownTag(stack).putLong("ExpireTick", Playroom.getServer().getOverworld().getTime() + cooldownTime);
+            handleUseLogic(player, hand, stack, world);
+            player.setCurrentHand(hand);
+            return TypedActionResult.pass(stack);
         }
+    }
 
-        if (world instanceof ServerWorld serverWorld) {
-            if (player.isSneaking()) {
-                long geoId = GeoItem.getOrAssignId(player.getStackInHand(hand), serverWorld);
+    private boolean canUse(ItemStack stack, Hand hand) {
+        return isCooldownExpired(stack) && hand == Hand.MAIN_HAND;
+    }
+
+    private boolean canFire(ItemStack stack, Hand hand, PlayerEntity player) {
+        return canUse(stack, hand) && !player.isSneaking();
+    }
+
+    private void handleUseLogic(PlayerEntity player, Hand hand, ItemStack stack, World world) {
+        if (!canUse(stack, hand)) return;
+        boolean rapidFire = getPlayroomTag(stack).getBoolean("RapidFire");
+
+        if (player.isSneaking()) {
+            getPlayroomTag(stack).putBoolean("RapidFire", !rapidFire);
+            setCooldown(stack, ServerConfig.instance().laserSwapModeCooldown);
+
+            if (world instanceof ServerWorld serverWorld) {
+                SoundEvent soundEvent = rapidFire ? SoundEvents.BLOCK_PISTON_CONTRACT : SoundEvents.BLOCK_PISTON_EXTEND;
+                world.playSound(null, player.getX(), player.getY(), player.getZ(), soundEvent, SoundCategory.PLAYERS, 0.5F, 2.0F);
+                long geoId = GeoItem.getOrAssignId(stack, serverWorld);
                 if (rapidFire) {
                     triggerAnim(player, geoId, "controller", "range_mode");
                 } else {
                     triggerAnim(player, geoId, "controller", "rapidfire_mode");
                 }
-                return TypedActionResult.pass(stack);
             }
-
-            LaserProjectileEntity laserShot = LaserProjectileEntity.create(world, player, rapidFire);
-            laserShot.setVelocity(player, player.getPitch(), player.getHeadYaw(), 0.0f, getProjectileSpeed(rapidFire), getProjectileDivergence(rapidFire));
-            serverWorld.spawnEntity(laserShot);
-
-            //double distance = Math.sqrt(raycast.getPos().squaredDistanceTo(start));
-
-            //Vec3d direction = player.getRotationVec(0);
-
-            /*for (double i = 0; i < distance; i += 0.01 * distance) {
-                Vec3d end = start.add(direction.x * i, direction.y * i, direction.z * i);
-                spawnParticles(serverWorld, new DustParticleEffect(Vec3d.unpackRgb(0xFF0000).toVector3f(), 1.0f),
-                  end.x, end.y, end.z, 1, 0, 0, 0, 1);
-            }*/
-            //player.swingHand(hand, true);
         }
-
-        player.setCurrentHand(hand);
-        return TypedActionResult.pass(stack);
     }
 
-    protected <T extends ParticleEffect> void spawnParticles(@NotNull ServerWorld world, T particle, double x, double y, double z, int count, double deltaX, double deltaY, double deltaZ, double speed) {
-        ParticleS2CPacket particleS2CPacket = new ParticleS2CPacket(particle, true, x, y, z, (float)deltaX, (float)deltaY, (float)deltaZ, (float)speed, count);
-        for (int i = 0; i < world.getPlayers().size(); ++i) {
-            ServerPlayerEntity serverPlayerEntity = world.getPlayers().get(i);
-            world.sendToPlayerIfNearby(serverPlayerEntity, true, x, y, z, particleS2CPacket);
+    private void handleRangedMode(ItemStack stack, World world, PlayerEntity player, Hand hand) {
+        if (!canFire(stack, hand, player)) return;
+
+        setCooldown(stack, ServerConfig.instance().laserFireReloadTime);
+        getPlayroomTag(stack).putByte("Amo", (byte) (-1));
+
+        if (world instanceof ServerWorld serverWorld) {
+            fireProjectile(player, false, serverWorld);
+            playShootSound(world, player, false);
         }
+    }
+
+    private void handleRapidFire(World world, @NotNull PlayerEntity player, Hand hand, ItemStack stack) {
+        if (!canFire(stack, hand, player)) return;
+
+        boolean rapidFire = getPlayroomTag(stack).getBoolean("RapidFire");
+        if (!rapidFire) return;
+
+        short amo = (short) (getPlayroomTag(stack).getShort("Amo") - 1);
+        getPlayroomTag(stack).putShort("Amo", amo);
+
+        if (amo <= 0) {
+            setCooldown(stack, ServerConfig.instance().laserFireReloadTime);
+        }
+
+        if (world instanceof ServerWorld serverWorld) {
+            fireProjectile(player, true, serverWorld);
+            playShootSound(world, player, true);
+        }
+    }
+
+    public void fireProjectile(PlayerEntity player, boolean rapidFire, ServerWorld world) {
+        LaserProjectileEntity laserShot = LaserProjectileEntity.create(world, player, rapidFire);
+        laserShot.setVelocity(player, player.getPitch(), player.getHeadYaw(), 0.0f, getProjectileSpeed(rapidFire), getProjectileDivergence(rapidFire));
+        world.spawnEntity(laserShot);
+    }
+
+    public void playShootSound(World world, PlayerEntity player, boolean rapidFire) {
+        SoundEvent soundEvent = rapidFire ? Sounds.LASER_GUN_SHOOT_RAPID : Sounds.LASER_GUN_SHOOT_RANGE;
+        world.playSound(null, player.getX(), player.getY(), player.getZ(), soundEvent, SoundCategory.PLAYERS, 0.5F, 1.0F);
     }
 
     @Override
@@ -237,6 +291,14 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
         }
     }
 
+    public void registerTooltipProvider(TooltipProvider tooltipProvider) {
+        this.tooltipProvider.add(tooltipProvider);
+    }
+
+    public void setShowAdvancedTooltip(Supplier<Boolean> showAdvancedTooltip) {
+        this.showAdvancedTooltip = showAdvancedTooltip;
+    }
+
     @Override
     public void createRenderer(Consumer<Object> consumer) {
         if (renderer != null) {
@@ -268,8 +330,23 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
         return animationCache;
     }
 
+    public void setCooldown(ItemStack stack, int time) {
+        if (time > 0) {
+            getCooldownTag(stack).putInt("Duration", time);
+            getCooldownTag(stack).putLong("ExpireTick", Playroom.getServer().getOverworld().getTime() + time);
+        }
+    }
+
     public boolean isCooldownExpired(ItemStack stack) {
         return getCooldownTag(stack).getLong("ExpireTick") < Playroom.getServer().getOverworld().getTime();
+    }
+
+    public int getCooldownLeft(ItemStack stack) {
+        return (int) (getCooldownTag(stack).getLong("ExpireTick") - Playroom.getServer().getOverworld().getTime());
+    }
+
+    public int getAmo(ItemStack stack) {
+        return getPlayroomTag(stack).getByte("Amo");
     }
 
     private float getProjectileSpeed(boolean rapidFire) {
@@ -278,5 +355,19 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
 
     private float getProjectileDivergence(boolean rapidFire) {
         return rapidFire ? ServerConfig.instance().laserRapidDivergence : ServerConfig.instance().laserRangedDivergence;
+    }
+
+    public boolean isRapidFire(ItemStack stack) {
+        return getPlayroomTag(stack).getBoolean("RapidFire");
+    }
+
+    @Override
+    public boolean canAim(ItemStack stack) {
+        return !isRapidFire(stack);
+    }
+
+    @FunctionalInterface
+    public interface TooltipProvider {
+        void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context);
     }
 }

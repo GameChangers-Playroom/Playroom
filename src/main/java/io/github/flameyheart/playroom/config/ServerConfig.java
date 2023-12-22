@@ -30,40 +30,59 @@ public class ServerConfig {
 
     @SerialEntry(comment = "Will kick players with mismatching protocol versions")
     public boolean requireMatchingProtocol = false;
+
+    @SerialEntry(comment = "The port to use for the Tiltify webhook server")
+    public short tiltifyWebhookPort = 8443;
+
+    @SerialEntry(comment = "The tiltify webhook secret")
+    public String tiltifySecret = "DO NOT SHARE";
     //endregion
 
     //region LASER GUN
     @SendToClient
-    @SerialEntry(comment = "How much amo the rapid fire mode has\n[Min: 0, Max: 127, Default: 5]")
+    @SerialEntry(comment = "How much amo the rapid fire mode has\n[Min: 1, Max: 127, Default: 5]")
     public byte laserRapidFireAmo = 12;
 
     @SendToClient
-    @SerialEntry(comment = "The laser reload time when it hits a player\n[Min: 0, Max: 32767, Default: 3600]")
-    public short laserHitReloadTime = 3600;
-
-    @SendToClient
-    @SerialEntry(comment = "The laser reload time when it doesn't hit a player\n[Min: 0, Max: 32767, Default: 1200]")
-    public short laserMissReloadTime = 1200;
-
-    @SendToClient
-    @SerialEntry(comment = "The laser reach\n[Min: 0, Max: 127, Default: 12]")
-    public byte laserReach = 12;
+    @SerialEntry(comment = "The laser reload time for the gun cooldown\n[Min: 0, Max: 32767, Default: 3600]")
+    public short laserFireReloadTime = 3600;
 
     @SendToClient
     @SerialEntry(comment = "The cooldown applied to when the player swaps the gun mode\n[Min: 0, Max: 32767, Default: 10]")
     public short laserSwapModeCooldown = 10;
 
     @SerialEntry(comment = "The speed of the ranged mode ice shot\n[Min: 0.1, Default: 3] [DECIMAL SUPPORTED]")
-    public float laserRangedBulletSpeed = 3;
+    public float laserRangedBulletSpeed = 5;
 
     @SerialEntry(comment = "The divergence of the ranged mode ice shot\n[Min: 0, Default: 0] [DECIMAL SUPPORTED]")
     public float laserRangedDivergence = 0;
 
-
     @SerialEntry(comment = "The speed of the rapid fire mode ice shot\n[Min: 0.1, Default: 3] [DECIMAL SUPPORTED]")
     public float laserRapidBulletSpeed = 3;
 
-    @SerialEntry(comment = "The divergence of the rapid fire mode ice shot\n[Min: 0, Default: 3] [DECIMAL SUPPORTED]")
+    @SerialEntry(comment = "The divergence of the rapid fire mode ice shot\n[Min: 0, Default: 0] [DECIMAL SUPPORTED]")
     public float laserRapidDivergence = 0;
+    //endregion
+
+    //region FREEZE TIMES
+    @SendToClient
+    @SerialEntry(comment = "The duration of the zoom effect\n[Min: 0, Default: 60]")
+    public int freezeZoomDuration = 60;
+
+    @SendToClient
+    @SerialEntry(comment = "The target FOV for the zoom effect\n[Min: 0, Default: 0.1] [DECIMAL SUPPORTED]")
+    public float freezeZoomFov = 0.1f;
+
+    @SendToClient
+    @SerialEntry(comment = "A value to fine tune the zoom animation\n[Min: 0, Default: 5]")
+    public int freezeZoomOffset = 5;
+
+    @SendToClient
+    @SerialEntry(comment = "The duration of the slowdown effect\n[Min: 0, Default: ??]")
+    public int freezeSlowdownTime = 50;
+
+    @SendToClient
+    @SerialEntry(comment = "The duration of the ice\n[Min: 0, Default: ??]")
+    public int freezeIceTime = 100;
     //endregion
 }

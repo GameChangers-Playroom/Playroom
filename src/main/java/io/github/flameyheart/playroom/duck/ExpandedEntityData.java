@@ -1,5 +1,8 @@
 package io.github.flameyheart.playroom.duck;
 
+import io.github.flameyheart.playroom.config.ServerConfig;
+import org.apache.logging.log4j.core.jmx.Server;
+
 public interface ExpandedEntityData {
     int playroom$getGunFreezeTicks();
     void playroom$setGunFreezeTicks(int frozenTicks);
@@ -26,15 +29,28 @@ public interface ExpandedEntityData {
     }
 
     default int playroom$slowdownTime() {
-        return 50;
+        return ServerConfig.instance().freezeSlowdownTime;
     }
 
     default int playroom$iceTime() {
-        return 100;
+        return ServerConfig.instance().freezeIceTime;
     }
 
     default int playroom$zoomStart() {
-        return playroom$freezeTime() - 20;
+        return playroom$slowdownTime() + playroom$zoomDuration();
+    }
+
+    default boolean playroom$showZoom() {
+        return playroom$getGunFreezeTicks() > playroom$slowdownTime() && playroom$getGunFreezeTicks() <= playroom$zoomStart() - ServerConfig.instance().freezeZoomOffset;
+    }
+
+    default boolean playroom$showZoomOffset() {
+        int offset = ServerConfig.instance().freezeZoomOffset;
+        return playroom$getGunFreezeTicks() > playroom$slowdownTime() - offset && playroom$getGunFreezeTicks() <= playroom$zoomStart() - offset;
+    }
+
+    default int playroom$zoomDuration() {
+        return ServerConfig.instance().freezeZoomDuration;
     }
 
     default int playroom$freezeTime() {

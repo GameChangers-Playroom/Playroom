@@ -1,0 +1,32 @@
+{
+  "laser_gun.shoot.range": {
+    "sounds": [
+      "playroom:laser_gun/range"
+    ],
+    "subtitle": "playroom.subtitles.laser_gun.shoot.range"
+  },
+  "laser_gun.shoot.rapid": {
+    "sounds": [
+      "playroom:laser_gun/rapid"
+    ],
+    "subtitle": "playroom.subtitles.laser_gun.shoot.rapid"
+  },
+  "laser_gun.charge": {
+    "sounds": [
+      "playroom:laser_gun/charge"
+    ],
+    "subtitle": "playroom.subtitles.laser_gun.charge"
+  },
+  "generic.freeze": {
+    "sounds": [
+      "playroom:freeze"
+    ],
+    "subtitle": "playroom.subtitles.generic.freeze"
+  },
+  "generic.hit_freeze": {
+    "sounds": [
+      "playroom:hitfreeze"
+    ],
+    "subtitle": "playroom.subtitles.generic.hit_freeze"
+  }
+}

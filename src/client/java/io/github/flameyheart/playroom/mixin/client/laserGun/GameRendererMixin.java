@@ -2,6 +2,7 @@ package io.github.flameyheart.playroom.mixin.client.laserGun;
 
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import io.github.flameyheart.playroom.PlayroomClient;
+import io.github.flameyheart.playroom.item.Aimable;
 import io.github.flameyheart.playroom.item.LaserGun;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
@@ -9,6 +10,7 @@ import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 import org.spongepowered.asm.mixin.Final;
@@ -27,9 +29,10 @@ public class GameRendererMixin {
 
     @Inject(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;bobView(Lnet/minecraft/client/util/math/MatrixStack;F)V", shift = At.Shift.BEFORE))
     private void bobViewGun(MatrixStack matrices, Camera camera, float tickDelta, CallbackInfo ci) {
-        Item item = this.client.player.getMainHandStack().getItem();
+        ItemStack stack = this.client.player.getMainHandStack();
+        Item item = stack.getItem();
 
-        if (item instanceof LaserGun && !PlayroomClient.isAiming(item) && !this.client.player.isSprinting()) {
+        if (item instanceof Aimable && !PlayroomClient.isAiming(stack) && !this.client.player.isSprinting()) {
             playroom$gunBobView(matrices, tickDelta);
         }
     }

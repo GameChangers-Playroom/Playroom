@@ -1,14 +1,22 @@
 package io.github.flameyheart.playroom.render.entity.feature;
 
+import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
+import net.minecraft.client.render.model.BakedModel;
+import net.minecraft.client.render.model.BakedModelManager;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.random.Random;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class IceFeatureRenderer extends FeatureRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> {
 
@@ -24,11 +32,16 @@ public class IceFeatureRenderer extends FeatureRenderer<AbstractClientPlayerEnti
     @Override
     public void render(MatrixStack matrixStack, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {
         if (!((ExpandedEntityData) entity).playroom$isFrozen()) return;
+        MinecraftClient client = MinecraftClient.getInstance();
         ExpandedEntityData eEntity = (ExpandedEntityData) entity;
         int freezeTicks = eEntity.playroom$getGunFreezeTicks();
         //MatrixStack stack = new MatrixStack();
 
         matrixStack.push();
+        BakedModelManager modelManager = client.getBakedModelManager();
+        modelManager.getModel(Playroom.id(""));
+
+
         //float[] shaderColor = RenderSystem.getShaderColor();
         //int overlay = LivingEntityRenderer.getOverlay(entity, 0.0f);
 

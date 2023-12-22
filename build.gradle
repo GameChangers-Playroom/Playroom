@@ -84,9 +84,10 @@ dependencies {
 	modImplementation("net.fabricmc:fabric-loader:${project.loader_version}")
 
 	modImplementation("net.fabricmc.fabric-api:fabric-api:${project.fabric_version}")
-	include implementation("com.github.Chocohead:Fabric-ASM:v2.3")
+	implementation include("com.github.Chocohead:Fabric-ASM:v2.3")
 
-	//TODO: Not use it, unless we add custom UI, than we can use it bc I don't want to do UI by hand
+	//include modImplementation("maven.modrinth:zoomify:2.11.2")
+
 	modImplementation("io.wispforest:owo-lib:${project.owo_version}")
 	include("io.wispforest:owo-sentinel:${project.owo_version}")
 
@@ -95,7 +96,7 @@ dependencies {
 	modImplementation("software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}")
 
 	//include modImplementation("com.github.KrLite.Equator-v2:build:${project.equator_version}")
-	include modImplementation("com.github.0x3C50:Renderer:${project.renderer_version}") {
+	modImplementation include("com.github.0x3C50:Renderer:${project.renderer_version}") {
 		exclude group: "xml-apis", module: "xml-apis"
 		exclude group: "commons-io", module: "commons-io"
 		exclude group: "io.github.ladysnake", module: "satin"
@@ -106,6 +107,7 @@ dependencies {
 
 	//Non mod libraries
 	implementation("org.quiltmc.parsers:gson:0.2.1")
+	implementation("org.bouncycastle:bcprov-jdk18on:1.77")
 
 	//Compatibility
 	modCompileOnly("curse.maven:project-297344:4623488") //Tweakeroo 0.17.1

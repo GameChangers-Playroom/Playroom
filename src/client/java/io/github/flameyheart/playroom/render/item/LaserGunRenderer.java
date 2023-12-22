@@ -37,7 +37,8 @@ public class LaserGunRenderer extends AlternativeGeoItemRenderer<LaserGun> {
     public LaserGunRenderer() {
         super(new LaserGunModel());
         addRenderLayer(new StripLayer(this));
-        addRenderLayer(new ChargePulseLayer(this));
+        addRenderLayer(new EnergyFlowLayer(this));
+        addRenderLayer(new ChargeLayer(this));
         addRenderLayer(new StripGlowLayer(this));
     }
 
@@ -157,8 +158,8 @@ public class LaserGunRenderer extends AlternativeGeoItemRenderer<LaserGun> {
         }
     }
 
-    private class ChargePulseLayer extends AutoGlowingGeoLayer<LaserGun> {
-        public ChargePulseLayer(GeoRenderer<LaserGun> renderer) {
+    private class EnergyFlowLayer extends AutoGlowingGeoLayer<LaserGun> {
+        public EnergyFlowLayer(GeoRenderer<LaserGun> renderer) {
             super(renderer);
         }
 
@@ -178,6 +179,39 @@ public class LaserGunRenderer extends AlternativeGeoItemRenderer<LaserGun> {
             getRenderer().reRender(bakedModel, poseStack, bufferSource, animatable, emissiveRenderType,
               bufferSource.getBuffer(emissiveRenderType), partialTick, 0xF0_00_00, OverlayTexture.DEFAULT_UV,
               1, 1, 1, alpha);
+        }
+    }
+
+    private class ChargeLayer extends AutoGlowingGeoLayer<LaserGun> {
+        public ChargeLayer(GeoRenderer<LaserGun> renderer) {
+            super(renderer);
+        }
+
+        @Override
+        protected RenderLayer getRenderType(LaserGun animatable) {
+            return AnimatedAutoGlowingTexture.getRenderType(Playroom.id("textures/item/laser_gun_strips_glow.png"));
+        }
+
+        @Override
+        public void render(MatrixStack poseStack, LaserGun item, BakedGeoModel bakedModel, RenderLayer renderType, VertexConsumerProvider bufferSource, VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay) {
+            ItemStack stack = getCurrentItemStack();
+            RenderLayer emissiveRenderType = getRenderType(item);
+            float alphaMultiplier = 1f;
+            if (IS_IRIS_PRESENT && IrisApi.getInstance().isShaderPackInUse()) {
+                alphaMultiplier = 0.25f;
+            }
+
+            float alpha;
+            int charge = item.getPlayroomTag(stack).getInt("Charge");
+            if (charge > 0) {
+                alpha = charge / 100f;
+            } else {
+                alpha = 0;
+            }
+
+            getRenderer().reRender(bakedModel, poseStack, bufferSource, item, emissiveRenderType,
+              bufferSource.getBuffer(emissiveRenderType), partialTick, 0xF0_00_00, OverlayTexture.DEFAULT_UV,
+              1, 1, 1, alpha * alphaMultiplier);
         }
     }
 
@@ -208,7 +242,7 @@ public class LaserGunRenderer extends AlternativeGeoItemRenderer<LaserGun> {
             double fadeinStart = animationStart + length;
             double currentTick = RenderUtils.getCurrentTick();
             double fadeoutEnd = animationStart + length * 2;
-            //make alpha fade in and out
+            //make alphaMultiplier fade in and out
             if (currentTick < animationStart) {
                 //get progress between fadeout start and fadeout end
                 double startTime = currentTick - fadeinStart;

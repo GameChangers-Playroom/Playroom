@@ -16,6 +16,6 @@ public class MouseMixin {
 
     @ModifyExpressionValue(method = "updateMouse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingSpyglass()Z"))
     public boolean ifScopedGun(boolean original) {
-        return (original || PlayroomClient.isAiming(this.client.player.getMainHandStack().getItem()));
+        return (original || PlayroomClient.isAiming(this.client.player.getMainHandStack()));
     }
 }

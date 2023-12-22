@@ -20,7 +20,7 @@ public class PlayerEntityRendererMixin {
     @Inject(method = "getArmPose", at = @At("HEAD"), cancellable = true)
     private static void gunPose(AbstractClientPlayerEntity player, Hand hand, CallbackInfoReturnable<BipedEntityModel.ArmPose> ci) {
         ItemStack itemStack = player.getStackInHand(hand);
-        if (itemStack.getItem() instanceof LaserGun gunItem) {
+        if (itemStack.getItem() instanceof LaserGun) {
             ci.setReturnValue(PlayroomClient.LASER_GUN_POSE);
         }
     }

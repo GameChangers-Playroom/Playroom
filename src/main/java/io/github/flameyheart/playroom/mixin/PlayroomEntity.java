@@ -7,6 +7,7 @@ import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -57,6 +58,6 @@ public abstract class PlayroomEntity implements ExpandedEntityData {
 
     @Override
     public void playroom$addGunFreezeTicks(int frozenTicks) {
-        playroom$setGunFreezeTicks(Math.max(0, playroom$getGunFreezeTicks() + frozenTicks));
+        playroom$setGunFreezeTicks(MathHelper.clamp(playroom$getGunFreezeTicks() + frozenTicks, 0, playroom$freezeTime()));
     }
 }

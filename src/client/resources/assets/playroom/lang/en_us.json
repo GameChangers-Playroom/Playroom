@@ -1,6 +1,47 @@
 {
     "item.playroom.laser_gun": "Flamey's super cool laser gun",
-    "item.playroom.laser_gun.tooltip": "Natural regeneration is disabled when held",
+    "item.playroom.laser_gun.tooltip.more": [
+        {
+            "text": "ʜᴏʟᴅ ꜱʜɪꜰᴛ ꜰᴏʀ ᴍᴏʀᴇ...",
+            "color": "dark_gray"
+        }
+    ],
+    "item.playroom.laser_gun.tooltip.regen": [
+        {
+            "text": "ɴᴀᴛᴜʀᴀʟ ʀᴇɢᴇɴᴇʀᴀᴛɪᴏɴ ɪꜱ ᴅɪꜱᴀʙʟᴇᴅ ᴡʜᴇɴ ʜᴇʟᴅ",
+            "color": "red"
+        }
+    ],
+    "item.playroom.laser_gun.tooltip.ready": [
+        {
+            "text": "✔ ʀᴇᴀᴅʏ ᴛᴏ ꜰɪʀᴇ",
+            "color": "green"
+        }
+    ],
+    "item.playroom.laser_gun.tooltip.cooldown": [
+        {
+            "text": "Cooling down, ",
+            "color": "gray"
+        },
+        {
+            "index": 0,
+            "color": "gray"
+        },
+        {
+            "text": " seconds remaining",
+            "color": "gray"
+        }
+    ],
+    "item.playroom.laser_gun.tooltip.amo": [
+        {
+            "text": "Amo left: ",
+            "color": "gray"
+        },
+        {
+            "index": 0,
+            "color": "gray"
+        }
+    ],
 
     "playroom.multiplayer.disconnect.unsupported_client": "Unsupported client \nPlayroom is required to join the server",
     "playroom.multiplayer.disconnect.unexpected_handshake": "Unexpected handshake packet from client",
@@ -9,12 +50,67 @@
     "playroom.multiplayer.disconnect.invalid_config": "Server sent invalid config",
     "playroom.warning.protocol.title": "Mismatching protocol version",
     "playroom.warning.protocol.message": "Playroom may behave weirdly",
+    "playroom.donation_screen.title": "%s donated %f.2 %s",
 
     "config.playroom.category.general": "General",
-    "config.playroom.category.networking": "Networking",
+    "config.playroom.category.server": "Server",
+    "config.playroom.option_group.networking": "Networking",
+    "config.playroom.option_group.laser_gun": "Laser Gun",
+    "config.playroom.option_group.player_freeze": "Player freeze",
+
+
+    "config.playroom.option.general.reducedMotion": "Reduced motion",
+    "config.playroom.option.general.reducedMotion.description": [
+        "Disables some animation effectsn\n",
+        "Disabled effetcs:\n",
+        " - Freeze zoom"
+    ],
+
 
     "config.playroom.option.networking.allowVanillaPlayers": "Allow vanilla players",
     "config.playroom.option.networking.allowVanillaPlayers.description": "Allow vanilla players to join the server",
+
     "config.playroom.option.networking.requireMatchingProtocol": "Require matching protocol",
-    "config.playroom.option.networking.requireMatchingProtocol.description": "Require clients to have the same mod protocol version as the server"
+    "config.playroom.option.networking.requireMatchingProtocol.description": "Require clients to have the same mod protocol version as the server",
+
+    "config.playroom.option.networking.tiltifyWebhookPort": "Tiltify webhook port",
+    "config.playroom.option.networking.tiltifyWebhookPort.description": "The port to use for the Tiltify webhook server",
+
+
+    "config.playroom.option.laser_gun.laserRapidFireAmo": "Rapid fire amo",
+    "config.playroom.option.laser_gun.laserRapidFireAmo.description": "How much amo the rapid fire mode has",
+
+    "config.playroom.option.laser_gun.laserFireReloadTime": "Fire reload time",
+    "config.playroom.option.laser_gun.laserFireReloadTime.description": "The laser reload time for the gun cooldown",
+
+    "config.playroom.option.laser_gun.laserSwapModeCooldown": "Laser Gun mode swap cooldown",
+    "config.playroom.option.laser_gun.laserSwapModeCooldown.description": "The cooldown applied to when the player swaps the gun mode",
+
+    "config.playroom.option.laser_gun.laserRangedBulletSpeed": "Laser Gun range mode bullet speed",
+    "config.playroom.option.laser_gun.laserRangedBulletSpeed.description": "The speed of the ranged mode \"bullet\"",
+
+    "config.playroom.option.laser_gun.laserRangedDivergence": "Laser Gun range mode bullet divergence",
+    "config.playroom.option.laser_gun.laserRangedDivergence.description": "The divergence of the ranged mode \"bullet\"",
+
+    "config.playroom.option.laser_gun.laserRapidBulletSpeed": "Laser Gun rapid fire mode bullet speed",
+    "config.playroom.option.laser_gun.laserRapidBulletSpeed.description": "The speed of the rapid fire mode \"bullet\"",
+
+    "config.playroom.option.laser_gun.laserRapidDivergence": "Laser Gun rapid fire mode bullet divergence",
+    "config.playroom.option.laser_gun.laserRapidDivergence.description": "The divergence of the rapid fire mode \"bullet\"",
+
+
+    "config.playroom.option.player_freeze.freezeZoomDuration": "Freeze zoom duration",
+    "config.playroom.option.player_freeze.freezeZoomDuration.description": "The duration of the zoom effect",
+
+    "config.playroom.option.player_freeze.freezeZoomFov": "Freeze zoom FOV",
+    "config.playroom.option.player_freeze.freezeZoomFov.description": "The target FOV for the zoom effect",
+
+    "config.playroom.option.player_freeze.freezeZoomOffset": "Freeze zoom offset",
+    "config.playroom.option.player_freeze.freezeZoomOffset.description": "A value to fine tune the zoom animation",
+
+    "config.playroom.option.player_freeze.freezeSlowdownTime": "Freeze slowdown time",
+    "config.playroom.option.player_freeze.freezeSlowdownTime.description": "The duration of the slowdown effect",
+
+    "config.playroom.option.player_freeze.freezeIceTime": "Freeze ice time",
+    "config.playroom.option.player_freeze.freezeIceTime.description": "The duration of the ice"
 }

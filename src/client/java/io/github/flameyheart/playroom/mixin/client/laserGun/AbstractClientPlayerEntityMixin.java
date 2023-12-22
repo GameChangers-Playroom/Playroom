@@ -19,7 +19,7 @@ public abstract class AbstractClientPlayerEntityMixin extends PlayerEntity {
 
     @Inject(method = "getFovMultiplier", at = @At("TAIL"), cancellable = true)
     public void zoomLevel(CallbackInfoReturnable<Float> ci) {
-        if (PlayroomClient.isAiming(this.getMainHandStack().getItem())) {
+        if (PlayroomClient.isAiming(this.getMainHandStack())) {
             ci.setReturnValue(0.125f);
         }
     }

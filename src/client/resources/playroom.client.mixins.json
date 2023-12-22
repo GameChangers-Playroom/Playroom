@@ -25,7 +25,8 @@
         "laserGun.GameRendererMixin",
         "laserGun.HeldItemRendererMixin",
         "laserGun.MinecraftClientMixin",
-        "laserGun.PlayerEntityRendererMixin"
+        "laserGun.PlayerEntityRendererMixin",
+        "MixinPlayerEntity"
     ],
     "injectors": {
         "defaultRequire": 1

@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import software.bernie.geckolib.core.animation.AnimationController;
 import software.bernie.geckolib.core.animation.RawAnimation;
 
-@Mixin(AnimationController.class)
+@Mixin(value = AnimationController.class, remap = false)
 public interface AnimationControllerAccessor {
     @Accessor RawAnimation getTriggeredAnimation();
 }
