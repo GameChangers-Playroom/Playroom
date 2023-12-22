@@ -48,6 +48,10 @@ public class ServerConfig {
     public short laserFireReloadTime = 3600;
 
     @SendToClient
+    @SerialEntry(comment = "The laser charge time for the ranged more\n[Min: 0, Max: 32767, Default: 20]")
+    public short laserRangeChargeTime = 20;
+
+    @SendToClient
     @SerialEntry(comment = "The cooldown applied to when the player swaps the gun mode\n[Min: 0, Max: 32767, Default: 10]")
     public short laserSwapModeCooldown = 10;
 

@@ -145,7 +145,8 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
             if (isRapidFire(stack)) {
                 handleRapidFire(world, player, Hand.MAIN_HAND, stack);
             } else {
-                int charge = MathHelper.clamp(getUseTime(stack, remainingUseTicks) * 4, 0, 100);
+                int scale = Math.floorDiv(100, ServerConfig.instance().laserRangeChargeTime);
+                int charge = MathHelper.clamp(getUseTime(stack, remainingUseTicks) * scale, 0, 100);
                 getPlayroomTag(stack).putLong("Charge", charge);
             }
         }
