@@ -2,77 +2,55 @@ package io.github.flameyheart.playroom.render.entity.feature;
 
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
+import io.github.flameyheart.playroom.registry.Items;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.client.render.model.BakedModel;
-import net.minecraft.client.render.model.BakedModelManager;
+import net.minecraft.client.render.item.ItemRenderer;
+import net.minecraft.client.render.model.json.ModelTransformationMode;
+import net.minecraft.client.util.ModelIdentifier;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.random.Random;
+import net.minecraft.util.math.RotationAxis;
 
-import java.util.HashMap;
-import java.util.Map;
-
-public class IceFeatureRenderer extends FeatureRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> {
+public class IceFeatureRenderer<T extends AbstractClientPlayerEntity> extends FeatureRenderer<T, PlayerEntityModel<T>> {
 
     private final EntityRendererFactory.Context ctx;
-    private Random random;
 
-    //
-    public IceFeatureRenderer(EntityRendererFactory.Context ctx, LivingEntityRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> context) {
+    public IceFeatureRenderer(EntityRendererFactory.Context ctx, LivingEntityRenderer<T, PlayerEntityModel<T>> context) {
         super(context);
         this.ctx = ctx;
     }
 
     @Override
-    public void render(MatrixStack matrixStack, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {
+    public void render(MatrixStack matrixStack, VertexConsumerProvider vertexConsumers, int light, T entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {
         if (!((ExpandedEntityData) entity).playroom$isFrozen()) return;
+
         MinecraftClient client = MinecraftClient.getInstance();
         ExpandedEntityData eEntity = (ExpandedEntityData) entity;
         int freezeTicks = eEntity.playroom$getGunFreezeTicks();
-        //MatrixStack stack = new MatrixStack();
 
+        PlayerEntityModel<T> playerModel = getContextModel();
         matrixStack.push();
-        BakedModelManager modelManager = client.getBakedModelManager();
-        modelManager.getModel(Playroom.id(""));
-
-
-        //float[] shaderColor = RenderSystem.getShaderColor();
-        //int overlay = LivingEntityRenderer.getOverlay(entity, 0.0f);
-
-        /*RenderSystem.enableCull();
-        RenderSystem.enableDepthTest();
-        RenderSystem.enableBlend();*/
-        //this.ctx.getBlockRenderManager().renderBlockAsEntity(Blocks.ICE.getDefaultState(), matrixStack, vertexConsumers, light, overlay);
-        //this.ctx.getHeldItemRenderer().renderItem(entity, entity.getOffHandStack(), ModelTransformationMode.THIRD_PERSON_LEFT_HAND, false, matrixStack, vertexConsumers, light);
-        /*Camera camera = MinecraftClient.getInstance().gameRenderer.getCamera();
-
-        stack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
-        stack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(camera.getYaw() + 180));
-
-        stack.translate(-0.5, 0, -0.5);
-
-        //Interpolate entity prev position with current position
-        double x = MathHelper.lerp(tickDelta, entity.prevX, entity.getX());
-        double y = MathHelper.lerp(tickDelta, entity.prevY, entity.getY());
-        double z = MathHelper.lerp(tickDelta, entity.prevZ, entity.getZ());
-
-        Vec3d pos = new Vec3d(x, y, z);*/
-
-        //Renderer3d.renderEdged(stack, new Color(0, 242, 250, 128), Color.RED, pos, new Vec3d(1, 1, 1));
-        //RenderSystem.setShaderColor(0f, 1f, 0f, 1f);
-        //ctx.getBlockRenderManager().renderBlock(Blocks.ICE.getDefaultState(), entity.getBlockPos(), entity.getWorld(), matrixStack, vertexConsumers.getBuffer(RenderLayer.getTranslucent()), false, entity.getRandom());
-
-        //RenderSystem.disableDepthTest();
-        //RenderSystem.disableCull();
-        //RenderSystem.disableBlend();
-
+        playerModel.body.rotate(matrixStack);
+        matrixStack.translate(0, 0.9, 0);
+        matrixStack.multiply(RotationAxis.POSITIVE_X.rotation((float) Math.PI));
+        ModelIdentifier modelId = new ModelIdentifier(Playroom.MOD_ID, "ice_blocks", "inventory");
+        ItemRenderer itemRenderer = client.getItemRenderer();
+        itemRenderer.renderItem(
+                Items.ICE_BLOCKS.getDefaultStack(),
+                ModelTransformationMode.NONE,
+                false,
+                matrixStack,
+                vertexConsumers,
+                light,
+                OverlayTexture.DEFAULT_UV,
+                itemRenderer.getModels().getModelManager().getModel(modelId)
+        );
         matrixStack.pop();
-        //RenderSystem.setShaderColor(1f, 0f, 0f, 1f);
     }
 }

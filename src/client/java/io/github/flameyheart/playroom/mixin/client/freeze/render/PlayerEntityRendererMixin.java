@@ -20,6 +20,6 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void addIceFeatures(EntityRendererFactory.Context ctx, boolean slim, CallbackInfo ci) {
-        this.addFeature(new IceFeatureRenderer(ctx, this));
+        this.addFeature(new IceFeatureRenderer<>(ctx, this));
     }
 }
