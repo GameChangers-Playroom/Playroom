@@ -16,7 +16,8 @@
         "ServerLoginNetworkHandlerAccessor",
         "ServerLoginNetworkHandlerMixin",
         "ServerPlayerEntityMixin",
-        "geo.AnimationControllerAccessor"
+        "geo.AnimationControllerAccessor",
+        "network.PlayerListS2CPacketMixin"
     ],
     "injectors": {
         "defaultRequire": 1

@@ -1,4 +1,5 @@
 {
+    "soundCategory.playroom": "Playroom",
     "item.playroom.laser_gun": "Flamey's super cool laser gun",
     "item.playroom.laser_gun.tooltip.more": [
         {
@@ -51,6 +52,9 @@
     "playroom.warning.protocol.title": "Mismatching protocol version",
     "playroom.warning.protocol.message": "Playroom may behave weirdly",
     "playroom.donation_screen.title": "%s donated %f.2 %s",
+    "playroom.subtitles.laser_gun.charge": "Laser gun charges",
+    "playroom.subtitles.laser_gun.shoot": "Laser gun shoots",
+    "playroom.subtitles.laser_gun.mode": "Laser gun changes mode",
 
     "config.playroom.category.general": "General",
     "config.playroom.category.server": "Server",
@@ -65,6 +69,9 @@
         "Disabled effetcs:\n",
         " - Freeze zoom"
     ],
+
+    "config.playroom.option.general.debugInfo": "Debug info",
+    "config.playroom.option.general.debugInfo.description": "Shows debug info in the top left corner",
 
 
     "config.playroom.option.networking.allowVanillaPlayers": "Allow vanilla players",
@@ -101,6 +108,12 @@
     "config.playroom.option.laser_gun.laserRapidDivergence": "Laser Gun rapid fire mode bullet divergence",
     "config.playroom.option.laser_gun.laserRapidDivergence.description": "The divergence of the rapid fire mode \"bullet\"",
 
+    "config.playroom.option.laser_gun.laserRapidFreezeAmount": "Laser Gun rapid fire mode freeze time",
+    "config.playroom.option.laser_gun.laserRapidFreezeAmount.description": "The amount of time added per rapid fire shot",
+
+    "config.playroom.option.laser_gun.laserAimSlowdown": "Laser gun aim slowdown",
+    "config.playroom.option.laser_gun.laserAimSlowdown.description": "The player speed multiplier when aiming",
+
 
     "config.playroom.option.player_freeze.freezeZoomDuration": "Freeze zoom duration",
     "config.playroom.option.player_freeze.freezeZoomDuration.description": "The duration of the zoom effect",
@@ -115,5 +128,10 @@
     "config.playroom.option.player_freeze.freezeSlowdownTime.description": "The duration of the slowdown effect",
 
     "config.playroom.option.player_freeze.freezeIceTime": "Freeze ice time",
-    "config.playroom.option.player_freeze.freezeIceTime.description": "The duration of the ice"
+    "config.playroom.option.player_freeze.freezeIceTime.description": "The duration of the ice",
+
+    "config.playroom.option.player_freeze.freezeSlowdown": "Freeze slowdown",
+    "config.playroom.option.player_freeze.freezeSlowdown.description": "The multiplier for the player speed",
+
+    "config.playroom.option.server.commands": "Editing the commands in game is not supported yet, please edit the config file"
 }

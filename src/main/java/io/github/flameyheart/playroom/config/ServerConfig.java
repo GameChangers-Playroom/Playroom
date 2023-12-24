@@ -7,6 +7,10 @@ import dev.isxander.yacl3.platform.YACLPlatform;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.annotations.SendToClient;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class ServerConfig {
     public static final ConfigClassHandler<ServerConfig> INSTANCE = ConfigClassHandler.createBuilder(ServerConfig.class)
         .id(Playroom.id("config"))
@@ -25,16 +29,16 @@ public class ServerConfig {
     }
 
     //region NETWORKING
-    @SerialEntry(comment = "Allows vanilla players to join the server")
+    @SerialEntry(comment = "Allows vanilla players to join the server\n[Default: false]")
     public boolean allowVanillaPlayers = false;
 
-    @SerialEntry(comment = "Will kick players with mismatching protocol versions")
+    @SerialEntry(comment = "Will kick players with mismatching protocol versions\n[Default: false]")
     public boolean requireMatchingProtocol = false;
 
-    @SerialEntry(comment = "The port to use for the Tiltify webhook server")
-    public short tiltifyWebhookPort = 8443;
+    @SerialEntry(comment = "The port to use for the Tiltify webhook server\n[Min: 0, Max: 2147483647, Default: 8443]")
+    public int tiltifyWebhookPort = 8443;
 
-    @SerialEntry(comment = "The tiltify webhook secret")
+    @SerialEntry(comment = "The tiltify webhook secret\n[Default: \"DO NOT SHARE\"]")
     public String tiltifySecret = "DO NOT SHARE";
     //endregion
 
@@ -66,20 +70,27 @@ public class ServerConfig {
 
     @SerialEntry(comment = "The divergence of the rapid fire mode ice shot\n[Min: 0, Default: 0] [DECIMAL SUPPORTED]")
     public float laserRapidDivergence = 0;
+
+    @SerialEntry(comment = "The amount of time added per rapid fire shot\n[Min: 0, Max: 32767, Default: 100]")
+    public short laserRapidFreezeAmount = 100;
+
+    @SendToClient
+    @SerialEntry(comment = "The player speed multiplier when aiming\n[Min: 0, Default: ??] [DECIMAL SUPPORTED]")
+    public float laserAimSlowdown = 0.5f;
     //endregion
 
     //region FREEZE TIMES
     @SendToClient
-    @SerialEntry(comment = "The duration of the zoom effect\n[Min: 0, Default: 60]")
-    public int freezeZoomDuration = 60;
+    @SerialEntry(comment = "The duration of the zoom effect\n[Min: 0, Default: 10]")
+    public int freezeZoomDuration = 10;
 
     @SendToClient
     @SerialEntry(comment = "The target FOV for the zoom effect\n[Min: 0, Default: 0.1] [DECIMAL SUPPORTED]")
     public float freezeZoomFov = 0.1f;
 
     @SendToClient
-    @SerialEntry(comment = "A value to fine tune the zoom animation\n[Min: 0, Default: 5]")
-    public int freezeZoomOffset = 5;
+    @SerialEntry(comment = "A value to fine tune the zoom animation\n[Min: 0, Default: 7]")
+    public int freezeZoomOffset = 7;
 
     @SendToClient
     @SerialEntry(comment = "The duration of the slowdown effect\n[Min: 0, Default: ??]")
@@ -88,5 +99,12 @@ public class ServerConfig {
     @SendToClient
     @SerialEntry(comment = "The duration of the ice\n[Min: 0, Default: ??]")
     public int freezeIceTime = 100;
+
+    @SendToClient
+    @SerialEntry(comment = "The multiplier for the player speed\n[Min: 0, Default: ??] [DECIMAL SUPPORTED]")
+    public float freezeSlowdown = 0.5f;
     //endregion
+
+    @SerialEntry(comment = "The rewards interaction commands\n[Default: {}]")
+    public Map<String, List<String>> commands = new HashMap<>();
 }

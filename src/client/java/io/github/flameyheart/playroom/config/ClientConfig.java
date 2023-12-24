@@ -23,6 +23,8 @@ public class ClientConfig {
         return INSTANCE.defaults();
     }
 
-    @SerialEntry(comment = "Disables some animations to reduce motion sickness")
+    @SerialEntry(comment = "Disables some animations to reduce motion sickness\n[Default: false]")
     public boolean reducedMotion = false;
+    @SerialEntry(comment = "Enables debug info\n[Default: false]")
+    public boolean debugInfo = false;
 }

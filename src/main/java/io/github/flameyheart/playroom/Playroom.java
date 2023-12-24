@@ -27,16 +27,22 @@ import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.networking.v1.*;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerLoginNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Vec2f;
+import net.minecraft.util.math.Vec3d;
 import org.quiltmc.parsers.json.JsonReader;
 import org.quiltmc.parsers.json.gson.GsonReader;
 import org.slf4j.Logger;
@@ -63,6 +69,7 @@ public class Playroom implements ModInitializer {
 
 	private static MinecraftServer server;
 	private static boolean stopTicking = false;
+	public static long serverTime = 0;
 
 	@Override
 	public void onInitialize() {
@@ -82,16 +89,16 @@ public class Playroom implements ModInitializer {
 		ServerLifecycleEvents.SERVER_STARTING.register(server -> {
 			Playroom.server = server;
 		});
-
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
 			sslServer = new TiltifyWebhookConnection();
 			sslServer.start();
 		});
-
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
 			sslServer.interrupt();
 		});
-
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+			Playroom.server = null;
+		});
 		EntityTickEvents.END_BASE_TICK.register(baseEntity -> {
 			if (stopTicking) return;
 			if (baseEntity instanceof PlayerEntity entity) {
@@ -116,15 +123,16 @@ public class Playroom implements ModInitializer {
 				entity.getWorld().getProfiler().pop();
 			}
 		});
-
 		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
 			ServerConfig.INSTANCE.load();
-			sendPacket(id("config/update"), p -> {
+			if (sslServer != null) sslServer.interrupt();
+			sslServer = new TiltifyWebhookConnection();
+			sslServer.start();
+			sendPacket(id("config/sync"), p -> {
 				boolean canModify = Permissions.check(p, "playroom.admin.server.update_config", 4);
 				return PacketByteBufs.create().writeString(serializeConfig(canModify));
 			}, p -> true);
 		});
-
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			server.execute(() -> {
 				if (!Permissions.check(handler.player, "playroom.admin.server.update_config", 4)) {
@@ -135,10 +143,18 @@ public class Playroom implements ModInitializer {
 				ServerPlayNetworking.send(handler.player, id("config/sync"), byteBuf);
 			});
 		});
-
 		ServerEntityEvents.ENTITY_UNLOAD.register((entity, world) -> {
 			if (entity instanceof LaserProjectileEntity projectile && projectile.getRemovalReason() == Entity.RemovalReason.UNLOADED_TO_CHUNK) {
 				projectile.remove(Entity.RemovalReason.DISCARDED);
+			}
+		});
+
+		ServerTickEvents.END_SERVER_TICK.register(server -> {
+			long time = server.getOverworld().getTime();
+			if (time % 100 == 0) {
+				PacketByteBuf buf = PacketByteBufs.create();
+				buf.writeLong(time);
+				sendPacket(id("time_sync"), buf);
 			}
 		});
 	}
@@ -196,7 +212,7 @@ public class Playroom implements ModInitializer {
 				}
 				ServerConfig.INSTANCE.save();
 
-				sendPacket(id("config/update"), p -> {
+				sendPacket(id("config/sync"), p -> {
 					boolean canModify = Permissions.check(p, "playroom.admin.server.update_config", 4);
 					return PacketByteBufs.create().writeString(serializeConfig(canModify));
 				}, p -> true);
@@ -295,8 +311,9 @@ public class Playroom implements ModInitializer {
 
 		for (ConfigField<?> field : config.fields()) {
 			ReadOnlyFieldAccess<?> defaultedAccess = field.defaultAccess();
+			ReadOnlyFieldAccess<?> access = field.access();
 			if (sendAll || defaultedAccess.getAnnotation(SendToClient.class).isPresent()) {
-				json.add(defaultedAccess.name(), gson.toJsonTree(defaultedAccess.get()));
+				json.add(defaultedAccess.name(), gson.toJsonTree(field.access().get()));
 			}
 		}
 
@@ -367,15 +384,25 @@ public class Playroom implements ModInitializer {
 		buf.writeString(donation.currency());
 		buf.writeBoolean(donation.status() == Donation.Status.AUTO_APPROVED);
 
-		sendPacket(id("donation/add"), buf, player -> true);
+		sendPacket(id("donation/add"), buf);
+	}
+
+	public static boolean hasDonation(UUID id) {
+		return DONATIONS.containsKey(id);
+	}
+
+	public static ServerCommandSource getCommandSource() {
+		ServerWorld serverWorld = server.getOverworld();
+		return new ServerCommandSource(server, serverWorld == null ? Vec3d.ZERO : Vec3d.of(serverWorld.getSpawnPos()), Vec2f.ZERO,
+		serverWorld, 4, "Playroom", Text.literal("Playroom"), server, null);
+	}
+
+	public static void sendPacket(Identifier id, PacketByteBuf buf) {
+		sendPacket(id, buf, p -> true);
 	}
 
 	public static void sendPacket(Identifier id, PacketByteBuf buf, Predicate<Entity> predicate) {
-		for (ServerPlayerEntity player : getServer().getPlayerManager().getPlayerList()) {
-			if (predicate.test(player)) {
-				ServerPlayNetworking.send(player, id, buf);
-			}
-		}
+		sendPacket(id, p -> buf, predicate);
 	}
 
 	public static void sendPacket(Identifier id, Function<PlayerEntity, PacketByteBuf> bufBuilder, Predicate<Entity> predicate) {

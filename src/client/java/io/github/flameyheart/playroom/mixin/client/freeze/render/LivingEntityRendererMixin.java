@@ -26,9 +26,9 @@ public abstract class LivingEntityRendererMixin {
     private void setColour(Args args) {
         if(playroom$entity instanceof ExpandedEntityData entity) {
             int freezeTicks = entity.playroom$getGunFreezeTicks();
-            if (entity.playroom$isFrozen()) {
+            if (entity.playroom$showIce()) {
                 //Fade from blue to white as the frozen ticks go down
-                float colour = Math.max(1 - freezeTicks / (float) entity.playroom$slowdownTime(), 0.35f);
+                float colour = Math.max(1 - entity.playroom$iceMeltProgress() * 2, 0.35f);
                 args.set(4, colour);
                 args.set(5, colour);
             }

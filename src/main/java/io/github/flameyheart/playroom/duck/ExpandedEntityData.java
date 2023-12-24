@@ -1,9 +1,14 @@
 package io.github.flameyheart.playroom.duck;
 
 import io.github.flameyheart.playroom.config.ServerConfig;
+import net.minecraft.text.Text;
+import net.minecraft.util.Pair;
 import org.apache.logging.log4j.core.jmx.Server;
 
 public interface ExpandedEntityData {
+    void playroom$setDisplayName(Text prefix, Text displayName);
+    Pair<Text, Text> playroom$getDisplayName();
+
     int playroom$getGunFreezeTicks();
     void playroom$setGunFreezeTicks(int frozenTicks);
     void playroom$addGunFreezeTicks(int frozenTicks);
@@ -22,10 +27,6 @@ public interface ExpandedEntityData {
 
     default boolean playroom$isSlowedDown() {
         return playroom$getGunFreezeTicks() > 0 && playroom$slowdownTime() >= playroom$getGunFreezeTicks();
-    }
-
-    default boolean playroom$isFrozenDelayed() {
-        return playroom$getGunFreezeTicks() > 0 && playroom$getGunFreezeTicks() < playroom$freezeTime();
     }
 
     default int playroom$slowdownTime() {

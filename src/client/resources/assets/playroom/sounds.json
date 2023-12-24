@@ -1,15 +1,27 @@
 {
+  "laser_gun.mode.rapid": {
+    "sounds": [
+      "minecraft:tile/piston/in"
+    ],
+    "subtitle": "playroom.subtitles.laser_gun.mode"
+  },
+  "laser_gun.mode.range": {
+    "sounds": [
+      "minecraft:tile/piston/out"
+    ],
+    "subtitle": "playroom.subtitles.laser_gun.mode"
+  },
   "laser_gun.shoot.range": {
     "sounds": [
       "playroom:laser_gun/range"
     ],
-    "subtitle": "playroom.subtitles.laser_gun.shoot.range"
+    "subtitle": "playroom.subtitles.laser_gun.shoot"
   },
   "laser_gun.shoot.rapid": {
     "sounds": [
       "playroom:laser_gun/rapid"
     ],
-    "subtitle": "playroom.subtitles.laser_gun.shoot.rapid"
+    "subtitle": "playroom.subtitles.laser_gun.shoot"
   },
   "laser_gun.charge": {
     "sounds": [

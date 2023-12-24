@@ -7,6 +7,8 @@ import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.text.Text;
+import net.minecraft.util.Pair;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Final;
@@ -25,6 +27,8 @@ public abstract class PlayroomEntity implements ExpandedEntityData {
     @Shadow public abstract void stopRiding();
 
     private static final @Unique TrackedData<Integer> playroom$GUN_FREEZE_TICKS = DataTracker.registerData(Entity.class, TrackedDataHandlerRegistry.INTEGER);
+    private @Unique Text playroom$prefix;
+    private @Unique Text playroom$displayName;
 
     @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;initDataTracker()V", shift = At.Shift.BEFORE))
     private void initTrackers(EntityType<?> type, World world, CallbackInfo ci) {
@@ -59,5 +63,16 @@ public abstract class PlayroomEntity implements ExpandedEntityData {
     @Override
     public void playroom$addGunFreezeTicks(int frozenTicks) {
         playroom$setGunFreezeTicks(MathHelper.clamp(playroom$getGunFreezeTicks() + frozenTicks, 0, playroom$freezeTime()));
+    }
+
+    @Override
+    public void playroom$setDisplayName(Text prefix, Text displayName) {
+        this.playroom$prefix = prefix;
+        this.playroom$displayName = displayName;
+    }
+
+    @Override
+    public Pair<Text, Text> playroom$getDisplayName() {
+        return new Pair<>(playroom$prefix, playroom$displayName);
     }
 }

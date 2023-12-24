@@ -18,7 +18,6 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.RotationAxis;
 
 public class IceFeatureRenderer<T extends AbstractClientPlayerEntity> extends FeatureRenderer<T, PlayerEntityModel<T>> {
-
     private final EntityRendererFactory.Context ctx;
 
     public IceFeatureRenderer(EntityRendererFactory.Context ctx, LivingEntityRenderer<T, PlayerEntityModel<T>> context) {
@@ -28,19 +27,22 @@ public class IceFeatureRenderer<T extends AbstractClientPlayerEntity> extends Fe
 
     @Override
     public void render(MatrixStack matrixStack, VertexConsumerProvider vertexConsumers, int light, T entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {
-        if (!((ExpandedEntityData) entity).playroom$isFrozen()) return;
+        if (!((ExpandedEntityData) entity).playroom$showIce()) return;
 
         MinecraftClient client = MinecraftClient.getInstance();
         ExpandedEntityData eEntity = (ExpandedEntityData) entity;
-        int freezeTicks = eEntity.playroom$getGunFreezeTicks();
+        float iceMelt = eEntity.playroom$iceMeltProgress();
 
         PlayerEntityModel<T> playerModel = getContextModel();
         matrixStack.push();
         playerModel.body.rotate(matrixStack);
         matrixStack.translate(0, 0.9, 0);
         matrixStack.multiply(RotationAxis.POSITIVE_X.rotation((float) Math.PI));
+        matrixStack.multiply(RotationAxis.POSITIVE_Y.rotation((float) Math.PI));
         ModelIdentifier modelId = new ModelIdentifier(Playroom.MOD_ID, "ice_blocks", "inventory");
         ItemRenderer itemRenderer = client.getItemRenderer();
+        matrixStack.translate(0,  -(1 - iceMelt) / 2, 0);
+        matrixStack.scale(1, iceMelt, 1);
         itemRenderer.renderItem(
                 Items.ICE_BLOCKS.getDefaultStack(),
                 ModelTransformationMode.NONE,

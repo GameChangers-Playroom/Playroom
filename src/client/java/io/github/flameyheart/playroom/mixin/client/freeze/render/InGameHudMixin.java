@@ -25,7 +25,7 @@ public abstract class InGameHudMixin {
 
         int freezeTicks = entity.playroom$getGunFreezeTicks();
         if (freezeTicks > 0) {
-            this.renderOverlay(context, POWDER_SNOW_OUTLINE, Math.min(1, (freezeTicks) / 20f));
+            this.renderOverlay(context, POWDER_SNOW_OUTLINE, Math.min(1, (freezeTicks) / (float) entity.playroom$slowdownTime()));
         }
     }
 }

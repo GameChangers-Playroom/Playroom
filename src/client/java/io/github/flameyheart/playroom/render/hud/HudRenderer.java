@@ -1,6 +1,7 @@
 package io.github.flameyheart.playroom.render.hud;
 
 import io.github.flameyheart.playroom.PlayroomClient;
+import io.github.flameyheart.playroom.config.ClientConfig;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -8,6 +9,7 @@ import net.minecraft.client.gui.DrawContext;
 public class HudRenderer {
 
     public static void render(DrawContext drawContext) {
+        if (!ClientConfig.instance().debugInfo) return;
         //MatrixStack matrixStack = drawContext.getMatrices();
         //MinecraftClient client = MinecraftClient.getInstance();
         //Renderer2d.renderRoundedQuad(drawContext.getMatrices(), Color.RED, 10, 10, 100, 100, 5, 5);

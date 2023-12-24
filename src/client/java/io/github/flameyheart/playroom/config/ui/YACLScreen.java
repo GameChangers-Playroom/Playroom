@@ -41,6 +41,15 @@ public class YACLScreen {
             .build()
         );
 
+        general.option(
+          Option.<Boolean>createBuilder()
+            .name(Text.translatable("config.playroom.option.general.debugInfo"))
+            .description(OptionDescription.of(Text.translatable("config.playroom.option.general.debugInfo.description")))
+            .binding(clientDefaults.debugInfo, () -> clientConfig.debugInfo, newVal -> clientConfig.debugInfo = newVal)
+            .controller(TickBoxControllerBuilder::create)
+            .build()
+        );
+
         builder.category(general.build());
 
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
@@ -95,7 +104,7 @@ public class YACLScreen {
                 .name(Text.translatable("config.playroom.option.laser_gun.laserFireReloadTime"))
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserFireReloadTime.description")))
                 .binding((int) serverDefaults.laserFireReloadTime, () -> (int) serverConfig.laserFireReloadTime, newVal -> serverConfig.laserFireReloadTime = newVal.shortValue())
-                .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 200).step(5))
+                .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 3600).step(20))
                 .build()
             );
 
@@ -104,7 +113,7 @@ public class YACLScreen {
                 .name(Text.translatable("config.playroom.option.laser_gun.laserRangeChargeTime"))
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRangeChargeTime.description")))
                 .binding((int) serverDefaults.laserRangeChargeTime, () -> (int) serverConfig.laserRangeChargeTime, newVal -> serverConfig.laserRangeChargeTime = newVal.shortValue())
-                .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 3600).step(20))
+                .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 200).step(5))
                 .build()
             );
 
@@ -153,6 +162,24 @@ public class YACLScreen {
                 .build()
             );
 
+            laserGun.option(
+              Option.<Integer>createBuilder()
+                .name(Text.translatable("config.playroom.option.laser_gun.laserRapidFreezeAmount"))
+                .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRapidFreezeAmount.description")))
+                .binding((int) serverDefaults.laserRapidFreezeAmount, () -> (int) serverConfig.laserRapidFreezeAmount, newVal -> serverConfig.laserRapidFreezeAmount = newVal.shortValue())
+                .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 500).step(20))
+                .build()
+            );
+
+            laserGun.option(
+              Option.<Float>createBuilder()
+                .name(Text.translatable("config.playroom.option.laser_gun.laserAimSlowdown"))
+                .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserAimSlowdown.description")))
+                .binding(serverDefaults.laserAimSlowdown, () -> serverConfig.laserAimSlowdown, newVal -> serverConfig.laserAimSlowdown = newVal)
+                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 1f).step(0.05f))
+                .build()
+            );
+
             server.group(laserGun.build());
             OptionGroup.Builder playerFreeze = OptionGroup.createBuilder().name(Text.translatable("config.playroom.option_group.player_freeze"));
             playerFreeze.collapsed(true);
@@ -162,7 +189,7 @@ public class YACLScreen {
                 .name(Text.translatable("config.playroom.option.player_freeze.freezeZoomDuration"))
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeZoomDuration.description")))
                 .binding(serverDefaults.freezeZoomDuration, () -> serverConfig.freezeZoomDuration, newVal -> serverConfig.freezeZoomDuration = newVal)
-                .controller(option -> IntegerSliderControllerBuilder.create(option).range(1, 20).step(1))
+                .controller(option -> IntegerSliderControllerBuilder.create(option).range(1, 60).step(1))
                 .build()
             );
 
@@ -171,14 +198,14 @@ public class YACLScreen {
                 .name(Text.translatable("config.playroom.option.player_freeze.freezeZoomFov"))
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeZoomFov.description")))
                 .binding(serverDefaults.freezeZoomFov, () -> serverConfig.freezeZoomFov, newVal -> serverConfig.freezeZoomFov = newVal)
-                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 5f).step(0.1f))
+                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 5f).step(0.01f))
                 .build()
             );
 
             playerFreeze.option(
               Option.<Integer>createBuilder()
-                .name(Text.translatable("config.playroom.option.player_freeze.freezeZoomFov"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeZoomFov.description")))
+                .name(Text.translatable("config.playroom.option.player_freeze.freezeZoomOffset"))
+                .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeZoomOffset.description")))
                 .binding(serverDefaults.freezeZoomOffset, () -> serverConfig.freezeZoomOffset, newVal -> serverConfig.freezeZoomOffset = newVal)
                 .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 19).step(1))
                 .build()
@@ -202,18 +229,30 @@ public class YACLScreen {
                 .build()
             );
 
+            playerFreeze.option(
+              Option.<Float>createBuilder()
+                .name(Text.translatable("config.playroom.option.player_freeze.freezeSlowdown"))
+                .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeSlowdown.description")))
+                .binding(serverDefaults.freezeSlowdown, () -> serverConfig.freezeSlowdown, newVal -> serverConfig.freezeSlowdown = newVal)
+                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 1f).step(0.05f))
+                .build()
+            );
+
             server.group(playerFreeze.build());
+            server.option(LabelOption.create(Text.translatable("config.playroom.option.server.commands")));
 
             builder.category(server.build());
         }
 
         builder.save(() -> {
-            ServerConfig.INSTANCE.save();
             ClientConfig.INSTANCE.save();
-
-            PacketByteBuf buf = PacketByteBufs.create();
-            buf.writeString(Playroom.serializeConfig(true));
-            ClientPlayNetworking.send(Playroom.id("config/update"), buf);
+            if (Playroom.getServer() != null && Playroom.getServer().isSingleplayer()) {
+                ServerConfig.INSTANCE.save();
+            } else {
+                PacketByteBuf buf = PacketByteBufs.create();
+                buf.writeString(Playroom.serializeConfig(true));
+                ClientPlayNetworking.send(Playroom.id("config/update"), buf);
+            }
         });
         return builder.build().generateScreen(parent);
     }

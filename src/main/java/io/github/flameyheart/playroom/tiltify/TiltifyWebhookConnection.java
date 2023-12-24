@@ -1,11 +1,22 @@
 package io.github.flameyheart.playroom.tiltify;
 
+import blue.endless.jankson.Jankson;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ServerConfig;
+import io.github.flameyheart.playroom.tiltify.websocket.DonationUpdated;
+import io.github.flameyheart.playroom.tiltify.websocket.WebhookEvent;
+import io.github.flameyheart.playroom.tiltify.websocket.WebhookStructure;
+import io.github.flameyheart.playroom.util.DynamicPlaceholders;
+import net.minecraft.server.network.ServerPlayerEntity;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
 import org.slf4j.Logger;
@@ -26,9 +37,12 @@ import java.util.*;
 
 public class TiltifyWebhookConnection extends Thread {
     private static final Logger LOGGER = LoggerFactory.getLogger("Playroom Tiltify Webhook Connection");
+    public static final JsonMapper JSON_MAPPER = JsonMapper.builder()
+      .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+      .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+      .build();
     private boolean running = true;
     private SSLServerSocket serverSocket;
-    private final Gson GSON = new GsonBuilder().serializeNulls().create();
 
     public TiltifyWebhookConnection() {
         super("Tiltify Webhook Connection");
@@ -47,7 +61,7 @@ public class TiltifyWebhookConnection extends Thread {
         Path certificatePath = Playroom.getConfigPath().resolve("cert.pem"),
           privateKeyPath = Playroom.getConfigPath().resolve("key.pem");
 
-        short port = ServerConfig.instance().tiltifyWebhookPort;
+        int port = ServerConfig.instance().tiltifyWebhookPort;
         try {
             // Load private key using Bouncy Castle
             PrivateKey privateKey = loadPrivateKey(privateKeyPath);
@@ -89,6 +103,7 @@ public class TiltifyWebhookConnection extends Thread {
     }
 
     private void handleClientConnection(SSLSocket sslSocket) throws IOException {
+        LOGGER.info("Handling Tiltify Webhook event");
         // Get the input and output streams from the SSL socket
         BufferedReader reader = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
         PrintWriter writer = new PrintWriter(sslSocket.getOutputStream(), true);
@@ -121,7 +136,10 @@ public class TiltifyWebhookConnection extends Thread {
         boolean error = false;
         try {
             processData(requestLine, headers, requestBody.toString());
+        } catch (JsonParseException | JsonProcessingException ignored) {
+            LOGGER.error("Failed to parse Tiltify Webhook event", ignored);
         } catch (Throwable e) {
+            LOGGER.error("Error while processing Tiltify Webhook event", e);
             error = true;
         }
 
@@ -141,7 +159,8 @@ public class TiltifyWebhookConnection extends Thread {
         sslSocket.close();
     }
 
-    private void processData(String request, Map<String, String> headers, String body) {
+    private void processData(String request, Map<String, String> headers, String body) throws JsonProcessingException {
+        LOGGER.info("Received Tiltify Webhook event");
         request = request.toLowerCase();
         if (!request.startsWith("post / ")) return;
         if (!headers.containsKey("x-tiltify-signature")) return;
@@ -154,35 +173,27 @@ public class TiltifyWebhookConnection extends Thread {
         if (!verifySignature(secret, signature, timestamp, body)) return;
 
         //Parse the body JSON
-        JsonElement jsonElement = GSON.fromJson(body, JsonElement.class);
-        if (!jsonElement.isJsonObject()) return;
-        JsonObject json = jsonElement.getAsJsonObject();
-        if (!json.has("data")) return;
-        if (!json.has("meta")) return;
-        if (!json.getAsJsonObject("meta").has("event_type")) return;
-        String eventType = json.getAsJsonObject("meta").get("event_type").getAsString();
-        if (!eventType.equalsIgnoreCase("private:direct:donation_updated") && !eventType.equalsIgnoreCase("public:direct:donation_updated")) return;
+        WebhookEvent<DonationUpdated> event = JSON_MAPPER.readValue(body, WebhookEvent.DonationUpdatedEvent.class);
+        if (event == null || event.data == null || event.meta == null) return;
+        if (!event.meta.eventType.type.equalsIgnoreCase("donation_updated")) return;
 
-        JsonObject data = json.getAsJsonObject("data");
-        if (!data.has("amount")) return;
-        if (!data.has("id")) return;
-        if (!data.has("completed_at")) return;
-        if (!data.has("donor_name")) return;
-        if (!data.has("donor_comment")) return;
+        if (Playroom.hasDonation(event.meta.id)) return;
 
-        String donor = data.get("donor_name").getAsString();
-        String comment = data.get("donor_comment").getAsString();
-        UUID id = UUID.fromString(data.get("id").getAsString());
-        JsonObject amount = data.get("amount").getAsJsonObject();
-        if (!amount.has("currency")) return;
-        if (!amount.has("value")) return;
+        if (event.data.rewardClaims != null) {
+            for (WebhookStructure.RewardClaim claim : event.data.rewardClaims) {
+                ServerPlayerEntity player = Playroom.getServer().getPlayerManager().getPlayer(claim.customQuestion);
+                if (player == null) {
+                    LOGGER.warn("Failed to find player \"{}\", {}'s donation could not be fully processed", claim.customQuestion, event.data.donorName);
+                    continue; //TODO inform the team it failed to find the player
+                }
 
-        String currency = amount.get("currency").getAsString();
-        double value = amount.get("value").getAsDouble();
+                ServerConfig.instance().commands.get(claim.rewardId.toString()).forEach(command -> {
+                    Playroom.getServer().getCommandManager().executeWithPrefix(Playroom.getCommandSource(), DynamicPlaceholders.parseText(command, player).getString());
+                });
+            }
+        }
 
-        LOGGER.info("Received Tiltify donation: " + donor + " (" + comment + ") " + value + " " + currency);
-
-        Playroom.addDonation(new Donation(id, donor, comment, (float) value, currency, false));
+        //Playroom.addDonation(new Donation());
     }
 
     private int getContentLength(String requestLine) {
@@ -215,10 +226,12 @@ public class TiltifyWebhookConnection extends Thread {
     @Override
     public void interrupt() {
         running = false;
-        try {
-            serverSocket.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        if (serverSocket != null) {
+            try {
+                serverSocket.close();
+            } catch (IOException e) {
+                LOGGER.error("Error while closing Tiltify Webhook server", e);
+            }
         }
         LOGGER.info("Closing Tiltify Webhook thread");
         super.interrupt();

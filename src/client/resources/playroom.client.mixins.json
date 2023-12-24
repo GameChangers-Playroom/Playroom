@@ -4,6 +4,8 @@
     "compatibilityLevel": "JAVA_17",
     "client": [
         "ClientLoginNetworkHandlerMixin",
+        "EntityRendererMixin",
+        "PlayerEntityMixin",
         "ProjectileEntityRendererMixin",
         "freeze.camera.ClientPlayerEntityMixin",
         "freeze.camera.ClientPlayerInteractionManagerMixin",
@@ -16,6 +18,7 @@
         "freeze.render.BipedEntityModelMixin",
         "freeze.render.InGameHud$HeartTypeMixin",
         "freeze.render.InGameHudMixin",
+        "freeze.render.InventoryScreenMixin",
         "freeze.render.LivingEntityRendererMixin",
         "freeze.render.PlayerEntityRendererMixin",
         "geo.AnimTriggerPacketMixin",
@@ -25,8 +28,7 @@
         "laserGun.GameRendererMixin",
         "laserGun.HeldItemRendererMixin",
         "laserGun.MinecraftClientMixin",
-        "laserGun.PlayerEntityRendererMixin",
-        "MixinPlayerEntity"
+        "laserGun.PlayerEntityRendererMixin"
     ],
     "injectors": {
         "defaultRequire": 1

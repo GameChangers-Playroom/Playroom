@@ -7,10 +7,12 @@ import fi.dy.masa.tweakeroo.config.FeatureToggle;
 import io.github.flameyheart.playroom.compat.ModOptional;
 import io.github.flameyheart.playroom.config.ClientConfig;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
+import io.github.flameyheart.playroom.duck.PlayerDisplayName;
 import io.github.flameyheart.playroom.duck.client.ExpandedClientLoginNetworkHandler;
 import io.github.flameyheart.playroom.event.LivingEntityEvents;
 import io.github.flameyheart.playroom.freeze.CameraEntity;
 import io.github.flameyheart.playroom.item.Aimable;
+import io.github.flameyheart.playroom.item.LaserGun;
 import io.github.flameyheart.playroom.mixin.EntityAccessor;
 import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Items;
@@ -45,12 +47,15 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.bernie.geckolib.animatable.client.RenderProvider;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class PlayroomClient implements ClientModInitializer {
+    public static final Logger LOGGER = LoggerFactory.getLogger("Playroom Client");
     public static final Map<Long, Double> animationStartTick = new HashMap<>();
     public static final BipedEntityModel.ArmPose LASER_GUN_POSE = ClassTinkerers.getEnum(BipedEntityModel.ArmPose.class, "LASER_GUN");
     public static final Map<UUID, Donation> DONATIONS = new LinkedHashMap<>();
@@ -79,15 +84,6 @@ public class PlayroomClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         ClientConfig.INSTANCE.load();
-
-        Items.LASER_GUN.setRenderer(new RenderProvider() {
-            private final LaserGunRenderer renderer = new LaserGunRenderer();
-
-            @Override
-            public BuiltinModelItemRenderer getCustomRenderer() {
-                return renderer;
-            }
-        });
 
         ParticleFactoryRegistry.getInstance().register(Particles.TEST_PARTICLE, TestParticle.Factory::new);
         EntityRendererRegistry.register(Entities.LASER_SHOT, LaserProjectileRenderer::new);
@@ -125,6 +121,7 @@ public class PlayroomClient implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player != null) {
+                Playroom.serverTime++;
                 ExpandedEntityData player = (ExpandedEntityData) client.player;
                 boolean showIce = player.playroom$showIce();
                 if (!showIce) {
@@ -163,6 +160,14 @@ public class PlayroomClient implements ClientModInitializer {
 
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
             Items.LASER_GUN.setShowAdvancedTooltip(Screen::hasShiftDown);
+            Items.LASER_GUN.setRenderer(new RenderProvider() {
+                private final LaserGunRenderer renderer = new LaserGunRenderer();
+
+                @Override
+                public BuiltinModelItemRenderer getCustomRenderer() {
+                    return renderer;
+                }
+            });
         });
     }
 
@@ -199,6 +204,33 @@ public class PlayroomClient implements ClientModInitializer {
                 }
             });
         });
+
+        ClientPlayNetworking.registerGlobalReceiver(Playroom.id("player_name"), (client, handler, buf, responseSender) -> {
+            List<PlayerDisplayName> displayNames = buf.readList(packetByteBuf -> {
+                UUID player = packetByteBuf.readUuid();
+                Text prefix = packetByteBuf.readText();
+                Text name = packetByteBuf.readText();
+
+                return new PlayerDisplayName(player, prefix, name);
+            });
+
+            client.execute(() -> {
+                for (PlayerDisplayName displayName : displayNames) {
+                    PlayerEntity player = client.world.getPlayerByUuid(displayName.player());
+                    if (player != null) {
+                        ((ExpandedEntityData) player).playroom$setDisplayName(displayName.prefix(), displayName.displayName());
+                    }
+                }
+            });
+        });
+
+        ClientPlayNetworking.registerGlobalReceiver(Playroom.id("time_sync"), (client, handler, buf, responseSender) -> {
+            long serverTime = buf.readLong();
+
+            client.execute(() -> {
+                Playroom.serverTime = serverTime;
+            });
+        });
     }
 
     private void handleLoginPackets() {
@@ -233,6 +265,8 @@ public class PlayroomClient implements ClientModInitializer {
         if (MinecraftClient.getInstance().isInSingleplayer()) {
             return true;
         }
+
+        LOGGER.info("Received {} bytes from server", data.getBytes().length);
 
         return Playroom.deserializeConfig(data);
     }

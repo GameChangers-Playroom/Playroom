@@ -1,9 +1,14 @@
 package io.github.flameyheart.playroom.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import io.github.flameyheart.playroom.Playroom;
+import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.item.LaserGun;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -41,7 +46,7 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 
     @ModifyVariable(method = "handleFallDamage", at = @At(value = "HEAD"), index = 2, argsOnly = true)
     private float reduceIceTimeFromFall(float damageMultiplier, float fallDistance) {
-        if (((ExpandedEntityData) this).playroom$isFrozen()) {
+        if (((ExpandedEntityData) this).playroom$showIce()) {
             ((ExpandedEntityData) this).playroom$addGunFreezeTicks(-(int) Math.ceil(fallDistance * 3f)); //TODO: config
             return damageMultiplier * 0.3f; //TODO: config
         }
@@ -51,9 +56,16 @@ public abstract class PlayerEntityMixin extends LivingEntity {
     @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/GameRules;getBoolean(Lnet/minecraft/world/GameRules$Key;)Z"))
     private boolean disableRegen(GameRules instance, GameRules.Key<GameRules.BooleanRule> rule) {
         if (((ExpandedEntityData) this).playroom$isFrozen() || this.selectedItem.getItem() instanceof LaserGun) {
-            return false; //TODO: config
+            return false;
         }
         return instance.getBoolean(rule);
     }
 
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getAttributeValue(Lnet/minecraft/entity/attribute/EntityAttribute;)D"))
+    private double slowdown(double original) {
+        if (((ExpandedEntityData) this).playroom$isSlowedDown()) {
+            return original * ServerConfig.instance().freezeSlowdown;
+        }
+        return original;
+    }
 }

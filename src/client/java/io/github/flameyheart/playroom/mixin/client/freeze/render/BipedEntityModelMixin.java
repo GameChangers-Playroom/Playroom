@@ -14,7 +14,7 @@ public class BipedEntityModelMixin<T extends LivingEntity> {
     @Inject(method = "setAngles(Lnet/minecraft/entity/LivingEntity;FFFFF)V", at = @At("HEAD"), cancellable = true)
     private void stopAnimations(T livingEntity, float f, float g, float h, float i, float j, CallbackInfo ci) {
         ExpandedEntityData entity = (ExpandedEntityData) livingEntity;
-        if (entity.playroom$isFrozen()) {
+        if (entity.playroom$showIce()) {
             if (PlayroomClient.wasFrozen) {
                 ci.cancel();
             } else {

@@ -1,7 +1,9 @@
 package io.github.flameyheart.playroom.entity;
 
+import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.registry.Entities;
+import io.github.flameyheart.playroom.registry.Sounds;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -11,6 +13,7 @@ import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.world.World;
@@ -51,7 +54,8 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
         Entity entity = entityHitResult.getEntity();
         if (entity instanceof ExpandedEntityData entityData && getOwner() != null) {
             if (isRapidFire()) {
-                entityData.playroom$addGunFreezeTicks(100);
+                playSound(getHitSound(), 0.5f, 1);
+                entityData.playroom$addGunFreezeTicks(ServerConfig.instance().laserRapidFreezeAmount);
             } else {
                 entityData.playroom$freeze();
             }
@@ -61,7 +65,6 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
 
     @Override
     protected void onBlockHit(BlockHitResult blockHitResult) {
-        super.onBlockHit(blockHitResult);
         this.discard();
     }
 
@@ -90,5 +93,10 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
     @Override
     protected ItemStack asItemStack() {
         return ItemStack.EMPTY;
+    }
+
+    @Override
+    protected SoundEvent getHitSound() {
+        return isRapidFire() ? Sounds.HIT_FREEZE : Sounds.FREEZE;
     }
 }

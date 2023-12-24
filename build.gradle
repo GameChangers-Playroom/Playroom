@@ -35,7 +35,7 @@ loom {
 			vmArg "-Dfabric-api.datagen"
 			vmArg "-Dfabric-api.datagen.output-dir=${file("src/main/generated")}"
 			vmArg "-Dfabric-api.datagen.modid=playroom"
- 
+
 			runDir "build/datagen"
 		}
 	}
@@ -58,6 +58,7 @@ repositories {
 	maven { url "https://maven.firstdarkdev.xyz/snapshots" }
 	maven { url "https://maven.shedaniel.me/" }
 	maven { url "https://masa.dy.fi/maven" }
+	maven { url 'https://maven.nucleoid.xyz' }
 	maven { url "https://maven.isxander.dev/releases" }
 	maven { url "https://maven.terraformersmc.com/releases" }
 	maven { url "https://maven.quiltmc.org/repository/release" }
@@ -84,9 +85,6 @@ dependencies {
 	modImplementation("net.fabricmc:fabric-loader:${project.loader_version}")
 
 	modImplementation("net.fabricmc.fabric-api:fabric-api:${project.fabric_version}")
-	implementation include("com.github.Chocohead:Fabric-ASM:v2.3")
-
-	//include modImplementation("maven.modrinth:zoomify:2.11.2")
 
 	modImplementation("io.wispforest:owo-lib:${project.owo_version}")
 	include("io.wispforest:owo-sentinel:${project.owo_version}")
@@ -94,20 +92,23 @@ dependencies {
 	modImplementation("dev.isxander.yacl:yet-another-config-lib-fabric:${project.yacl_version}")
 	modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}")
 	modImplementation("software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}")
+	modImplementation("me.lucko:fabric-permissions-api:${project.permissions_api_version}")
 
-	//include modImplementation("com.github.KrLite.Equator-v2:build:${project.equator_version}")
-	modImplementation include("com.github.0x3C50:Renderer:${project.renderer_version}") {
+	include modImplementation("eu.pb4:placeholder-api:${project.placeholder_api_version}")
+	include modImplementation("com.github.0x3C50:Renderer:${project.renderer_version}") {
 		exclude group: "xml-apis", module: "xml-apis"
 		exclude group: "commons-io", module: "commons-io"
 		exclude group: "io.github.ladysnake", module: "satin"
 	}
 
-	modImplementation("me.lucko:fabric-permissions-api:${project.permissions_api_version}")
-	include implementation(annotationProcessor("com.github.llamalad7.mixinextras:mixinextras-fabric:${project.mixin_extras_version}"))
-
 	//Non mod libraries
+	include implementation(annotationProcessor("com.github.llamalad7.mixinextras:mixinextras-fabric:${project.mixin_extras_version}"))
+	include implementation("com.github.Chocohead:Fabric-ASM:v2.3")
+	include implementation("com.fasterxml.jackson.core:jackson-core:2.16.0")
+	include implementation("com.fasterxml.jackson.core:jackson-databind:2.16.0")
+	include implementation("org.bouncycastle:bcprov-jdk18on:1.77")
+
 	implementation("org.quiltmc.parsers:gson:0.2.1")
-	implementation("org.bouncycastle:bcprov-jdk18on:1.77")
 
 	//Compatibility
 	modCompileOnly("curse.maven:project-297344:4623488") //Tweakeroo 0.17.1

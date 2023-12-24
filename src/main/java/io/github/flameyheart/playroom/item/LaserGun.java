@@ -1,5 +1,6 @@
 package io.github.flameyheart.playroom.item;
 
+import io.github.flameyheart.playroom.Constants;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.entity.LaserProjectileEntity;
@@ -14,6 +15,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Vanishable;
+import net.minecraft.network.packet.s2c.play.StopSoundS2CPacket;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
@@ -119,8 +122,13 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
 
     @Override
     public void onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
-        if (remainingUseTicks < 72000 - 20 && !isRapidFire(stack)) {
+        short chargeTime = ServerConfig.instance().laserRangeChargeTime;
+        if (remainingUseTicks < 72000 - chargeTime && !isRapidFire(stack) && chargeTime > 0) {
             handleRangedMode(stack, world, (PlayerEntity) user, Hand.MAIN_HAND);
+            if (world instanceof ServerWorld serverWorld) {
+                StopSoundS2CPacket stopSoundS2CPacket = new StopSoundS2CPacket(Sounds.LASER_GUN_CHARGE.getId(), Constants.PLAYROOM_SOUND_CATEGORY);
+                serverWorld.getPlayers(player -> player instanceof ServerPlayerEntity && player.distanceTo(user) < 64).forEach(player -> player.networkHandler.sendPacket(stopSoundS2CPacket));
+            }
         }
         getPlayroomTag(stack).putInt("Charge", 0);
         super.onStoppedUsing(stack, world, user, remainingUseTicks);
@@ -145,9 +153,12 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
             if (isRapidFire(stack)) {
                 handleRapidFire(world, player, Hand.MAIN_HAND, stack);
             } else {
-                int scale = Math.floorDiv(100, ServerConfig.instance().laserRangeChargeTime);
-                int charge = MathHelper.clamp(getUseTime(stack, remainingUseTicks) * scale, 0, 100);
-                getPlayroomTag(stack).putLong("Charge", charge);
+                short chargeTime = ServerConfig.instance().laserRangeChargeTime;
+                if (chargeTime > 0) {
+                    int scale = Math.floorDiv(100, chargeTime);
+                    int charge = MathHelper.clamp(getUseTime(stack, remainingUseTicks) * scale, 0, 100);
+                    getPlayroomTag(stack).putLong("Charge", charge);
+                }
             }
         }
         super.usageTick(world, user, stack, remainingUseTicks);
@@ -162,8 +173,10 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
             if (!player.isSneaking()) {
                 if (isRapidFire(stack)) {
                     handleRapidFire(world, player, hand, stack);
-                } else {
+                } else if (ServerConfig.instance().laserRangeChargeTime > 0) {
                     playSound(world, player, Sounds.LASER_GUN_CHARGE);
+                } else {
+                    handleRangedMode(stack, world, player, hand);
                 }
             }
 
@@ -190,8 +203,8 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
             setCooldown(stack, ServerConfig.instance().laserSwapModeCooldown);
 
             if (world instanceof ServerWorld serverWorld) {
-                SoundEvent soundEvent = rapidFire ? SoundEvents.BLOCK_PISTON_CONTRACT : SoundEvents.BLOCK_PISTON_EXTEND;
-                world.playSound(null, player.getX(), player.getY(), player.getZ(), soundEvent, SoundCategory.PLAYERS, 0.5F, 2.0F);
+                SoundEvent soundEvent = rapidFire ? Sounds.LASER_GUN_MODE_RAPID : Sounds.LASER_GUN_MODE_RANGE;
+                world.playSound(null, player.getX(), player.getY(), player.getZ(), soundEvent, Constants.PLAYROOM_SOUND_CATEGORY, 0.5F, 2.0F);
                 long geoId = GeoItem.getOrAssignId(stack, serverWorld);
                 if (rapidFire) {
                     triggerAnim(player, geoId, "controller", "range_mode");
@@ -241,14 +254,14 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
 
     public void playShootSound(World world, PlayerEntity player, boolean rapidFire) {
         SoundEvent soundEvent = rapidFire ? Sounds.LASER_GUN_SHOOT_RAPID : Sounds.LASER_GUN_SHOOT_RANGE;
-        world.playSound(null, player.getX(), player.getY(), player.getZ(), soundEvent, SoundCategory.PLAYERS, 0.5F, 1.0F);
+        world.playSound(null, player.getX(), player.getY(), player.getZ(), soundEvent, Constants.PLAYROOM_SOUND_CATEGORY, 0.5f, 1.0F);
     }
 
     @Override
     public int getItemBarStep(@NotNull ItemStack stack) {
         long cooldown = getCooldownTag(stack).getLong("Duration");
         long cooldownExpires = getCooldownTag(stack).getLong("ExpireTick");
-        long time = Playroom.getServer().getOverworld().getTime();
+        long time = Playroom.serverTime;
         long timeLeft = cooldownExpires - time;
 
         if (timeLeft <= 0 && getPlayroomTag(stack).getBoolean("RapidFire")) {
@@ -262,7 +275,7 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     public int getItemBarColor(@NotNull ItemStack stack) {
         long cooldown = getCooldownTag(stack).getLong("Duration");
         long cooldownExpires = getCooldownTag(stack).getLong("ExpireTick");
-        long time = Playroom.getServer().getOverworld().getTime();
+        long time = Playroom.serverTime;
         long timeLeft = cooldownExpires - time;
 
         if (timeLeft <= 0 && getPlayroomTag(stack).getBoolean("RapidFire")) return 0x0000FF;
@@ -334,16 +347,16 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     public void setCooldown(ItemStack stack, int time) {
         if (time > 0) {
             getCooldownTag(stack).putInt("Duration", time);
-            getCooldownTag(stack).putLong("ExpireTick", Playroom.getServer().getOverworld().getTime() + time);
+            getCooldownTag(stack).putLong("ExpireTick", Playroom.serverTime + time);
         }
     }
 
     public boolean isCooldownExpired(ItemStack stack) {
-        return getCooldownTag(stack).getLong("ExpireTick") < Playroom.getServer().getOverworld().getTime();
+        return getCooldownTag(stack).getLong("ExpireTick") < Playroom.serverTime;
     }
 
     public int getCooldownLeft(ItemStack stack) {
-        return (int) (getCooldownTag(stack).getLong("ExpireTick") - Playroom.getServer().getOverworld().getTime());
+        return (int) (getCooldownTag(stack).getLong("ExpireTick") - Playroom.serverTime);
     }
 
     public int getAmo(ItemStack stack) {
@@ -370,5 +383,10 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     @FunctionalInterface
     public interface TooltipProvider {
         void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context);
+    }
+
+    public interface OptionProvider {
+        float getRangedShotVolume();
+        float getRapidShotVolume();
     }
 }

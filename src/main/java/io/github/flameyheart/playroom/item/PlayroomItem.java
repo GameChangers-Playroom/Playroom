@@ -1,5 +1,6 @@
 package io.github.flameyheart.playroom.item;
 
+import io.github.flameyheart.playroom.Constants;
 import io.github.flameyheart.playroom.registry.Sounds;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -28,7 +29,7 @@ public interface PlayroomItem {
 
     default void playSound(World world, PlayerEntity player, SoundEvent sound) {
         if (!world.isClient) {
-            world.playSound(null, player.getX(), player.getY(), player.getZ(), sound, SoundCategory.PLAYERS, 0.5F, 1.0F);
+            world.playSound(null, player.getX(), player.getY(), player.getZ(), sound, Constants.PLAYROOM_SOUND_CATEGORY, 0.5F, 1.0F);
         }
     }
 }
