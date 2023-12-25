@@ -25,7 +25,6 @@ public abstract class LivingEntityRendererMixin {
     @ModifyArgs(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/model/EntityModel;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;IIFFFF)V"))
     private void setColour(Args args) {
         if(playroom$entity instanceof ExpandedEntityData entity) {
-            int freezeTicks = entity.playroom$getGunFreezeTicks();
             if (entity.playroom$showIce()) {
                 //Fade from blue to white as the frozen ticks go down
                 float colour = Math.max(1 - entity.playroom$iceMeltProgress() * 2, 0.35f);

@@ -12,8 +12,8 @@ public class Sounds implements AutoRegistryContainer<SoundEvent> {
     public static final SoundEvent LASER_GUN_MODE_RANGE = SoundEvent.of(Playroom.id("laser_gun.mode.range"));
     public static final SoundEvent LASER_GUN_MODE_RAPID = SoundEvent.of(Playroom.id("laser_gun.mode.rapid"));
     public static final SoundEvent LASER_GUN_CHARGE = SoundEvent.of(Playroom.id("laser_gun.charge"));
-    public static final SoundEvent FREEZE = SoundEvent.of(Playroom.id("general.freeze"));
-    public static final SoundEvent HIT_FREEZE = SoundEvent.of(Playroom.id("general.hit_freeze"));
+    public static final SoundEvent FREEZE = SoundEvent.of(Playroom.id("generic.freeze"));
+    public static final SoundEvent HIT_FREEZE = SoundEvent.of(Playroom.id("generic.hit_freeze"));
 
     @Override
     public Registry<SoundEvent> getRegistry() {

@@ -30,15 +30,14 @@ public abstract class EntityRendererMixin<T extends Entity> {
     @Inject(method = "renderLabelIfPresent", at = @At("TAIL"))
     private void renderFancyLabel(T entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         if (entity instanceof PlayerEntity player) {
+            Text prefix = ((ExpandedEntityData) player).playroom$getDisplayName().getLeft();
             boolean bl = !entity.isSneaky();
-            if (!bl) {
+            if (!bl || prefix == null || text == null) {
                 return;
             }
-            Text prefix = ((ExpandedEntityData) player).playroom$getDisplayName().getLeft();
             float f = entity.getNameLabelHeight();
             int i = "deadmau5".equals(text.getString()) ? -10 : 0;
 
-            ExpandedEntityData data = (ExpandedEntityData) player;
             matrices.push();
             matrices.translate(0.0f, f + 0.25f, 0.0f);
             matrices.multiply(this.dispatcher.getRotation());
@@ -48,7 +47,6 @@ public abstract class EntityRendererMixin<T extends Entity> {
             int j = (int)(g * 255.0f) << 24;
             TextRenderer textRenderer = this.getTextRenderer();
             float h = (float) -textRenderer.getWidth(prefix) / 2;
-
             textRenderer.draw(prefix, h, i, 0x20FFFFFF,false, matrix4f, vertexConsumers, TextRenderer.TextLayerType.SEE_THROUGH, j, light);
             textRenderer.draw(prefix, h, i, -1, false, matrix4f, vertexConsumers, TextRenderer.TextLayerType.NORMAL, 0, light);
             matrices.pop();

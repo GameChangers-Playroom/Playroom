@@ -1,5 +1,6 @@
 package io.github.flameyheart.playroom.entity;
 
+import io.github.flameyheart.playroom.Constants;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.registry.Entities;
@@ -10,6 +11,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -42,7 +44,6 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
         return new LaserProjectileEntity(world, owner, isRapidFire);
     }
 
-
     @Override
     protected void initDataTracker() {
         super.initDataTracker();
@@ -52,9 +53,9 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
     @Override
     protected void onEntityHit(@NotNull EntityHitResult entityHitResult) {
         Entity entity = entityHitResult.getEntity();
-        if (entity instanceof ExpandedEntityData entityData && getOwner() != null) {
+        if (entity instanceof ExpandedEntityData entityData && entity instanceof PlayerEntity && getOwner() != null) {
+            playSound(entity.getWorld(), entity, getHitSound());
             if (isRapidFire()) {
-                playSound(getHitSound(), 0.5f, 1);
                 entityData.playroom$addGunFreezeTicks(ServerConfig.instance().laserRapidFreezeAmount);
             } else {
                 entityData.playroom$freeze();
@@ -97,6 +98,12 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
 
     @Override
     protected SoundEvent getHitSound() {
-        return isRapidFire() ? Sounds.HIT_FREEZE : Sounds.FREEZE;
+        return isRapidFire() ? Sounds.FREEZE : Sounds.HIT_FREEZE;
+    }
+
+    public void playSound(World world, Entity target, SoundEvent sound) {
+        if (!world.isClient) {
+            world.playSound(null, target.getX(), target.getY(), target.getZ(), sound, Constants.PLAYROOM_SOUND_CATEGORY, 0.5F, 1.0F);
+        }
     }
 }

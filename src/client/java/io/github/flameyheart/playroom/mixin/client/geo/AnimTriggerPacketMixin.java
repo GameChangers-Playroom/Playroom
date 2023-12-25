@@ -21,6 +21,6 @@ public class AnimTriggerPacketMixin {
 
     @Inject(method = "receive", at = @At("TAIL"), locals = LocalCapture.CAPTURE_FAILEXCEPTION)
     private static void setAnimationStartTick(MinecraftClient client, ClientPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender, CallbackInfo ci, String syncableId, long instanceId, String controllerName, String animName) {
-        PlayroomClient.animationStartTick.put(instanceId,  RenderUtils.getCurrentTick());
+        PlayroomClient.ANIMATION_START_TICK.put(instanceId,  RenderUtils.getCurrentTick());
     }
 }

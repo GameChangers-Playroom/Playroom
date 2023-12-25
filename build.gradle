@@ -92,7 +92,7 @@ dependencies {
 	modImplementation("dev.isxander.yacl:yet-another-config-lib-fabric:${project.yacl_version}")
 	modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}")
 	modImplementation("software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}")
-	modImplementation("me.lucko:fabric-permissions-api:${project.permissions_api_version}")
+	include modImplementation("me.lucko:fabric-permissions-api:${project.permissions_api_version}")
 
 	include modImplementation("eu.pb4:placeholder-api:${project.placeholder_api_version}")
 	include modImplementation("com.github.0x3C50:Renderer:${project.renderer_version}") {
@@ -105,6 +105,7 @@ dependencies {
 	include implementation(annotationProcessor("com.github.llamalad7.mixinextras:mixinextras-fabric:${project.mixin_extras_version}"))
 	include implementation("com.github.Chocohead:Fabric-ASM:v2.3")
 	include implementation("com.fasterxml.jackson.core:jackson-core:2.16.0")
+	include implementation("com.fasterxml.jackson.core:jackson-annotations:2.16.0")
 	include implementation("com.fasterxml.jackson.core:jackson-databind:2.16.0")
 	include implementation("org.bouncycastle:bcprov-jdk18on:1.77")
 

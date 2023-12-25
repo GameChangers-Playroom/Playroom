@@ -26,6 +26,7 @@ public abstract class PlayroomEntity implements ExpandedEntityData {
     @Shadow public abstract boolean hasVehicle();
     @Shadow public abstract void stopRiding();
 
+    @Shadow private World world;
     private static final @Unique TrackedData<Integer> playroom$GUN_FREEZE_TICKS = DataTracker.registerData(Entity.class, TrackedDataHandlerRegistry.INTEGER);
     private @Unique Text playroom$prefix;
     private @Unique Text playroom$displayName;
@@ -56,6 +57,7 @@ public abstract class PlayroomEntity implements ExpandedEntityData {
 
     @Override
     public void playroom$setGunFreezeTicks(int frozenTicks) {
+        if (world.isClient()) return;
         this.dataTracker.set(playroom$GUN_FREEZE_TICKS, frozenTicks);
         if (hasVehicle()) stopRiding();
     }

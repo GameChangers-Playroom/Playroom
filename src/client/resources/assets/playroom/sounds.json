@@ -39,6 +39,6 @@
     "sounds": [
       "playroom:hitfreeze"
     ],
-    "subtitle": "playroom.subtitles.generic.hit_freeze"
+    "subtitle": "playroom.subtitles.generic.freeze"
   }
 }

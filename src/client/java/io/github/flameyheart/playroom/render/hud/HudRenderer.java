@@ -5,6 +5,9 @@ import io.github.flameyheart.playroom.config.ClientConfig;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import software.bernie.geckolib.util.RenderUtils;
+
+import java.util.Arrays;
 
 public class HudRenderer {
 
@@ -14,10 +17,8 @@ public class HudRenderer {
         //MinecraftClient client = MinecraftClient.getInstance();
         //Renderer2d.renderRoundedQuad(drawContext.getMatrices(), Color.RED, 10, 10, 100, 100, 5, 5);
         //new Flat(drawContext, 1, new Box(10, 10, 100, 100)).new Oval(Palette.RED).addColor(1, Palette.CYAN).addColor(2, Palette.CYAN).render();
-        drawContext.drawText(MinecraftClient.getInstance().textRenderer, "Ticking: " + !PlayroomClient.stopTicking, 5, 5, 0xFFFFFF, true);
-        drawContext.drawText(MinecraftClient.getInstance().textRenderer, "Camera: " + PlayroomClient.orbitCameraEnabled, 5, 16, 0xFFFFFF, true);
-
-        drawContext.drawText(MinecraftClient.getInstance().textRenderer, "Reload time: " + ServerConfig.instance().laserFireReloadTime, 5, 38, 0xFFFFFF, true);
+        drawContext.drawText(MinecraftClient.getInstance().textRenderer, "Use ticks: " + (MinecraftClient.getInstance().player == null ? "Null player" : MinecraftClient.getInstance().player.getItemUseTimeLeft()), 5, 5, 0xFFFFFF, true);
+        drawContext.drawText(MinecraftClient.getInstance().textRenderer, "Frozen model: " + PlayroomClient.frozenModel.size(), 5, 16, 0xFFFFFF, true);
         //matrixStack.push();
         //matrixStack.translate(100, 100, 0);
         //if (client.world != null) {

@@ -7,6 +7,7 @@ import io.github.flameyheart.playroom.entity.LaserProjectileEntity;
 import io.github.flameyheart.playroom.mixin.geo.AnimationControllerAccessor;
 import io.github.flameyheart.playroom.registry.Sounds;
 import net.fabricmc.fabric.api.item.v1.FabricItem;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.Entity;
@@ -14,7 +15,9 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.NetworkSyncedItem;
 import net.minecraft.item.Vanishable;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.StopSoundS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -39,6 +42,8 @@ import software.bernie.geckolib.core.animation.AnimationController;
 import software.bernie.geckolib.core.animation.AnimationState;
 import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.core.object.PlayState;
+import software.bernie.geckolib.network.GeckoLibNetwork;
+import software.bernie.geckolib.network.packet.AnimTriggerPacket;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.ArrayList;
@@ -103,18 +108,19 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
         super.inventoryTick(stack, world, entity, slot, selected);
 
-        if (world instanceof ServerWorld serverWorld) {
+        if (world instanceof ServerWorld) {
+            if (entity instanceof LivingEntity livingEntity) {
+                if (livingEntity.getItemUseTimeLeft() == 0) {
+                    getPlayroomTag(stack).putLong("Charge", 0);
+                    getPlayroomTag(stack).putLong("FireCooldown", 0);
+                }
+            }
+
             boolean rapidFire = getPlayroomTag(stack).getBoolean("RapidFire");
 
             if (rapidFire) {
                 if (getPlayroomTag(stack).getByte("Amo") <= 0 && isCooldownExpired(stack)) {
                     getPlayroomTag(stack).putByte("Amo", ServerConfig.instance().laserRapidFireAmo);
-                }
-
-                long geoId = GeoItem.getOrAssignId(stack, serverWorld);
-                AnimationController<GeoAnimatable> controller = getAnimatableInstanceCache().getManagerForId(geoId).getAnimationControllers().get("controller");
-                if (((AnimationControllerAccessor) controller).getTriggeredAnimation() == null) {
-                    triggerAnim(entity, geoId, "controller", "rapidfire_mode");
                 }
             }
         }
@@ -131,6 +137,7 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
             }
         }
         getPlayroomTag(stack).putInt("Charge", 0);
+        getPlayroomTag(stack).putLong("FireCooldown", 0);
         super.onStoppedUsing(stack, world, user, remainingUseTicks);
     }
 
@@ -150,8 +157,13 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     @Override
     public void usageTick(World world, LivingEntity user, ItemStack stack, int remainingUseTicks) {
         if (user instanceof PlayerEntity player && canFire(stack, Hand.MAIN_HAND, player)) {
+            long fireCooldown = getPlayroomTag(stack).getLong("FireCooldown");
             if (isRapidFire(stack)) {
-                handleRapidFire(world, player, Hand.MAIN_HAND, stack);
+                if (fireCooldown-- <= 0) {
+                    handleRapidFire(world, player, Hand.MAIN_HAND, stack);
+                    fireCooldown = ServerConfig.instance().laserRapidFireCooldown;
+                }
+                getPlayroomTag(stack).putLong("FireCooldown", fireCooldown);
             } else {
                 short chargeTime = ServerConfig.instance().laserRangeChargeTime;
                 if (chargeTime > 0) {
@@ -268,7 +280,7 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
             return Math.round(getPlayroomTag(stack).getByte("Amo") * 13.0F / (float) ServerConfig.instance().laserRapidFireAmo);
         }
 
-        return Math.round(13.0F - timeLeft * 13.0F / (float) cooldown);
+        return Math.max(0, Math.round(13.0F - timeLeft * 13.0F / (float) cooldown));
     }
 
     @Override
@@ -383,10 +395,5 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     @FunctionalInterface
     public interface TooltipProvider {
         void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context);
-    }
-
-    public interface OptionProvider {
-        float getRangedShotVolume();
-        float getRapidShotVolume();
     }
 }

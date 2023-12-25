@@ -6,18 +6,19 @@ import fi.dy.masa.malilib.hotkeys.KeybindMulti;
 import fi.dy.masa.tweakeroo.config.FeatureToggle;
 import io.github.flameyheart.playroom.compat.ModOptional;
 import io.github.flameyheart.playroom.config.ClientConfig;
+import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.duck.PlayerDisplayName;
 import io.github.flameyheart.playroom.duck.client.ExpandedClientLoginNetworkHandler;
 import io.github.flameyheart.playroom.event.LivingEntityEvents;
 import io.github.flameyheart.playroom.freeze.CameraEntity;
 import io.github.flameyheart.playroom.item.Aimable;
-import io.github.flameyheart.playroom.item.LaserGun;
 import io.github.flameyheart.playroom.mixin.EntityAccessor;
 import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Items;
 import io.github.flameyheart.playroom.registry.Particles;
 import io.github.flameyheart.playroom.render.entity.LaserProjectileRenderer;
+import io.github.flameyheart.playroom.render.entity.PlayerModelPositions;
 import io.github.flameyheart.playroom.render.hud.HudRenderer;
 import io.github.flameyheart.playroom.render.item.LaserGunRenderer;
 import io.github.flameyheart.playroom.render.particle.TestParticle;
@@ -56,30 +57,13 @@ import java.util.concurrent.CompletableFuture;
 
 public class PlayroomClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("Playroom Client");
-    public static final Map<Long, Double> animationStartTick = new HashMap<>();
+    private static final KeyBinding DONATIONS_SCREEN_KEYBIND = ClientUtils.addKeybind("donations_screen", GLFW.GLFW_KEY_H);
+    public static final Map<Long, Double> ANIMATION_START_TICK = new HashMap<>();
     public static final BipedEntityModel.ArmPose LASER_GUN_POSE = ClassTinkerers.getEnum(BipedEntityModel.ArmPose.class, "LASER_GUN");
     public static final Map<UUID, Donation> DONATIONS = new LinkedHashMap<>();
 
     public static boolean orbitCameraEnabled = false;
-    public static boolean forceOrbitCamera = false;
-    public static boolean stopTicking = false;
-
-    public static boolean wasFrozen = false;
-
-    private final KeyBinding donationsScreenKeybind = ClientUtils.addKeybind("donations_screen", GLFW.GLFW_KEY_H);
-
-    private final KeyBinding devKeybind1 = ClientUtils.addKeybind("dev1", GLFW.GLFW_KEY_F4);
-    private final KeyBinding devKeybind2 = ClientUtils.addKeybind("dev2", GLFW.GLFW_KEY_F6);
-    private final KeyBinding devKeybind3 = ClientUtils.addKeybind("dev3", GLFW.GLFW_KEY_F7);
-    private final KeyBinding devKeybind4 = ClientUtils.addKeybind("dev4", GLFW.GLFW_KEY_F9);
-
-    private final KeyBinding devKeybind5 = ClientUtils.addKeybind("dev5", GLFW.GLFW_KEY_UP);
-    private final KeyBinding devKeybind6 = ClientUtils.addKeybind("dev6", GLFW.GLFW_KEY_DOWN);
-
-    public static boolean isAiming(ItemStack stack) {
-        Item item = stack.getItem();
-        return item instanceof Aimable aimable && aimable.canAim(stack) && MinecraftClient.getInstance().options.attackKey.isPressed();
-    }
+    public static Map<PlayerEntity, PlayerModelPositions> frozenModel = new HashMap<>();
 
     @Override
     public void onInitializeClient() {
@@ -103,18 +87,7 @@ public class PlayroomClient implements ClientModInitializer {
     }
 
     private void registerEventListeners() {
-        ClientUtils.listenKeybind(donationsScreenKeybind, (client) -> client.setScreen(new DonationListScreen()));
-
-        ClientUtils.listenKeybind(devKeybind1, (client) -> CameraEntity.setCameraState(orbitCameraEnabled = !orbitCameraEnabled));
-        ClientUtils.listenKeybind(devKeybind2, (client) -> forceOrbitCamera = !forceOrbitCamera);
-        ClientUtils.listenKeybind(devKeybind3, (client) -> ClientPlayNetworking.send(Playroom.id("dev/freeze_player"), PacketByteBufs.create()));
-        ClientUtils.listenKeybind(devKeybind4, (client) -> {
-            ClientPlayNetworking.send(Playroom.id("dev/toggle_ticking"), PacketByteBufs.create());
-            stopTicking = !stopTicking;
-        });
-
-        ClientUtils.listenKeybind(devKeybind5, (client) -> ClientPlayNetworking.send(Playroom.id("dev/freeze_player/add"), PacketByteBufs.create()));
-        ClientUtils.listenKeybind(devKeybind6, (client) -> ClientPlayNetworking.send(Playroom.id("dev/freeze_player/rem"), PacketByteBufs.create()));
+        ClientUtils.listenKeybind(DONATIONS_SCREEN_KEYBIND, (client) -> client.setScreen(new DonationListScreen()));
 
         RenderEvents.WORLD.register(WorldRenderer::render);
         RenderEvents.HUD.register(HudRenderer::render);
@@ -123,17 +96,11 @@ public class PlayroomClient implements ClientModInitializer {
             if (client.player != null) {
                 Playroom.serverTime++;
                 ExpandedEntityData player = (ExpandedEntityData) client.player;
-                boolean showIce = player.playroom$showIce();
-                if (!showIce) {
-                    wasFrozen = false;
-                }
-                if (!forceOrbitCamera) {
-                    if (!orbitCameraEnabled && player.playroom$showIce()) {
-                        CameraEntity.setCameraState(orbitCameraEnabled = true);
-                        client.player.input.sneaking = false;
-                    } else if (orbitCameraEnabled && !player.playroom$showIce()) {
-                        CameraEntity.setCameraState(orbitCameraEnabled = false);
-                    }
+                if (!orbitCameraEnabled && player.playroom$showIce()) {
+                    CameraEntity.setCameraState(orbitCameraEnabled = true);
+                    client.player.input.sneaking = false;
+                } else if (orbitCameraEnabled && !player.playroom$showIce()) {
+                    CameraEntity.setCameraState(orbitCameraEnabled = false);
                 }
 
                 CameraEntity.movementTick();
@@ -145,12 +112,28 @@ public class PlayroomClient implements ClientModInitializer {
                 player.getWorld().getProfiler().push("playroom_freezing");
                 ExpandedEntityData eEntity = (ExpandedEntityData) player;
 
-                if (player.getWorld().isClient && !player.isDead() && eEntity.playroom$isFrozen() && !player.isOnGround()) {
-                    player.setVelocity(player.getVelocity().multiply(0.8, 1, 0.8));
-                    ((EntityAccessor) player).callScheduleVelocityUpdate();
+                if (player.getWorld().isClient && !player.isDead() && eEntity.playroom$isFrozen()) {
+                    if (eEntity.playroom$showIce() && !player.isOnGround()) {
+                        player.setVelocity(player.getVelocity().multiply(0.8, 1, 0.8));
+                        ((EntityAccessor) player).callScheduleVelocityUpdate();
+                    } else if (!eEntity.playroom$showIce() && player.isOnGround()) {
+                        float slowdown = ServerConfig.instance().laserAimSlowdown;
+                        player.setVelocity(player.getVelocity().multiply(slowdown, 1, slowdown));
+                        ((EntityAccessor) player).callScheduleVelocityUpdate();
+
+                    }
                 }
 
                 player.getWorld().getProfiler().pop();
+            }
+        });
+        LivingEntityEvents.END_BASE_TICK.register(baseEntity -> {
+            if (baseEntity instanceof PlayerEntity player) {
+                ExpandedEntityData eEntity = (ExpandedEntityData) player;
+                boolean showIce = eEntity.playroom$showIce();
+                if (!showIce) {
+                    frozenModel.remove(player);
+                }
             }
         });
 
@@ -269,5 +252,10 @@ public class PlayroomClient implements ClientModInitializer {
         LOGGER.info("Received {} bytes from server", data.getBytes().length);
 
         return Playroom.deserializeConfig(data);
+    }
+
+    public static boolean isAiming(ItemStack stack) {
+        Item item = stack.getItem();
+        return item instanceof Aimable aimable && aimable.canAim(stack) && MinecraftClient.getInstance().options.attackKey.isPressed();
     }
 }

@@ -119,6 +119,15 @@ public class YACLScreen {
 
             laserGun.option(
               Option.<Integer>createBuilder()
+                .name(Text.translatable("config.playroom.option.laser_gun.laserRapidFireCooldown"))
+                .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRapidFireCooldown.description")))
+                .binding((int) serverDefaults.laserRapidFireCooldown, () -> (int) serverConfig.laserRapidFireCooldown, newVal -> serverConfig.laserRapidFireCooldown = newVal.shortValue())
+                .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 200).step(5))
+                .build()
+            );
+
+            laserGun.option(
+              Option.<Integer>createBuilder()
                 .name(Text.translatable("config.playroom.option.laser_gun.laserSwapModeCooldown"))
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserSwapModeCooldown.description")))
                 .binding((int) serverDefaults.laserSwapModeCooldown, () -> (int) serverConfig.laserSwapModeCooldown, newVal -> serverConfig.laserSwapModeCooldown = (short) newVal.intValue())

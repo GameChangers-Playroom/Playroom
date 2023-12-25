@@ -56,6 +56,10 @@ public class ServerConfig {
     public short laserRangeChargeTime = 20;
 
     @SendToClient
+    @SerialEntry(comment = "The cooldown between rapidfire automatic shots\n[Min: 0, Max: 32767, Default: 1]")
+    public short laserRapidFireCooldown = 1;
+
+    @SendToClient
     @SerialEntry(comment = "The cooldown applied to when the player swaps the gun mode\n[Min: 0, Max: 32767, Default: 10]")
     public short laserSwapModeCooldown = 10;
 

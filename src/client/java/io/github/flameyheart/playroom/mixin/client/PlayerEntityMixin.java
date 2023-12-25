@@ -1,12 +1,7 @@
 package io.github.flameyheart.playroom.mixin.client;
 
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import io.github.flameyheart.playroom.PlayroomClient;
-import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -30,17 +25,9 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 		Object self = this;
 		if (self instanceof AbstractClientPlayerEntity) {
 			ExpandedEntityData data = (ExpandedEntityData) self;
-			if (data != null && data.playroom$getDisplayName() != null) {
+			if (data != null && data.playroom$getDisplayName().getRight() != null) {
 				ci.setReturnValue(data.playroom$getDisplayName().getRight());
 			}
 		}
-	}
-
-	@ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getAttributeValue(Lnet/minecraft/entity/attribute/EntityAttribute;)D"))
-	private double slowdown(double original) {
-		if (PlayroomClient.isAiming(this.getMainHandStack())) {
-			return original * ServerConfig.instance().freezeSlowdown;
-		}
-		return original;
 	}
 }

@@ -14,8 +14,11 @@ import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.duck.ExpandedServerLoginNetworkHandler;
 import io.github.flameyheart.playroom.entity.LaserProjectileEntity;
 import io.github.flameyheart.playroom.event.EntityTickEvents;
+import io.github.flameyheart.playroom.event.LivingEntityEvents;
+import io.github.flameyheart.playroom.item.LaserGun;
 import io.github.flameyheart.playroom.mixin.GsonConfigSerializerAccessor;
 import io.github.flameyheart.playroom.mixin.PlayerEntityInvoker;
+import io.github.flameyheart.playroom.mixin.geo.AnimationControllerAccessor;
 import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Items;
 import io.github.flameyheart.playroom.registry.Particles;
@@ -33,7 +36,10 @@ import net.fabricmc.fabric.api.networking.v1.*;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.NetworkSyncedItem;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerLoginNetworkHandler;
@@ -47,6 +53,10 @@ import org.quiltmc.parsers.json.JsonReader;
 import org.quiltmc.parsers.json.gson.GsonReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.bernie.geckolib.animatable.GeoItem;
+import software.bernie.geckolib.core.animatable.GeoAnimatable;
+import software.bernie.geckolib.core.animation.AnimationController;
+import software.bernie.geckolib.network.packet.AnimTriggerPacket;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -68,7 +78,6 @@ public class Playroom implements ModInitializer {
 	private static TiltifyWebhookConnection sslServer;
 
 	private static MinecraftServer server;
-	private static boolean stopTicking = false;
 	public static long serverTime = 0;
 
 	@Override
@@ -94,13 +103,12 @@ public class Playroom implements ModInitializer {
 			sslServer.start();
 		});
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-			sslServer.interrupt();
+			if (sslServer != null) sslServer.interrupt();
 		});
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			Playroom.server = null;
 		});
-		EntityTickEvents.END_BASE_TICK.register(baseEntity -> {
-			if (stopTicking) return;
+		LivingEntityEvents.END_BASE_TICK.register(baseEntity -> {
 			if (baseEntity instanceof PlayerEntity entity) {
 				entity.getWorld().getProfiler().push("playroom_freezing");
 				ExpandedEntityData eEntity = (ExpandedEntityData) entity;
@@ -135,12 +143,24 @@ public class Playroom implements ModInitializer {
 		});
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			server.execute(() -> {
-				if (!Permissions.check(handler.player, "playroom.admin.server.update_config", 4)) {
+				ServerPlayerEntity player = handler.player;
+				if (!Permissions.check(player, "playroom.admin.server.update_config", 4)) {
 					return;
 				}
 				PacketByteBuf byteBuf = PacketByteBufs.create();
 				byteBuf.writeString(serializeConfig(true));
-				ServerPlayNetworking.send(handler.player, id("config/sync"), byteBuf);
+				ServerPlayNetworking.send(player, id("config/sync"), byteBuf);
+				PacketByteBuf buf = PacketByteBufs.create();
+				buf.writeLong(server.getOverworld().getTime());
+				ServerPlayNetworking.send(player, id("time_sync"), buf);
+				for (int i = 0; i < player.getInventory().size(); ++i) {
+					ItemStack stack = player.getInventory().getStack(i);
+					if (stack.getItem() instanceof LaserGun gun && gun.isRapidFire(stack)) {
+						ServerWorld world = player.getServerWorld();
+						long geoId = GeoItem.getOrAssignId(stack, world);
+						gun.triggerAnim(player, geoId, "controller", "rapid_fire");
+					}
+				}
 			});
 		});
 		ServerEntityEvents.ENTITY_UNLOAD.register((entity, world) -> {
@@ -151,7 +171,8 @@ public class Playroom implements ModInitializer {
 
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			long time = server.getOverworld().getTime();
-			if (time % 100 == 0) {
+			serverTime = time;
+			if (time % 100 == 0 && !getServer().isSingleplayer()) {
 				PacketByteBuf buf = PacketByteBufs.create();
 				buf.writeLong(time);
 				sendPacket(id("time_sync"), buf);
@@ -160,43 +181,6 @@ public class Playroom implements ModInitializer {
 	}
 
 	private void handlePlayPackets() {
-		ServerPlayNetworking.registerGlobalReceiver(id("dev/freeze_player"), (server, player, handler, buf, responseSender) -> {
-			if (!FabricLoader.getInstance().isDevelopmentEnvironment()) {
-				LOGGER.warn("Using dev feature in non-dev environment is not supported!");
-				LOGGER.warn("Also please bonk Awakened for forgetting to remove this");
-				return;
-			}
-			ExpandedEntityData entity = (ExpandedEntityData) player;
-			entity.playroom$freeze();
-		});
-		ServerPlayNetworking.registerGlobalReceiver(id("dev/freeze_player/add"), (server, player, handler, buf, responseSender) -> {
-			if (!FabricLoader.getInstance().isDevelopmentEnvironment()) {
-				LOGGER.warn("Using dev feature in non-dev environment is not supported!");
-				LOGGER.warn("Also please bonk Awakened for forgetting to remove this");
-				return;
-			}
-			ExpandedEntityData entity = (ExpandedEntityData) player;
-			entity.playroom$addGunFreezeTicks(1);
-		});
-		ServerPlayNetworking.registerGlobalReceiver(id("dev/freeze_player/rem"), (server, player, handler, buf, responseSender) -> {
-			if (!FabricLoader.getInstance().isDevelopmentEnvironment()) {
-				LOGGER.warn("Using dev feature in non-dev environment is not supported!");
-				LOGGER.warn("Also please bonk Awakened for forgetting to remove this");
-				return;
-			}
-			ExpandedEntityData entity = (ExpandedEntityData) player;
-			entity.playroom$addGunFreezeTicks(-1);
-		});
-
-		ServerPlayNetworking.registerGlobalReceiver(id("dev/toggle_ticking"), (server, player, handler, buf, responseSender) -> {
-			if (!FabricLoader.getInstance().isDevelopmentEnvironment()) {
-				LOGGER.warn("Using dev feature in non-dev environment is not supported!");
-				LOGGER.warn("Also please bonk Awakened for forgetting to remove this");
-				return;
-			}
-			stopTicking = !stopTicking;
-		});
-
 		ServerPlayNetworking.registerGlobalReceiver(id("config/update"), (server, player, handler, buf, responseSender) -> {
 			if (!Permissions.check(player, "playroom.admin.server.update_config", 4)) {
 				LOGGER.warn("Player {} tried to update the server config without permission!", player.getName());
@@ -218,7 +202,6 @@ public class Playroom implements ModInitializer {
 				}, p -> true);
 			});
 		});
-
 		ServerPlayNetworking.registerGlobalReceiver(id("donation/update"), (server, player, handler, buf, responseSender) -> {
 			if (!Permissions.check(player, "playroom.admin.server.update_donations", 4)) {
 				LOGGER.warn("Player {} tried to update the server donations without permission!", player.getName());

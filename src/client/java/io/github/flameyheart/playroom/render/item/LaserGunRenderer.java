@@ -49,7 +49,7 @@ public class LaserGunRenderer extends AlternativeGeoItemRenderer<LaserGun> {
 
     @Override
     public void updateAnimatedTextureFrame(LaserGun animatable) {
-        int offset = (int) PlayroomClient.animationStartTick.getOrDefault(getInstanceId(animatable), 0d).doubleValue();
+        int offset = (int) PlayroomClient.ANIMATION_START_TICK.getOrDefault(getInstanceId(animatable), 0d).doubleValue();
         AnimatableTexture.setAndUpdate(getTextureLocation(animatable), (int) animatable.getTick(animatable) - offset);
         AnimatableTexture.setAndUpdate(GeoAbstractTexture.appendToPath(getTextureLocation(animatable), "_glowmask"), (int) animatable.getTick(animatable) - offset);
     }
@@ -195,6 +195,7 @@ public class LaserGunRenderer extends AlternativeGeoItemRenderer<LaserGun> {
         @Override
         public void render(MatrixStack poseStack, LaserGun item, BakedGeoModel bakedModel, RenderLayer renderType, VertexConsumerProvider bufferSource, VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay) {
             ItemStack stack = getCurrentItemStack();
+            if (item.isRapidFire(stack)) return;
             RenderLayer emissiveRenderType = getRenderType(item);
             float alphaMultiplier = 1f;
             if (IS_IRIS_PRESENT && IrisApi.getInstance().isShaderPackInUse()) {
@@ -237,7 +238,7 @@ public class LaserGunRenderer extends AlternativeGeoItemRenderer<LaserGun> {
 
             float alpha;
             long length = 8;
-            double animationStart = PlayroomClient.animationStartTick.getOrDefault(getInstanceId(animatable), 0d);
+            double animationStart = PlayroomClient.ANIMATION_START_TICK.getOrDefault(getInstanceId(animatable), 0d);
 
             double fadeinStart = animationStart + length;
             double currentTick = RenderUtils.getCurrentTick();

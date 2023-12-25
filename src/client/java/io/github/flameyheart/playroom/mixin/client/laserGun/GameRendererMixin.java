@@ -32,7 +32,7 @@ public class GameRendererMixin {
         ItemStack stack = this.client.player.getMainHandStack();
         Item item = stack.getItem();
 
-        if (item instanceof Aimable && !PlayroomClient.isAiming(stack) && !this.client.player.isSprinting()) {
+        if (item instanceof Aimable && !PlayroomClient.isAiming(stack)) {
             playroom$gunBobView(matrices, tickDelta);
         }
     }
@@ -54,7 +54,6 @@ public class GameRendererMixin {
 
         matrices.translate(MathHelper.sin(g * (float) Math.PI) * h * 0.5f, -Math.abs(MathHelper.cos(g * (float) Math.PI) * h), 0.0);
 
-        // TODO: does this work?
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(MathHelper.sin(g * (float) Math.PI) * h * 3.0f));
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(Math.abs(MathHelper.cos(g * (float) Math.PI - 0.2f) * h) * 5.0f));
     }
