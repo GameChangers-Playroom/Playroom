@@ -113,7 +113,7 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
             boolean rapidFire = getPlayroomTag(stack).getBoolean("RapidFire");
 
             if (rapidFire) {
-                if (getPlayroomTag(stack).getByte("Amo") <= 0 && isCooldownExpired(stack)) {
+                if (getPlayroomTag(stack).getByte("Amo") <= 0) {
                     getPlayroomTag(stack).putByte("Amo", ServerConfig.instance().laserRapidFireAmo);
                 }
             }
@@ -243,7 +243,7 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
             setCooldown(stack, CooldownReason.RELOAD, ServerConfig.instance().laserFireReloadTime);
         }
 
-        if (world instanceof ServerWorld serverWorld) {
+        if (world instanceof ServerWorld serverWorld && amo >= 0) {
             fireProjectile(player, true, serverWorld);
             playShootSound(world, player, true);
         }
