@@ -27,6 +27,9 @@ import io.github.flameyheart.playroom.render.world.WorldRenderer;
 import io.github.flameyheart.playroom.tiltify.Donation;
 import io.github.flameyheart.playroom.toast.WarningToast;
 import io.github.flameyheart.playroom.util.ClientUtils;
+import io.github.flameyheart.playroom.zoom.ZoomHelper;
+import io.github.flameyheart.playroom.zoom.interpolate.SmoothInterpolator;
+import io.github.flameyheart.playroom.zoom.interpolate.TransitionInterpolator;
 import me.x150.renderer.event.RenderEvents;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
@@ -47,6 +50,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.MathHelper;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,9 +65,26 @@ public class PlayroomClient implements ClientModInitializer {
     public static final Map<Long, Double> ANIMATION_START_TICK = new HashMap<>();
     public static final BipedEntityModel.ArmPose LASER_GUN_POSE = ClassTinkerers.getEnum(BipedEntityModel.ArmPose.class, "LASER_GUN");
     public static final Map<UUID, Donation> DONATIONS = new LinkedHashMap<>();
+    public static final int MAX_SCROLL_TIERS = 5;
 
     public static boolean orbitCameraEnabled = false;
     public static Map<PlayerEntity, PlayerModelPositions> frozenModel = new HashMap<>();
+
+    private static boolean zooming = false;
+    private static final ZoomHelper ZOOM_HELPER = new ZoomHelper(
+      new TransitionInterpolator(
+        () -> ClientConfig.instance().laserAimZoomInTransition,
+        () -> ClientConfig.instance().laserAimZoomOutTransition,
+        () -> ClientConfig.instance().laserAimZoomInTime,
+        () -> ClientConfig.instance().laserAimZoomOutTime
+      ),
+      new SmoothInterpolator(() -> MathHelper.lerp(ClientConfig.defaults().laserAimCameraSmoothness / 100.0, 1.0, 0.1)),
+      () -> ServerConfig.instance().laserAimZoom,
+      () -> 3,
+      () -> MAX_SCROLL_TIERS,
+      () -> true
+    );
+    private static double previousZoomDivisor;
 
     @Override
     public void onInitializeClient() {
@@ -90,11 +111,11 @@ public class PlayroomClient implements ClientModInitializer {
         ClientUtils.listenKeybind(DONATIONS_SCREEN_KEYBIND, (client) -> client.setScreen(new DonationListScreen()));
 
         RenderEvents.WORLD.register(WorldRenderer::render);
-        RenderEvents.HUD.register(HudRenderer::render);
-
+        RenderEvents.HUD.register(HudRenderer::renderDebugInfo);
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            ZOOM_HELPER.tick(isZooming(), 0);
             if (client.player != null) {
-                Playroom.serverTime++;
+                if (Playroom.getServer() == null) Playroom.serverTime++;
                 ExpandedEntityData player = (ExpandedEntityData) client.player;
                 if (!orbitCameraEnabled && player.playroom$showIce()) {
                     CameraEntity.setCameraState(orbitCameraEnabled = true);
@@ -106,7 +127,6 @@ public class PlayroomClient implements ClientModInitializer {
                 CameraEntity.movementTick();
             }
         });
-
         LivingEntityEvents.END_TRAVEL.register(baseEntity -> {
             if (baseEntity instanceof PlayerEntity player) {
                 player.getWorld().getProfiler().push("playroom_freezing");
@@ -136,11 +156,10 @@ public class PlayroomClient implements ClientModInitializer {
                 }
             }
         });
-
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             CameraEntity.setCameraState(orbitCameraEnabled = false);
+            Playroom.serverTime = 0;
         });
-
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
             Items.LASER_GUN.setShowAdvancedTooltip(Screen::hasShiftDown);
             Items.LASER_GUN.setRenderer(new RenderProvider() {
@@ -211,6 +230,11 @@ public class PlayroomClient implements ClientModInitializer {
             long serverTime = buf.readLong();
 
             client.execute(() -> {
+                if (serverTime > Playroom.serverTime) {
+                    Playroom.LOGGER.warn("Server time is {} ticks ahead of client", serverTime - Playroom.serverTime);
+                } else if (serverTime < Playroom.serverTime) {
+                    Playroom.LOGGER.warn("Server time is {} ticks behind client", Playroom.serverTime - serverTime);
+                }
                 Playroom.serverTime = serverTime;
             });
         });
@@ -256,6 +280,30 @@ public class PlayroomClient implements ClientModInitializer {
 
     public static boolean isAiming(ItemStack stack) {
         Item item = stack.getItem();
-        return item instanceof Aimable aimable && aimable.canAim(stack) && MinecraftClient.getInstance().options.attackKey.isPressed();
+        boolean aiming = item instanceof Aimable aimable && aimable.canAim(stack) && MinecraftClient.getInstance().options.attackKey.isPressed();
+        setZooming(aiming);
+        return aiming;
+    }
+
+    private static void setZooming(boolean zooming) {
+        PlayroomClient.zooming = zooming;
+    }
+
+    public static boolean isZooming() {
+        return PlayroomClient.zooming;
+    }
+
+    public static double getPreviousZoomDivisor() {
+        return previousZoomDivisor;
+    }
+
+    public static double getZoomDivisor(float tickDelta) {
+        if (!zooming) {
+            ZOOM_HELPER.reset();
+        }
+
+        double zoomDivisor = ZOOM_HELPER.getZoomDivisor(tickDelta);
+        previousZoomDivisor = zoomDivisor;
+        return zoomDivisor;
     }
 }

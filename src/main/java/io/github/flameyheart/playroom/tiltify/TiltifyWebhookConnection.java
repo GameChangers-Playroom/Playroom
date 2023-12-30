@@ -1,22 +1,18 @@
 package io.github.flameyheart.playroom.tiltify;
 
-import blue.endless.jankson.Jankson;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ServerConfig;
-import io.github.flameyheart.playroom.tiltify.websocket.DonationUpdated;
-import io.github.flameyheart.playroom.tiltify.websocket.WebhookEvent;
-import io.github.flameyheart.playroom.tiltify.websocket.WebhookStructure;
+import io.github.flameyheart.playroom.tiltify.webhook.DonationUpdated;
+import io.github.flameyheart.playroom.tiltify.webhook.WebhookEvent;
+import io.github.flameyheart.playroom.tiltify.webhook.WebhookStructure;
 import io.github.flameyheart.playroom.util.DynamicPlaceholders;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
 import org.slf4j.Logger;
@@ -27,13 +23,16 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.net.ssl.*;
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.file.Path;
 import java.security.*;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.*;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TiltifyWebhookConnection extends Thread {
     private static final Logger LOGGER = LoggerFactory.getLogger("Playroom Tiltify Webhook Connection");
@@ -78,6 +77,7 @@ public class TiltifyWebhookConnection extends Thread {
             // Create an SSL server socket
             serverSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(port);
             LOGGER.info("Tiltify Webhook server started");
+            Playroom.getCommandSource().sendFeedback(() -> Text.translatable("feedback.playroom.webhook.ready"), true);
 
             while (running) {
                 try {
@@ -93,6 +93,17 @@ public class TiltifyWebhookConnection extends Thread {
                         } else if (message.startsWith("Insufficient buffer remaining for AEAD cipher fragment")) {
                             continue;
                         }
+                    } else if (e instanceof SocketException) {
+                        String message = e.getMessage();
+                        if (message.equals("Socket closed") && !running) {
+                            return;
+                        }
+                    } else if (e instanceof SSLException) {
+                        String message = e.getMessage();
+                        if (message.equals("Unsupported or unrecognized SSL message")) {
+                            LOGGER.warn("Received invalid SSL message");
+                            continue;
+                        }
                     }
                     LOGGER.error("Error while handling Tiltify Webhook event", e);
                 }
@@ -103,7 +114,6 @@ public class TiltifyWebhookConnection extends Thread {
     }
 
     private void handleClientConnection(SSLSocket sslSocket) throws IOException {
-        LOGGER.info("Handling Tiltify Webhook event");
         // Get the input and output streams from the SSL socket
         BufferedReader reader = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
         PrintWriter writer = new PrintWriter(sslSocket.getOutputStream(), true);
@@ -160,7 +170,6 @@ public class TiltifyWebhookConnection extends Thread {
     }
 
     private void processData(String request, Map<String, String> headers, String body) throws JsonProcessingException {
-        LOGGER.info("Received Tiltify Webhook event");
         request = request.toLowerCase();
         if (!request.startsWith("post / ")) return;
         if (!headers.containsKey("x-tiltify-signature")) return;

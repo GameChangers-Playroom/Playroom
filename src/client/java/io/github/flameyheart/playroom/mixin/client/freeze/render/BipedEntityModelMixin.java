@@ -7,6 +7,7 @@ import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.Pair;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -33,13 +34,15 @@ public class BipedEntityModelMixin<T extends LivingEntity> {
             if (entity.playroom$showIce()) {
                 PlayerModelPositions positions = PlayroomClient.frozenModel.get(player);
                 if (positions != null) {
-                    List.of(this.head, this.hat, this.body, this.rightArm, this.leftArm, this.rightLeg, this.leftLeg).forEach(modelPart -> {
-                        modelPart.pivotX = positions.head().pivotX();
-                        modelPart.pivotY = positions.head().pivotY();
-                        modelPart.pivotZ = positions.head().pivotZ();
-                        modelPart.roll = positions.head().roll();
-                        modelPart.yaw = positions.head().yaw();
-                        modelPart.pitch = positions.head().pitch();
+                    List.of(new Pair<>(this.head, positions.head()), new Pair<>(this.hat, positions.hat()), new Pair<>(this.body, positions.body()), new Pair<>(this.rightArm, positions.rightArm()), new Pair<>(this.leftArm, positions.leftArm()), new Pair<>(this.rightLeg, positions.rightLeg()), new Pair<>(this.leftLeg, positions.leftLeg())).forEach(pair -> {
+                        ModelPart modelPart = pair.getLeft();
+                        PlayerModelPositions.ModelPosition modelPosition = pair.getRight();
+                        modelPart.pivotX = modelPosition.pivotX();
+                        modelPart.pivotY = modelPosition.pivotY();
+                        modelPart.pivotZ = modelPosition.pivotZ();
+                        modelPart.roll = modelPosition.roll();
+                        modelPart.yaw = modelPosition.yaw();
+                        modelPart.pitch = modelPosition.pitch();
                     });
                     ci.cancel();
                 } else {

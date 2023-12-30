@@ -3,7 +3,6 @@ package io.github.flameyheart.playroom.duck;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
-import org.apache.logging.log4j.core.jmx.Server;
 
 public interface ExpandedEntityData {
     void playroom$setDisplayName(Text prefix, Text displayName);

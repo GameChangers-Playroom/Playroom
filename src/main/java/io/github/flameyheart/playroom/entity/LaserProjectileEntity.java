@@ -3,6 +3,7 @@ package io.github.flameyheart.playroom.entity;
 import io.github.flameyheart.playroom.Constants;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
+import io.github.flameyheart.playroom.registry.Damage;
 import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Sounds;
 import net.minecraft.entity.Entity;
@@ -53,7 +54,11 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
     @Override
     protected void onEntityHit(@NotNull EntityHitResult entityHitResult) {
         Entity entity = entityHitResult.getEntity();
-        if (entity instanceof ExpandedEntityData entityData && entity instanceof PlayerEntity && getOwner() != null) {
+        this.discard();
+        if (getOwner() == null || entity.getUuid().equals(getOwner().getUuid())) return;
+        entity.damage(Damage.laserShot(this.getWorld(), this, getOwner()), (float) getDamage());
+        if (isRapidFire()) entity.timeUntilRegen %= 5;
+        if (entity instanceof ExpandedEntityData entityData && entity instanceof PlayerEntity) {
             playSound(entity.getWorld(), entity, getHitSound());
             if (isRapidFire()) {
                 entityData.playroom$addGunFreezeTicks(ServerConfig.instance().laserRapidFreezeAmount);
@@ -61,7 +66,6 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
                 entityData.playroom$freeze();
             }
         }
-        this.discard();
     }
 
     @Override
@@ -99,6 +103,16 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
     @Override
     protected SoundEvent getHitSound() {
         return isRapidFire() ? Sounds.FREEZE : Sounds.HIT_FREEZE;
+    }
+
+    @Override
+    public double getDamage() {
+        return isRapidFire() ? ServerConfig.instance().laserRapidDamage : ServerConfig.instance().laserRangeDamage;
+    }
+
+    @Override
+    protected float getDragInWater() {
+        return 1;
     }
 
     public void playSound(World world, Entity target, SoundEvent sound) {

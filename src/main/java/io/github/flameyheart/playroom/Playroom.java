@@ -8,38 +8,37 @@ import com.google.gson.stream.JsonWriter;
 import dev.isxander.yacl3.config.v2.api.ConfigClassHandler;
 import dev.isxander.yacl3.config.v2.api.ConfigField;
 import dev.isxander.yacl3.config.v2.api.ReadOnlyFieldAccess;
+import io.github.flameyheart.playroom.command.PlayroomCommand;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.config.annotations.SendToClient;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.duck.ExpandedServerLoginNetworkHandler;
 import io.github.flameyheart.playroom.entity.LaserProjectileEntity;
-import io.github.flameyheart.playroom.event.EntityTickEvents;
 import io.github.flameyheart.playroom.event.LivingEntityEvents;
 import io.github.flameyheart.playroom.item.LaserGun;
 import io.github.flameyheart.playroom.mixin.GsonConfigSerializerAccessor;
 import io.github.flameyheart.playroom.mixin.PlayerEntityInvoker;
-import io.github.flameyheart.playroom.mixin.geo.AnimationControllerAccessor;
 import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Items;
 import io.github.flameyheart.playroom.registry.Particles;
 import io.github.flameyheart.playroom.registry.Sounds;
 import io.github.flameyheart.playroom.tiltify.Donation;
 import io.github.flameyheart.playroom.tiltify.TiltifyWebhookConnection;
+import io.github.flameyheart.playroom.util.InventorySlot;
 import io.wispforest.owo.registration.reflect.FieldRegistrationHandler;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.networking.v1.*;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.NetworkSyncedItem;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.packet.Packet;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerLoginNetworkHandler;
@@ -54,17 +53,11 @@ import org.quiltmc.parsers.json.gson.GsonReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.bernie.geckolib.animatable.GeoItem;
-import software.bernie.geckolib.core.animatable.GeoAnimatable;
-import software.bernie.geckolib.core.animation.AnimationController;
-import software.bernie.geckolib.network.packet.AnimTriggerPacket;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -75,8 +68,9 @@ public class Playroom implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("Playroom");
 	private static final Map<ServerLoginNetworkHandler, CompletableFuture<Object>> HANDSHAKE_QUEUE = new LinkedHashMap<>();
 	public static final Map<UUID, Donation> DONATIONS = new LinkedHashMap<>();
+	public static final Map<UUID, InventorySlot> GUN_STACKS = new LinkedHashMap<>();
+	private static final Map<String, Boolean> EXPERIMENTS = new HashMap<>();
 	private static TiltifyWebhookConnection sslServer;
-
 	private static MinecraftServer server;
 	public static long serverTime = 0;
 
@@ -122,53 +116,44 @@ public class Playroom implements ModInitializer {
 					((PlayerEntityInvoker) entity).invokeDropShoulderEntities();
 
 					if (entity.isOnFire()) {
-						eEntity.playroom$setGunFreezeTicks(Math.max(0, freezeTicks - entity.getFireTicks()));
+						eEntity.playroom$addGunFreezeTicks(-entity.getFireTicks());
 						entity.setFireTicks(0);
+					} else {
+						eEntity.playroom$addGunFreezeTicks(-1);
 					}
 
-					eEntity.playroom$setGunFreezeTicks(Math.max(0, freezeTicks - 1));
 				}
 				entity.getWorld().getProfiler().pop();
 			}
 		});
-		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
-			ServerConfig.INSTANCE.load();
-			if (sslServer != null) sslServer.interrupt();
-			sslServer = new TiltifyWebhookConnection();
-			sslServer.start();
-			sendPacket(id("config/sync"), p -> {
-				boolean canModify = Permissions.check(p, "playroom.admin.server.update_config", 4);
-				return PacketByteBufs.create().writeString(serializeConfig(canModify));
-			}, p -> true);
+		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+			PlayroomCommand.register(dispatcher);
 		});
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-			server.execute(() -> {
-				ServerPlayerEntity player = handler.player;
-				if (!Permissions.check(player, "playroom.admin.server.update_config", 4)) {
-					return;
-				}
-				PacketByteBuf byteBuf = PacketByteBufs.create();
-				byteBuf.writeString(serializeConfig(true));
-				ServerPlayNetworking.send(player, id("config/sync"), byteBuf);
-				PacketByteBuf buf = PacketByteBufs.create();
-				buf.writeLong(server.getOverworld().getTime());
-				ServerPlayNetworking.send(player, id("time_sync"), buf);
-				for (int i = 0; i < player.getInventory().size(); ++i) {
-					ItemStack stack = player.getInventory().getStack(i);
-					if (stack.getItem() instanceof LaserGun gun && gun.isRapidFire(stack)) {
-						ServerWorld world = player.getServerWorld();
-						long geoId = GeoItem.getOrAssignId(stack, world);
-						gun.triggerAnim(player, geoId, "controller", "rapid_fire");
-					}
-				}
-			});
+			if (server.isSingleplayer()) return;
+			ServerPlayerEntity player = handler.player;
+			if (!Permissions.check(player, "playroom.admin.server.update_config", 4)) {
+				return;
+			}
+			PacketByteBuf byteBuf = PacketByteBufs.create();
+			byteBuf.writeString(serializeConfig(true));
+			ServerPlayNetworking.send(player, id("config/sync"), byteBuf);
+			PacketByteBuf buf = PacketByteBufs.create();
+			buf.writeLong(server.getOverworld().getTime());
+			ServerPlayNetworking.send(player, id("time_sync"), buf);
 		});
 		ServerEntityEvents.ENTITY_UNLOAD.register((entity, world) -> {
 			if (entity instanceof LaserProjectileEntity projectile && projectile.getRemovalReason() == Entity.RemovalReason.UNLOADED_TO_CHUNK) {
 				projectile.remove(Entity.RemovalReason.DISCARDED);
 			}
 		});
-
+		ServerPlayerEvents.COPY_FROM.register((oldPlayer, newPlayer, alive) -> {
+			if (!alive) {
+				InventorySlot slot = GUN_STACKS.remove(oldPlayer.getUuid());
+				if (slot == null) return;
+				newPlayer.getInventory().setStack(slot.slot(), slot.stack());
+			}
+		});
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			long time = server.getOverworld().getTime();
 			serverTime = time;
@@ -394,5 +379,26 @@ public class Playroom implements ModInitializer {
 				ServerPlayNetworking.send(player, id, bufBuilder.apply(player));
 			}
 		}
+	}
+
+	public static boolean setExperiment(String experiment) {
+		return EXPERIMENTS.compute(experiment, (s, aBoolean) -> aBoolean == null || !aBoolean);
+	}
+
+	public static boolean isExperimentEnabled(String experiment) {
+		return EXPERIMENTS.getOrDefault(experiment, false);
+	}
+
+	public static void reload(boolean restartWebhookServer) {
+		ServerConfig.INSTANCE.load();
+		if (restartWebhookServer) {
+			if (sslServer != null) sslServer.interrupt();
+			sslServer = new TiltifyWebhookConnection();
+			sslServer.start();
+		}
+		sendPacket(id("config/sync"), p -> {
+			boolean canModify = Permissions.check(p, "playroom.admin.server.update_config", 4);
+			return PacketByteBufs.create().writeString(serializeConfig(canModify));
+		}, p -> true);
 	}
 }

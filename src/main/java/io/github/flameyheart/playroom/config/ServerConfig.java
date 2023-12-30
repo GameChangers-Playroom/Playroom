@@ -78,9 +78,18 @@ public class ServerConfig {
     @SerialEntry(comment = "The amount of time added per rapid fire shot\n[Min: 0, Max: 32767, Default: 100]")
     public short laserRapidFreezeAmount = 100;
 
+    @SerialEntry(comment = "The zoom amount for when aiming with the gun\n[Min: 0, Default: ??] [DECIMAL SUPPORTED]")
+    public float laserAimSlowdown = 0.5f;
+
     @SendToClient
     @SerialEntry(comment = "The player speed multiplier when aiming\n[Min: 0, Default: ??] [DECIMAL SUPPORTED]")
-    public float laserAimSlowdown = 0.5f;
+    public int laserAimZoom = 1;
+
+    @SerialEntry(comment = "The amount of damage a ranged shot does\n[Min: 0, Default: 1] [DECIMAL SUPPORTED]")
+    public float laserRangeDamage = 1f;
+
+    @SerialEntry(comment = "The amount of damage a rapid fire shot does\n[Min: 0, Default: 0.3] [DECIMAL SUPPORTED]")
+    public float laserRapidDamage = 0.3f;
     //endregion
 
     //region FREEZE TIMES

@@ -1,7 +1,11 @@
 package io.github.flameyheart.playroom.mixin.client.laserGun;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import io.github.flameyheart.playroom.PlayroomClient;
+import io.github.flameyheart.playroom.config.ClientConfig;
+import io.github.flameyheart.playroom.config.ServerConfig;
+import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.item.Aimable;
 import io.github.flameyheart.playroom.item.LaserGun;
 import net.minecraft.client.MinecraftClient;
@@ -24,8 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GameRenderer.class)
 public class GameRendererMixin {
-    @Shadow @Final
-    MinecraftClient client;
+    @Shadow @Final MinecraftClient client;
 
     @Inject(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;bobView(Lnet/minecraft/client/util/math/MatrixStack;F)V", shift = At.Shift.BEFORE))
     private void bobViewGun(MatrixStack matrices, Camera camera, float tickDelta, CallbackInfo ci) {
@@ -43,8 +46,7 @@ public class GameRendererMixin {
         return !(this.client.player.getMainHandStack().getItem() instanceof LaserGun);
     }
 
-    @Unique
-    private void playroom$gunBobView(MatrixStack matrices, float tickDelta) {
+    private @Unique void playroom$gunBobView(MatrixStack matrices, float tickDelta) {
         if (!(this.client.getCameraEntity() instanceof PlayerEntity playerEntity)) {
             return;
         }
@@ -56,5 +58,10 @@ public class GameRendererMixin {
 
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(MathHelper.sin(g * (float) Math.PI) * h * 3.0f));
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(Math.abs(MathHelper.cos(g * (float) Math.PI - 0.2f) * h) * 5.0f));
+    }
+
+    @ModifyReturnValue(method = "getFov", at = @At("RETURN"))
+    private double modifyFovWithZoom(double fov, Camera camera, float tickDelta, boolean changingFov) {
+        return fov / PlayroomClient.getZoomDivisor(tickDelta);
     }
 }

@@ -1,11 +1,9 @@
 package io.github.flameyheart.playroom.item;
 
 import io.github.flameyheart.playroom.Constants;
-import io.github.flameyheart.playroom.registry.Sounds;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.world.World;
 

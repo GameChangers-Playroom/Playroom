@@ -1,4 +1,4 @@
-package io.github.flameyheart.playroom.tiltify.websocket;
+package io.github.flameyheart.playroom.tiltify.webhook;
 
 public abstract class WebhookEvent<T extends WebhookStructure.Webhook> {
     public T data;

@@ -1,4 +1,4 @@
-package io.github.flameyheart.playroom.tiltify.websocket;
+package io.github.flameyheart.playroom.tiltify.webhook;
 
 import org.jetbrains.annotations.Nullable;
 

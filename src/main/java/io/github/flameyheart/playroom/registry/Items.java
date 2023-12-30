@@ -17,8 +17,8 @@ public class Items implements ItemRegistryContainer {
     public static final Item ICE_BLOCKS  = new Item(new FabricItemSettings().rarity(Rarity.RARE).maxCount(1));
 
     @IterationIgnored
-    public static final OwoItemGroup ITEM_GROUP = OwoItemGroup.builder(Playroom.id("item_group"), () -> Icon.of(net.minecraft.item.Items.TNT))
-        .initializer(itemGroup -> itemGroup.tabs.add(new ItemGroupTab(Icon.of(net.minecraft.item.Items.TNT), Text.translatable("itemGroup.flamey.tab.main"), (context, entries) -> {
+    public static final OwoItemGroup ITEM_GROUP = OwoItemGroup.builder(Playroom.id("items"), () -> Icon.of(ICE_BLOCKS))
+        .initializer(itemGroup -> itemGroup.tabs.add(new ItemGroupTab(Icon.of(ICE_BLOCKS), Text.translatable("itemGroup.playroom.items"), (context, entries) -> {
             entries.add(LASER_GUN);
             entries.add(ICE_BLOCKS);
         }, ItemGroupTab.DEFAULT_TEXTURE, true))).build();

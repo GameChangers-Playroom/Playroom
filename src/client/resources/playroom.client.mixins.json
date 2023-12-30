@@ -23,11 +23,11 @@
         "freeze.render.PlayerEntityRendererMixin",
         "geo.AnimTriggerPacketMixin",
         "geo.AutoGlowingTextureAccessor",
-        "laserGun.AbstractClientPlayerEntityMixin",
         "laserGun.BipedEntityModelMixin",
         "laserGun.GameRendererMixin",
         "laserGun.HeldItemRendererMixin",
         "laserGun.MinecraftClientMixin",
+        "laserGun.MouseMixin",
         "laserGun.PlayerEntityRendererMixin"
     ],
     "injectors": {

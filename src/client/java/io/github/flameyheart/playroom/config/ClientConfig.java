@@ -5,6 +5,8 @@ import dev.isxander.yacl3.config.v2.api.SerialEntry;
 import dev.isxander.yacl3.config.v2.api.serializer.GsonConfigSerializerBuilder;
 import dev.isxander.yacl3.platform.YACLPlatform;
 import io.github.flameyheart.playroom.Playroom;
+import io.github.flameyheart.playroom.config.annotations.SendToClient;
+import io.github.flameyheart.playroom.zoom.TransitionType;
 
 public class ClientConfig {
     public static final ConfigClassHandler<ClientConfig> INSTANCE = ConfigClassHandler.createBuilder(ClientConfig.class)
@@ -25,6 +27,22 @@ public class ClientConfig {
 
     @SerialEntry(comment = "Disables some animations to reduce motion sickness\n[Default: false]")
     public boolean reducedMotion = false;
+
     @SerialEntry(comment = "Enables debug info\n[Default: false]")
     public boolean debugInfo = false;
+
+    @SerialEntry(comment = "The relative sensitivity of the camera while aiming\n[Min: 0, Default: 100]")
+    public short laserAimCameraSmoothness = 100;
+
+    @SerialEntry(comment = "The zoom in transition when aiming")
+    public TransitionType laserAimZoomInTransition = TransitionType.EASE_OUT_EXP;
+
+    @SerialEntry(comment = "The zoom out transition when aiming")
+    public TransitionType laserAimZoomOutTransition = TransitionType.EASE_OUT_EXP;
+
+    @SerialEntry(comment = "The zoom in duration when aiming\n[Min: 0, Default: 0.5] [DECIMAL SUPPORTED]")
+    public double laserAimZoomInTime = 0.5f;
+
+    @SerialEntry(comment = "The zoom out duration when aiming\n[Min: 0, Default: 0.5] [DECIMAL SUPPORTED]")
+    public double laserAimZoomOutTime = 0.5f;
 }

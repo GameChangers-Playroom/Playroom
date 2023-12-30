@@ -1,6 +1,5 @@
 package io.github.flameyheart.playroom.mixin.client.freeze.render;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.entity.LivingEntity;

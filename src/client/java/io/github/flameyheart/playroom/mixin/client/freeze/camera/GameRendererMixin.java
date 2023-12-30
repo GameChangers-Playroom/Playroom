@@ -19,14 +19,10 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(value = GameRenderer.class, priority = 1002)
-public abstract class GameRendererMixin {
-
+public class GameRendererMixin {
     @Shadow @Final MinecraftClient client;
-
-    @Shadow public abstract void render(float tickDelta, long startTime, boolean tick);
-
-    private @Unique double playroom$lastFov;
-    private @Unique double playroom$fov;
+    private @Unique double playroom$lastFreezeFov;
+    private @Unique double playroom$freezeFov;
 
     //Uses player target so the camera doesn't target the player and allows you to kick yourself with a single click
     @WrapOperation(method = "updateTargetedEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getCameraEntity()Lnet/minecraft/entity/Entity;"))
@@ -47,17 +43,17 @@ public abstract class GameRendererMixin {
         //ZoomManager.ZOOM_HELPER.tick(zoom, 0);
         if (zoom) {
             double targetFov = ServerConfig.instance().freezeZoomFov;
-            playroom$lastFov = playroom$fov;
-            this.playroom$fov += (targetFov - this.playroom$fov) * ((1 - targetFov) / (entity.playroom$zoomDuration() + 10));
+            playroom$lastFreezeFov = playroom$freezeFov;
+            this.playroom$freezeFov += (targetFov - this.playroom$freezeFov) * ((1 - targetFov) / (entity.playroom$zoomDuration() + 10));
 
 
             if (changingFov) {
                 fov = this.client.options.getFov().getValue().intValue();
-                fov *= MathHelper.lerp(tickDelta, playroom$lastFov, playroom$fov);
+                fov *= MathHelper.lerp(tickDelta, playroom$lastFreezeFov, playroom$freezeFov);
             }
 
         } else {
-            playroom$fov = 1;
+            playroom$freezeFov = 1;
         }
 
         return fov;

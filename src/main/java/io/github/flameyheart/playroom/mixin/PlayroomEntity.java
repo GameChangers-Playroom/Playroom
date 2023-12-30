@@ -6,6 +6,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
@@ -33,13 +34,17 @@ public abstract class PlayroomEntity implements ExpandedEntityData {
 
     @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;initDataTracker()V", shift = At.Shift.BEFORE))
     private void initTrackers(EntityType<?> type, World world, CallbackInfo ci) {
-        this.dataTracker.startTracking(playroom$GUN_FREEZE_TICKS, 0);
+        if ((Object) this instanceof PlayerEntity) {
+            this.dataTracker.startTracking(playroom$GUN_FREEZE_TICKS, 0);
+        }
     }
 
     @Inject(method = "writeNbt", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;writeCustomDataToNbt(Lnet/minecraft/nbt/NbtCompound;)V"))
     private void appendNbt(NbtCompound nbt, CallbackInfoReturnable<NbtCompound> cir) {
         NbtCompound compound = new NbtCompound();
-        compound.putInt("TicksFrozen", playroom$getGunFreezeTicks());
+        if ((Object) this instanceof PlayerEntity) {
+            compound.putInt("TicksFrozen", playroom$getGunFreezeTicks());
+        }
 
         nbt.put("Playroom", compound);
     }
@@ -47,7 +52,9 @@ public abstract class PlayroomEntity implements ExpandedEntityData {
     @Inject(method = "readNbt", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;readCustomDataFromNbt(Lnet/minecraft/nbt/NbtCompound;)V"))
     private void appendNbt(NbtCompound nbt, CallbackInfo ci) {
         NbtCompound compound = nbt.getCompound("Playroom");
-        playroom$setGunFreezeTicks(compound.getInt("TicksFrozen"));
+        if ((Object) this instanceof PlayerEntity) {
+            playroom$setGunFreezeTicks(compound.getInt("TicksFrozen"));
+        }
     }
 
     @Override

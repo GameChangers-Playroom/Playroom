@@ -1,9 +1,13 @@
 {
-    "soundCategory.playroom": "Playroom",
     "category.playroom.keybinds": "Playroom",
-    "itemGroup.playroom.item_group": "Playroom",
+    "itemGroup.playroom.items": "Playroom",
+    "soundCategory.playroom": "Playroom",
     "key.playroom.donation_screen": "View donation history [In dev]",
-    "item.playroom.laser_gun": "Flamey's super cool laser gun",
+    "commands.playroom.reload": "Reloading Playroom config",
+    "commands.playroom.reload.restart_webhook_server": "Restarting the Tiltify webhook server",
+    "commands.playroom.experiment": "Experiment \"%s\" set to %s",
+    "item.playroom.ice_blocks": "Ice Blocks",
+    "item.playroom.laser_gun": "ꜰʀᴇᴇᴢᴇ ɢᴜɴ",
     "item.playroom.laser_gun.tooltip.more": [
         {
             "text": "ʜᴏʟᴅ ꜱʜɪꜰᴛ ꜰᴏʀ ᴍᴏʀᴇ...",
@@ -47,6 +51,8 @@
         }
     ],
 
+    "feedback.playroom.webhook.ready": "Tiltify Webhook server started",
+
     "playroom.multiplayer.disconnect.unsupported_client": "Unsupported client \nPlayroom is required to join the server",
     "playroom.multiplayer.disconnect.unexpected_handshake": "Unexpected handshake packet from client",
     "playroom.multiplayer.disconnect.unexpected_query_start": "Unexpected query start from client",
@@ -76,6 +82,21 @@
 
     "config.playroom.option.general.debugInfo": "Debug info",
     "config.playroom.option.general.debugInfo.description": "Shows debug info in the top left corner",
+
+    "config.playroom.option.general.laserAimCameraSmoothness": "Laser gun aim camera smoothness",
+    "config.playroom.option.general.laserAimCameraSmoothness.description": "The relative sensitivity of the camera while aiming",
+
+    "config.playroom.option.general.laserAimZoomInTime": "Laser gun aim zoom in time",
+    "config.playroom.option.general.laserAimZoomInTime.description": "The time it takes to zoom in",
+
+    "config.playroom.option.general.laserAimZoomOutTime": "Laser gun aim zoom out time",
+    "config.playroom.option.general.laserAimZoomOutTime.description": "The time it takes to zoom out",
+
+    "config.playroom.option.general.laserAimZoomInTransition": "Laser gun aim zoom in transition",
+    "config.playroom.option.general.laserAimZoomInTransition.description": "The transition function for zooming in",
+
+    "config.playroom.option.general.laserAimZoomOutTransition": "Laser gun aim zoom out transition",
+    "config.playroom.option.general.laserAimZoomOutTransition.description": "The transition function for zooming out",
 
 
     "config.playroom.option.networking.allowVanillaPlayers": "Allow vanilla players",
@@ -121,6 +142,15 @@
     "config.playroom.option.laser_gun.laserAimSlowdown": "Laser gun aim slowdown",
     "config.playroom.option.laser_gun.laserAimSlowdown.description": "The player speed multiplier when aiming",
 
+    "config.playroom.option.laser_gun.laserAimZoom": "Laser gun aim zoom",
+    "config.playroom.option.laser_gun.laserAimZoom.description": "The zoom amount for when aiming with the gun",
+
+    "config.playroom.option.laser_gun.laserRangeDamage": "Ranged shot damage",
+    "config.playroom.option.laser_gun.laserRangeDamage.description": "The amount of damage a ranged shot does",
+
+    "config.playroom.option.laser_gun.laserRapidDamage": "Rapid fire shot damage",
+    "config.playroom.option.laser_gun.laserRapidDamage.description": "The amount of damage a rapid fire shot does",
+
 
     "config.playroom.option.player_freeze.freezeZoomDuration": "Freeze zoom duration",
     "config.playroom.option.player_freeze.freezeZoomDuration.description": "The duration of the zoom effect",
@@ -140,5 +170,7 @@
     "config.playroom.option.player_freeze.freezeSlowdown": "Freeze slowdown",
     "config.playroom.option.player_freeze.freezeSlowdown.description": "The multiplier for the player speed",
 
-    "config.playroom.option.server.commands": "Editing the commands in game is not supported yet, please edit the config file"
+    "config.playroom.option.server.commands": "Editing the commands in game is not supported yet, please edit the config file",
+
+    "zoomify.gui.formatter.seconds": "%s secs"
 }
