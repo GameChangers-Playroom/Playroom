@@ -21,10 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class HeldItemRendererMixin {
     @Shadow public abstract void renderItem(LivingEntity entity, ItemStack stack, ModelTransformationMode renderMode, boolean leftHanded, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light);
     @Shadow protected abstract void applyEquipOffset(MatrixStack matrices, Arm arm, float equipProgress);
-
     @Shadow protected abstract void applySwingOffset(MatrixStack matrices, Arm arm, float swingProgress);
-
-    @Shadow protected abstract void renderArm(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, Arm arm);
 
     @Inject(method = "renderFirstPersonItem", at = @At("HEAD"), cancellable = true)
     private void cancelFirstPersonRender(AbstractClientPlayerEntity player, float tickDelta, float pitch, Hand hand, float swingProgress, ItemStack item, float equipProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {

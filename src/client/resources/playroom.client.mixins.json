@@ -21,7 +21,6 @@
     "freeze.render.InGameHudMixin",
     "freeze.render.InventoryScreenMixin",
     "freeze.render.LivingEntityRendererMixin",
-    "freeze.render.PlayerEntityRendererMixin",
     "geo.AnimTriggerPacketMixin",
     "geo.AutoGlowingTextureAccessor",
     "laserGun.BipedEntityModelMixin",
