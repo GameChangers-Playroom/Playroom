@@ -15,7 +15,6 @@ import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.duck.ExpandedServerLoginNetworkHandler;
 import io.github.flameyheart.playroom.entity.LaserProjectileEntity;
 import io.github.flameyheart.playroom.event.LivingEntityEvents;
-import io.github.flameyheart.playroom.item.LaserGun;
 import io.github.flameyheart.playroom.mixin.GsonConfigSerializerAccessor;
 import io.github.flameyheart.playroom.mixin.PlayerEntityInvoker;
 import io.github.flameyheart.playroom.registry.Entities;
@@ -37,7 +36,6 @@ import net.fabricmc.fabric.api.networking.v1.*;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
@@ -52,7 +50,6 @@ import org.quiltmc.parsers.json.JsonReader;
 import org.quiltmc.parsers.json.gson.GsonReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.bernie.geckolib.animatable.GeoItem;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -102,29 +99,29 @@ public class Playroom implements ModInitializer {
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			Playroom.server = null;
 		});
-		LivingEntityEvents.END_BASE_TICK.register(baseEntity -> {
-			if (baseEntity instanceof PlayerEntity entity) {
-				entity.getWorld().getProfiler().push("playroom_freezing");
-				ExpandedEntityData eEntity = (ExpandedEntityData) entity;
+		LivingEntityEvents.END_BASE_TICK.register(livingEntity -> {
+			livingEntity.getWorld().getProfiler().push("playroom_freezing");
+			ExpandedEntityData eEntity = (ExpandedEntityData) livingEntity;
 
-				int freezeTicks = eEntity.playroom$getGunFreezeTicks();
+			int freezeTicks = eEntity.playroom$getGunFreezeTicks();
 
-				if (!entity.getWorld().isClient && !entity.isDead() && freezeTicks > 0) {
-					if (entity.hasPassengers()) entity.removeAllPassengers();
-					if (entity.hasVehicle()) entity.stopRiding();
-					if (entity.isFallFlying()) entity.stopFallFlying();
-					((PlayerEntityInvoker) entity).invokeDropShoulderEntities();
-
-					if (entity.isOnFire()) {
-						eEntity.playroom$addGunFreezeTicks(-entity.getFireTicks());
-						entity.setFireTicks(0);
-					} else {
-						eEntity.playroom$addGunFreezeTicks(-1);
-					}
-
+			if (!livingEntity.getWorld().isClient && !livingEntity.isDead() && freezeTicks > 0) {
+				if (livingEntity.hasPassengers()) livingEntity.removeAllPassengers();
+				if (livingEntity.hasVehicle()) livingEntity.stopRiding();
+				if(livingEntity instanceof PlayerEntity player) {
+					if (player.isFallFlying() ) player.stopFallFlying();
+					((PlayerEntityInvoker) player).invokeDropShoulderEntities();
 				}
-				entity.getWorld().getProfiler().pop();
+
+				if (livingEntity.isOnFire()) {
+					eEntity.playroom$addGunFreezeTicks(-livingEntity.getFireTicks());
+					livingEntity.setFireTicks(0);
+				} else {
+					eEntity.playroom$addGunFreezeTicks(-1);
+				}
+
 			}
+			livingEntity.getWorld().getProfiler().pop();
 		});
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			PlayroomCommand.register(dispatcher);

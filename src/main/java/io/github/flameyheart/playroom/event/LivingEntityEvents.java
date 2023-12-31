@@ -23,9 +23,11 @@ import net.minecraft.entity.LivingEntity;
 public final class LivingEntityEvents {
 
     public static final Event<StartTick> START_TICK = EventFactory.createArrayBacked(StartTick.class, (callbacks) -> (server) -> {
+        boolean shouldCancel = false;
         for (StartTick event : callbacks) {
-            event.onStartTick(server);
+            shouldCancel |= event.onStartTick(server);
         }
+        return shouldCancel;
     });
 
     public static final Event<EndTick> END_TICK = EventFactory.createArrayBacked(EndTick.class, (callbacks) -> (server) -> {
@@ -35,9 +37,11 @@ public final class LivingEntityEvents {
     });
 
     public static final Event<StartTick> START_BASE_TICK = EventFactory.createArrayBacked(StartTick.class, (callbacks) -> (server) -> {
+        boolean shouldCancel = false;
         for (StartTick event : callbacks) {
-            event.onStartTick(server);
+            shouldCancel |= event.onStartTick(server);
         }
+        return shouldCancel;
     });
 
     public static final Event<EndTick> END_BASE_TICK = EventFactory.createArrayBacked(EndTick.class, (callbacks) -> (server) -> {
@@ -60,7 +64,7 @@ public final class LivingEntityEvents {
 
     @FunctionalInterface
     public interface StartTick {
-        void onStartTick(LivingEntity entity);
+        boolean onStartTick(LivingEntity entity);
     }
 
     @FunctionalInterface

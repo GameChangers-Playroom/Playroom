@@ -1,12 +1,20 @@
 package io.github.flameyheart.playroom.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.event.LivingEntityEvents;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.world.World;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.text.Text;
+import net.minecraft.util.Pair;
+import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -15,14 +23,89 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
-public abstract class LivingEntityMixin extends Entity {
-    public LivingEntityMixin(EntityType<?> type, World world) {
-        super(type, world);
+public abstract class LivingEntityMixin extends PlayroomEntity implements ExpandedEntityData {
+    @Shadow public int hurtTime;
+    private static final @Unique TrackedData<Integer> playroom$GUN_FREEZE_TICKS = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private @Unique Text playroom$prefix;
+    private @Unique Text playroom$displayName;
+
+    @Inject(method = "initDataTracker", at = @At("HEAD"))
+    private void trackGunFreezeTicks(CallbackInfo ci) {
+        this.dataTracker.startTracking(playroom$GUN_FREEZE_TICKS, 0);
     }
 
-    @Inject(method = "tick", at = @At(value = "HEAD"))
+    @Override
+    public int playroom$getGunFreezeTicks() {
+        return this.dataTracker.get(playroom$GUN_FREEZE_TICKS);
+    }
+
+    @Override
+    public void playroom$setGunFreezeTicks(int frozenTicks) {
+        if (getWorld().isClient()) return;
+        this.dataTracker.set(playroom$GUN_FREEZE_TICKS, frozenTicks);
+        if (hasVehicle()) stopRiding();
+    }
+
+    @Override
+    protected void appendNbt(NbtCompound nbt, CallbackInfoReturnable<NbtCompound> cir) {
+        NbtCompound compound = new NbtCompound();
+        if ((Object) this instanceof PlayerEntity) {
+            compound.putInt("TicksFrozen", playroom$getGunFreezeTicks());
+        }
+
+        nbt.put("Playroom", compound);
+    }
+
+    @Override
+    protected void appendNbt(NbtCompound nbt, CallbackInfo ci) {
+        NbtCompound compound = nbt.getCompound("Playroom");
+        if ((Object) this instanceof PlayerEntity) {
+            playroom$setGunFreezeTicks(compound.getInt("TicksFrozen"));
+        }
+    }
+
+    @Override
+    protected boolean collideWhileFrozen(boolean original) {
+        return super.collideWhileFrozen(original) || playroom$isFrozen();
+    }
+
+    @Override
+    protected boolean moveWhileFrozen(boolean original) {
+        if(playroom$isFrozen()) {
+            return false;
+        }
+        return super.moveWhileFrozen(original);
+    }
+
+    @Override
+    public void playroom$addGunFreezeTicks(int frozenTicks) {
+        playroom$setGunFreezeTicks(MathHelper.clamp(playroom$getGunFreezeTicks() + frozenTicks, 0, playroom$freezeTime()));
+    }
+
+    @Override
+    public void playroom$setDisplayName(Text prefix, Text displayName) {
+        this.playroom$prefix = prefix;
+        this.playroom$displayName = displayName;
+    }
+
+    @Override
+    public Pair<Text, Text> playroom$getDisplayName() {
+        return new Pair<>(playroom$prefix, playroom$displayName);
+    }
+
+    @ModifyReturnValue(method = "isImmobile", at = @At("RETURN"))
+    private boolean immobileIfFrozen(boolean original) {
+        return original || playroom$isFrozen();
+    }
+
+    @Inject(method = "tickMovement", at = @At("HEAD"), cancellable = true)
+    private void onTickMovementStart(CallbackInfo ci) {
+        if(playroom$isFrozen() && hurtTime == 0) ci.cancel();
+    }
+
+    @Inject(method = "tick", at = @At(value = "HEAD"), cancellable = true)
     private void onTickStart(CallbackInfo ci) {
-        LivingEntityEvents.START_TICK.invoker().onStartTick((LivingEntity) (Object) this);
+        if(LivingEntityEvents.START_TICK.invoker().onStartTick((LivingEntity) (Object) this)) ci.cancel();
     }
 
     @Inject(method = "tick", at = @At(value = "TAIL"))
@@ -30,9 +113,9 @@ public abstract class LivingEntityMixin extends Entity {
         LivingEntityEvents.END_TICK.invoker().onEndTick((LivingEntity) (Object) this);
     }
 
-    @Inject(method = "baseTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;push(Ljava/lang/String;)V", shift = At.Shift.AFTER))
+    @Inject(method = "baseTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;push(Ljava/lang/String;)V", shift = At.Shift.AFTER), cancellable = true)
     private void onBaseTickStart(CallbackInfo ci) {
-        LivingEntityEvents.START_BASE_TICK.invoker().onStartTick((LivingEntity) (Object) this);
+        if(LivingEntityEvents.START_BASE_TICK.invoker().onStartTick((LivingEntity) (Object) this)) ci.cancel();
     }
 
     @Inject(method = "baseTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V", shift = At.Shift.BEFORE))
@@ -63,15 +146,15 @@ public abstract class LivingEntityMixin extends Entity {
       ordinal = 0
     )
     private float iceDrag(float original) {
-        if (((ExpandedEntityData) this).playroom$isFrozen()) {
-            return this.isOnGround() ? 0.98f : 0.01f;
+        if (this.playroom$isFrozen()) {
+            return isOnGround() ? 0.98f : 0.01f;
         }
         return original;
     }
 
     @Inject(method = "getOffGroundSpeed", at = @At(value = "HEAD"), cancellable = true)
     private void addIceDrag(CallbackInfoReturnable<Float> cir) {
-        if (((ExpandedEntityData) this).playroom$isFrozen()) {
+        if (this.playroom$isFrozen()) {
             cir.setReturnValue(0.01f);
         }
     }

@@ -62,6 +62,7 @@ import java.util.concurrent.CompletableFuture;
 public class PlayroomClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("Playroom Client");
     private static final KeyBinding DONATIONS_SCREEN_KEYBIND = ClientUtils.addKeybind("donations_screen", GLFW.GLFW_KEY_H);
+
     public static final Map<Long, Double> ANIMATION_START_TICK = new HashMap<>();
     public static final BipedEntityModel.ArmPose LASER_GUN_POSE = ClassTinkerers.getEnum(BipedEntityModel.ArmPose.class, "LASER_GUN");
     public static final Map<UUID, Donation> DONATIONS = new LinkedHashMap<>();

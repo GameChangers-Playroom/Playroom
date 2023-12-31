@@ -6,6 +6,7 @@ import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.registry.Damage;
 import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Sounds;
+import io.github.flameyheart.playroom.registry.Tags;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -58,7 +59,7 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
         if (getOwner() == null || entity.getUuid().equals(getOwner().getUuid())) return;
         entity.damage(Damage.laserShot(this.getWorld(), this, getOwner()), (float) getDamage());
         if (isRapidFire()) entity.timeUntilRegen %= 5;
-        if (entity instanceof ExpandedEntityData entityData && entity instanceof PlayerEntity) {
+        if (entity instanceof ExpandedEntityData entityData && entity instanceof LivingEntity && !entity.getType().isIn(Tags.IMMUNE_TO_FREEZE)) {
             playSound(entity.getWorld(), entity, getHitSound());
             if (isRapidFire()) {
                 entityData.playroom$addGunFreezeTicks(ServerConfig.instance().laserRapidFreezeAmount);

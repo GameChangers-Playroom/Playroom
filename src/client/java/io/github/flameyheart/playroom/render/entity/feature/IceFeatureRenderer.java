@@ -4,25 +4,21 @@ import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.registry.Items;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
+import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.item.ItemRenderer;
 import net.minecraft.client.render.model.json.ModelTransformationMode;
 import net.minecraft.client.util.ModelIdentifier;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.RotationAxis;
 
-public class IceFeatureRenderer<T extends AbstractClientPlayerEntity> extends FeatureRenderer<T, PlayerEntityModel<T>> {
-    private final EntityRendererFactory.Context ctx;
-
-    public IceFeatureRenderer(EntityRendererFactory.Context ctx, LivingEntityRenderer<T, PlayerEntityModel<T>> context) {
+public class IceFeatureRenderer<T extends LivingEntity, M extends EntityModel<T>> extends FeatureRenderer<T, M> {
+    public IceFeatureRenderer(LivingEntityRenderer<T, M> context) {
         super(context);
-        this.ctx = ctx;
     }
 
     @Override
@@ -30,19 +26,22 @@ public class IceFeatureRenderer<T extends AbstractClientPlayerEntity> extends Fe
         if (!((ExpandedEntityData) entity).playroom$showIce()) return;
 
         MinecraftClient client = MinecraftClient.getInstance();
+        matrixStack.push();
+
         ExpandedEntityData eEntity = (ExpandedEntityData) entity;
         float iceMelt = eEntity.playroom$iceMeltProgress();
+        float entityHeight = entity.getHeight();
+        float entityWidth = entity.getWidth();
+        float scaleFactor = (entityHeight / 1.8f + entityWidth / 0.6f) / 2;  // model designed for 1.8x0.6 entity
 
-        PlayerEntityModel<T> playerModel = getContextModel();
-        matrixStack.push();
-        playerModel.body.rotate(matrixStack);
-        matrixStack.translate(0, 0.9, 0);
         matrixStack.multiply(RotationAxis.POSITIVE_X.rotation((float) Math.PI));
         matrixStack.multiply(RotationAxis.POSITIVE_Y.rotation((float) Math.PI));
+        matrixStack.translate(0, -0.9f / scaleFactor, 0);
+
         ModelIdentifier modelId = new ModelIdentifier(Playroom.MOD_ID, "ice_blocks", "inventory");
         ItemRenderer itemRenderer = client.getItemRenderer();
-        matrixStack.translate(0,  -(1 - iceMelt) / 2, 0);
-        matrixStack.scale(1, iceMelt, 1);
+        matrixStack.translate(0,  scaleFactor * -(1 - iceMelt) / 2, 0);
+        matrixStack.scale(scaleFactor, scaleFactor * iceMelt, scaleFactor);
         itemRenderer.renderItem(
                 Items.ICE_BLOCKS.getDefaultStack(),
                 ModelTransformationMode.NONE,
