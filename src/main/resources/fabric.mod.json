@@ -26,7 +26,7 @@
 			"io.github.flameyheart.playroom.PlayroomClient"
 		],
 		"fabric-datagen": [
-			"io.github.flameyheart.playroom.PlayroomDataGenerator"
+          "io.github.flameyheart.playroom.datagen.PlayroomDataGenerator"
 		],
 		"modmenu": [
 			"io.github.flameyheart.playroom.config.ui.ModMenuImpl"

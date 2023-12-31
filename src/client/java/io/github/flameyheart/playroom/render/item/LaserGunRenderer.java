@@ -125,10 +125,16 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
 
             float scale = 1 / 2f;
             matrixStack.multiplyPositionMatrix(bone.getModelRotationMatrix());
-            if (bone.getName().equals("rightArm")) {
+            if (bone.getName().equals("leftArm")) {
                 matrixStack.scale(scale, scale, scale);
-                matrixStack.translate(0.015, -0.03, 0.765);
+                if(leftHanded) {
+                    matrixStack.translate(-0.23f, -0.03, 0.765);
+                } else {
+                    matrixStack.translate(0.015, -0.03, 0.765);
+                }
+
                 matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-90));
+
                 playerEntityModel.leftArm.setPivot(0, 0, 0);
                 playerEntityModel.leftArm.setAngles(0, 0, 0);
                 playerEntityModel.leftArm.render(matrixStack, arm, packedLight, packedOverlay, 1, 1, 1, 1);
@@ -136,13 +142,21 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
                 playerEntityModel.leftSleeve.setPivot(bone.getPivotX(), bone.getPivotY(), bone.getPivotZ());
                 playerEntityModel.leftSleeve.setAngles(bone.getRotX(), bone.getRotY(), bone.getRotZ());
                 playerEntityModel.leftSleeve.render(matrixStack, sleeve, packedLight, packedOverlay, 1, 1, 1, 1);
-            } else if (bone.getName().equals("leftArm")) {
+            } else if (bone.getName().equals("rightArm")) {
                 matrixStack.scale(scale, scale, scale);
-                matrixStack.translate(-0.41f, -0.03, 0.56);
+                if(leftHanded) {
+                    matrixStack.translate(0.41f, -0.03, 0.56);
 
-                matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-94.320114f));
-                matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(7f));
-                matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(-31));
+                    matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-94.3f));
+                    matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-7f));
+                    matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(31f));
+                } else {
+                    matrixStack.translate(-0.41f, -0.03, 0.56);
+
+                    matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-94.3f));
+                    matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(7f));
+                    matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(-31f));
+                }
 
                 playerEntityModel.rightArm.setPivot(0, 0, 0);
                 playerEntityModel.rightArm.setAngles(0, 0, 0);

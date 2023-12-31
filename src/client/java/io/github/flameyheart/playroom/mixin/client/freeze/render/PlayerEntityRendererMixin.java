@@ -16,9 +16,4 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
     public PlayerEntityRendererMixin(EntityRendererFactory.Context ctx, PlayerEntityModel<AbstractClientPlayerEntity> model, float shadowRadius) {
         super(ctx, model, shadowRadius);
     }
-
-    @Inject(method = "<init>", at = @At("TAIL"))
-    private void addIceFeatures(EntityRendererFactory.Context ctx, boolean slim, CallbackInfo ci) {
-        this.addFeature(new IceFeatureRenderer<>(ctx, this));
-    }
 }
