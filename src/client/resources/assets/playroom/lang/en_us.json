@@ -6,6 +6,7 @@
     "commands.playroom.reload": "Reloading Playroom config",
     "commands.playroom.reload.restart_webhook_server": "Restarting the Tiltify webhook server",
     "commands.playroom.experiment": "Experiment \"%s\" set to %s",
+    "commands.playroom.entity_test": "Created test for %d entities",
     "item.playroom.ice_blocks": "Ice Blocks",
     "item.playroom.laser_gun": "ꜰʀᴇᴇᴢᴇ ɢᴜɴ",
     "item.playroom.laser_gun.tooltip.more": [

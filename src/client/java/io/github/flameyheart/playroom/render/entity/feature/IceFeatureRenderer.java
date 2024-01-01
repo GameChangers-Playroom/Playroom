@@ -34,14 +34,16 @@ public class IceFeatureRenderer<T extends LivingEntity, M extends EntityModel<T>
         float entityWidth = entity.getWidth();
         float scaleFactor = (entityHeight / 1.8f + entityWidth / 0.6f) / 2;  // model designed for 1.8x0.6 entity
 
+
         matrixStack.multiply(RotationAxis.POSITIVE_X.rotation((float) Math.PI));
         matrixStack.multiply(RotationAxis.POSITIVE_Y.rotation((float) Math.PI));
-        matrixStack.translate(0, -0.9f / scaleFactor, 0);
+        matrixStack.translate(0, /*-entityHeight * 1.5*/0, 0);
 
         ModelIdentifier modelId = new ModelIdentifier(Playroom.MOD_ID, "ice_blocks", "inventory");
         ItemRenderer itemRenderer = client.getItemRenderer();
-        matrixStack.translate(0,  scaleFactor * -(1 - iceMelt) / 2, 0);
-        matrixStack.scale(scaleFactor, scaleFactor * iceMelt, scaleFactor);
+        //TODO: DON'T LEAVE THIS COMMENTED
+        //matrixStack.translate(0,  scaleFactor * -(1 - iceMelt) / 2, 0);
+        //matrixStack.scale(scaleFactor, scaleFactor * iceMelt, scaleFactor);
         itemRenderer.renderItem(
                 Items.ICE_BLOCKS.getDefaultStack(),
                 ModelTransformationMode.NONE,
