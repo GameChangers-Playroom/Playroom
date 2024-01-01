@@ -8,5 +8,7 @@ public class PlayroomDataGenerator implements DataGeneratorEntrypoint {
     public void onInitializeDataGenerator(FabricDataGenerator generator) {
         FabricDataGenerator.Pack pack = generator.createPack();
         pack.addProvider(PlayroomEntityTypeTagProvider::new);
+        pack.addProvider(PLayroomItemTagProvider::new);
+        pack.addProvider(PLayroomDamageTypeTagProvider::new);
     }
 }

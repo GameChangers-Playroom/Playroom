@@ -82,8 +82,8 @@ public class ServerConfig {
     public float laserAimSlowdown = 0.5f;
 
     @SendToClient
-    @SerialEntry(comment = "The player speed multiplier when aiming\n[Min: 0, Default: ??] [DECIMAL SUPPORTED]")
-    public int laserAimZoom = 1;
+    @SerialEntry(comment = "The player speed multiplier when aiming\n[Min: 0, Default: 4] [DECIMAL SUPPORTED]")
+    public int laserAimZoom = 4;
 
     @SerialEntry(comment = "The amount of damage a ranged shot does\n[Min: 0, Default: 1] [DECIMAL SUPPORTED]")
     public float laserRangeDamage = 1f;

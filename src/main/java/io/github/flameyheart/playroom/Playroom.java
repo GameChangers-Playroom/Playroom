@@ -109,7 +109,7 @@ public class Playroom implements ModInitializer {
 				if (livingEntity.hasPassengers()) livingEntity.removeAllPassengers();
 				if (livingEntity.hasVehicle()) livingEntity.stopRiding();
 				if(livingEntity instanceof PlayerEntity player) {
-					if (player.isFallFlying() ) player.stopFallFlying();
+					if (player.isFallFlying()) player.stopFallFlying();
 					((PlayerEntityInvoker) player).invokeDropShoulderEntities();
 				}
 

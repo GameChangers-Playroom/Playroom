@@ -38,7 +38,7 @@ import software.bernie.geckolib.util.RenderUtils;
 import java.util.Objects;
 import java.util.function.Function;
 
-public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
+public class LaserGunRenderer extends AlternativeGeoItemRenderer<LaserGun> {
     private static final boolean IS_IRIS_PRESENT = ModOptional.isPresent("iris");
 
     private VertexConsumerProvider bufferSource;
@@ -54,10 +54,20 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
     }
 
     @Override
+    protected boolean useAlternativeTexture(LaserGun animatable) {
+        return animatable.isRapidFire(getCurrentItemStack());
+    }
+
+    @Override
+    public Identifier getTextureLocation(LaserGun animatable) {
+        return getGeoModel().getTextureResource(animatable);
+    }
+
+    @Override
     public void updateAnimatedTextureFrame(LaserGun animatable) {
         int offset = (int) PlayroomClient.ANIMATION_START_TICK.getOrDefault(getInstanceId(animatable), 0d).doubleValue();
         AnimatableTexture.setAndUpdate(getTextureLocation(animatable), (int) animatable.getTick(animatable) - offset);
-        AnimatableTexture.setAndUpdate(GeoAbstractTexture.appendToPath(getTextureLocation(animatable), "_glowmask"), (int) animatable.getTick(animatable) - offset);
+        AnimatableTexture.setAndUpdate(GeoAbstractTexture.appendToPath(super.getTextureLocation(animatable), "_glowmask"), (int) animatable.getTick(animatable) - offset);
     }
 
     @Override
@@ -202,7 +212,7 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
 
         @Override
         protected RenderLayer getRenderType(LaserGun animatable) {
-            return AnimatedAutoGlowingTexture.getRenderType(getTextureLocation(animatable));
+            return AnimatedAutoGlowingTexture.getRenderType(LaserGunRenderer.super.getTextureLocation(animatable));
         }
 
         @Override

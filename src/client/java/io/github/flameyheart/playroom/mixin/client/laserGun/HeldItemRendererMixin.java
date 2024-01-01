@@ -11,6 +11,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Arm;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -39,10 +40,13 @@ public abstract class HeldItemRendererMixin {
 
             Arm arm = player.getMainArm();
             matrices.push();
-            int rightHanded = arm == Arm.RIGHT ? 1 : -1;
-            applyEquipOffset(matrices, arm, equipProgress);
-            applySwingOffset(matrices, arm, swingProgress);
-            this.renderItem(player, item, rightHanded == 1 ? ModelTransformationMode.FIRST_PERSON_RIGHT_HAND : ModelTransformationMode.FIRST_PERSON_LEFT_HAND, rightHanded == -1, matrices, vertexConsumers, light);
+            boolean rightHanded = arm == Arm.RIGHT;
+            this.applyEquipOffset(matrices, arm, 0);
+            float f = MathHelper.sqrt(swingProgress);
+            float g = -0.2f * MathHelper.sin(swingProgress * (float)Math.PI);
+            float h = -0.4f * MathHelper.sin(f * (float)Math.PI);
+            matrices.translate(0, 0, g * h / -2);
+            this.renderItem(player, item, rightHanded ? ModelTransformationMode.FIRST_PERSON_RIGHT_HAND : ModelTransformationMode.FIRST_PERSON_LEFT_HAND, !rightHanded, matrices, vertexConsumers, light);
             matrices.pop();
             ci.cancel();
         }

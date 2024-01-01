@@ -49,9 +49,7 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Expand
     @Override
     protected void appendNbt(NbtCompound nbt, CallbackInfoReturnable<NbtCompound> cir) {
         NbtCompound compound = new NbtCompound();
-        if ((Object) this instanceof PlayerEntity) {
-            compound.putInt("TicksFrozen", playroom$getGunFreezeTicks());
-        }
+        compound.putInt("TicksFrozen", playroom$getGunFreezeTicks());
 
         nbt.put("Playroom", compound);
     }
@@ -59,19 +57,17 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Expand
     @Override
     protected void appendNbt(NbtCompound nbt, CallbackInfo ci) {
         NbtCompound compound = nbt.getCompound("Playroom");
-        if ((Object) this instanceof PlayerEntity) {
-            playroom$setGunFreezeTicks(compound.getInt("TicksFrozen"));
-        }
+        playroom$setGunFreezeTicks(compound.getInt("TicksFrozen"));
     }
 
     @Override
     protected boolean collideWhileFrozen(boolean original) {
-        return super.collideWhileFrozen(original) || playroom$isFrozen();
+        return super.collideWhileFrozen(original) || playroom$showIce();
     }
 
     @Override
     protected boolean moveWhileFrozen(boolean original) {
-        if(playroom$isFrozen()) {
+        if(playroom$showIce()) {
             return false;
         }
         return super.moveWhileFrozen(original);
@@ -95,12 +91,12 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Expand
 
     @ModifyReturnValue(method = "isImmobile", at = @At("RETURN"))
     private boolean immobileIfFrozen(boolean original) {
-        return original || playroom$isFrozen();
+        return original || playroom$showIce();
     }
 
     @Inject(method = "tickMovement", at = @At("HEAD"), cancellable = true)
     private void onTickMovementStart(CallbackInfo ci) {
-        if(playroom$isFrozen() && hurtTime == 0) ci.cancel();
+        if(playroom$showIce() && hurtTime == 0) ci.cancel();
     }
 
     @Inject(method = "tick", at = @At(value = "HEAD"), cancellable = true)

@@ -1,13 +1,12 @@
 package io.github.flameyheart.playroom.mixin.client.freeze.render;
 
-import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.render.entity.feature.IceFeatureRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
 import net.minecraft.client.render.entity.model.EntityModel;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,9 +21,7 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 @Mixin(LivingEntityRenderer.class)
 public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extends EntityModel<T>> {
     @Shadow protected abstract boolean addFeature(FeatureRenderer<T, M> feature);
-
-    @Unique
-    private LivingEntity playroom$entity;
+    @Unique private LivingEntity playroom$entity;
 
     @SuppressWarnings("unchecked")
     @Inject(method = "<init>", at = @At("TAIL"))
@@ -48,5 +45,15 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
                 args.set(5, colour);
             }
         }
+    }
+
+    @ModifyExpressionValue(method = "setupTransforms", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;deathTime:I"))
+    private int disableDeathTilt(int original) {
+        if(playroom$entity instanceof ExpandedEntityData entity) {
+            if (entity.playroom$showIce() && original > 0) {
+                return 0;
+            }
+        }
+        return original;
     }
 }

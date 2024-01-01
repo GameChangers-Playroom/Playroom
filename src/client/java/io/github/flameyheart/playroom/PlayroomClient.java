@@ -231,9 +231,9 @@ public class PlayroomClient implements ClientModInitializer {
             long serverTime = buf.readLong();
 
             client.execute(() -> {
-                if (serverTime > Playroom.serverTime) {
+                if (serverTime - 5 > Playroom.serverTime) {
                     Playroom.LOGGER.warn("Server time is {} ticks ahead of client", serverTime - Playroom.serverTime);
-                } else if (serverTime < Playroom.serverTime) {
+                } else if (serverTime < Playroom.serverTime - 5) {
                     Playroom.LOGGER.warn("Server time is {} ticks behind client", Playroom.serverTime - serverTime);
                 }
                 Playroom.serverTime = serverTime;

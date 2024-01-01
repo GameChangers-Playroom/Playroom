@@ -38,7 +38,7 @@ public class ClientConfig {
     public TransitionType laserAimZoomInTransition = TransitionType.EASE_OUT_EXP;
 
     @SerialEntry(comment = "The zoom out transition when aiming")
-    public TransitionType laserAimZoomOutTransition = TransitionType.EASE_OUT_EXP;
+    public TransitionType laserAimZoomOutTransition = TransitionType.EASE_IN_EXP;
 
     @SerialEntry(comment = "The zoom in duration when aiming\n[Min: 0, Default: 0.5] [DECIMAL SUPPORTED]")
     public double laserAimZoomInTime = 0.5f;
