@@ -58,10 +58,10 @@ public class PlayroomCommand {
           ).then(
             literal("entity-test").executes(context -> {
                 ServerCommandSource source = context.getSource();
-//                if (!FabricLoader.getInstance().isDevelopmentEnvironment()) {
-//                    source.sendError(Text.literal("This command is only available in development environment.\nThis is to avoid accidental mass destruction."));
-//                    return 0;
-//                }
+                if (!FabricLoader.getInstance().isDevelopmentEnvironment()) {
+                    source.sendError(Text.literal("This command is only available in development environment.\nThis is to avoid accidental mass destruction."));
+                    return 0;
+                }
 
                 ServerPlayerEntity player = source.getPlayer();
                 if (player == null) return 0;
