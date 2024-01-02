@@ -7,7 +7,6 @@ import io.github.flameyheart.playroom.render.entity.ModelPosition;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.*;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -33,8 +32,8 @@ import java.util.Map;
   SquidEntityModel.class, StriderEntityModel.class, TadpoleEntityModel.class, VexEntityModel.class, VillagerResemblingModel.class,
   WardenEntityModel.class, WitchEntityModel.class, WitherEntityModel.class, WolfEntityModel.class
 }, remap = false)
-public class EntityModelMixin<T extends LivingEntity> {
-    @Unique private ModelPart playroom$root;
+public class EntityModelMixin {
+    @Unique protected ModelPart playroom$root;
 
     @Inject(method = "<init>*", at = @At("TAIL"), require = 1)
     private void storeRoot0(CallbackInfo ci, @Local(argsOnly = true) ModelPart root) {
@@ -51,7 +50,7 @@ public class EntityModelMixin<T extends LivingEntity> {
 
     @Inject(method = {
       "setAngles(Lnet/minecraft/entity/LivingEntity;FFFFF)V",
-      "method_2819(Lnet/minecraft/class_1309;FFFFF)V"
+      "method_2819(Lnet/minecraft/class_1309;FFFFF)V",
     }, at = @At("TAIL"))
     private void stopAnimations(@Coerce Entity livingEntity, float f, float g, float h, float i, float j, CallbackInfo ci) {
         if (playroom$root == null) return;
@@ -72,7 +71,7 @@ public class EntityModelMixin<T extends LivingEntity> {
     }
 
     @Unique
-    private void playroom$resetPositions(String name, ModelPosition position) {
+    protected void playroom$resetPositions(String name, ModelPosition position) {
         ModelPart modelPart = position.parentPart().getChild(name);
         modelPart.pivotX = position.pivotX();
         modelPart.pivotY = position.pivotY();
@@ -84,7 +83,7 @@ public class EntityModelMixin<T extends LivingEntity> {
     }
 
     @Unique
-    private void playroom$storePositions(String name, ModelPart modelPart, ModelPart parent, Map<String, ModelPosition> positions) {
+    protected void playroom$storePositions(String name, ModelPart modelPart, ModelPart parent, Map<String, ModelPosition> positions) {
         Map<String, ModelPosition> _children = new HashMap<>();
         ModelPosition position = new ModelPosition(modelPart.pivotX, modelPart.pivotY, modelPart.pivotZ, modelPart.roll, modelPart.yaw, modelPart.pitch, parent, _children);
         ((ModelPartAccessor) modelPart).getChildren().forEach((childName, childModelPart) -> playroom$storePositions(childName, childModelPart, modelPart, _children));

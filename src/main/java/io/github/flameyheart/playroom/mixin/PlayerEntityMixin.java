@@ -1,13 +1,14 @@
 package io.github.flameyheart.playroom.mixin;
 
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.duck.InventoryDuck;
 import io.github.flameyheart.playroom.item.LaserGun;
 import io.github.flameyheart.playroom.registry.Items;
 import io.github.flameyheart.playroom.util.InventorySlot;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttributeInstance;
+import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
@@ -27,9 +28,12 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.UUID;
+
 @Mixin(PlayerEntity.class)
 public abstract class PlayerEntityMixin extends LivingEntityMixin {
     private static final @Unique TrackedData<Boolean> playroom$IS_AIMING = DataTracker.registerData(PlayerEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
+    private static final @Unique UUID playroomAIM_SLOWDOWN_ID = UUID.fromString("3bceceb5-bdd6-43b5-a8f6-64e0eb1893b1");
     @Shadow private ItemStack selectedItem;
 
     @Inject(method = "initDataTracker", at = @At("HEAD"))
@@ -78,14 +82,15 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin {
         return instance.getBoolean(rule);
     }
 
-    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getAttributeValue(Lnet/minecraft/entity/attribute/EntityAttribute;)D"))
-    private double slowdown(double original) {
-        if (this.playroom$isSlowedDown()) {
-            return original * ServerConfig.instance().freezeSlowdown;
-        } else if (this.playroom$isAiming()) {
-            return original * ServerConfig.instance().laserAimSlowdown;
+    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getAttributeValue(Lnet/minecraft/entity/attribute/EntityAttribute;)D", shift = At.Shift.BEFORE))
+    private void slowdown(CallbackInfo ci) {
+        EntityAttributeInstance entityAttributeInstance = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        if (entityAttributeInstance == null) return;
+        if (entityAttributeInstance.getModifier(playroomAIM_SLOWDOWN_ID) != null && !this.playroom$isAiming()) {
+            entityAttributeInstance.removeModifier(playroomAIM_SLOWDOWN_ID);
+        } else if (entityAttributeInstance.getModifier(playroomAIM_SLOWDOWN_ID) == null && this.playroom$isAiming()) {
+            entityAttributeInstance.addTemporaryModifier(new EntityAttributeModifier(playroomAIM_SLOWDOWN_ID, "Aim slowdown", -ServerConfig.instance().laserAimSlowdown, EntityAttributeModifier.Operation.MULTIPLY_BASE));
         }
-        return original;
     }
 
     @Inject(method = "dropInventory", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;dropAll()V"))

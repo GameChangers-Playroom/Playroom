@@ -82,7 +82,7 @@ public class ServerConfig {
     public float laserAimSlowdown = 0.5f;
 
     @SendToClient
-    @SerialEntry(comment = "The player speed multiplier when aiming\n[Min: 0, Default: 4] [DECIMAL SUPPORTED]")
+    @SerialEntry(comment = "The player speed multiplier when aiming\n[Min: 1, Default: 4]")
     public int laserAimZoom = 4;
 
     @SerialEntry(comment = "The amount of damage a ranged shot does\n[Min: 0, Default: 1] [DECIMAL SUPPORTED]")
@@ -113,9 +113,9 @@ public class ServerConfig {
     @SerialEntry(comment = "The duration of the ice\n[Min: 0, Default: ??]")
     public int freezeIceTime = 100;
 
-    @SendToClient
+    /*@SendToClient
     @SerialEntry(comment = "The multiplier for the player speed\n[Min: 0, Default: ??] [DECIMAL SUPPORTED]")
-    public float freezeSlowdown = 0.5f;
+    public float freezeSlowdown = 0.5f;*/
     //endregion
 
     @SerialEntry(comment = "The rewards interaction commands\n[Default: {}]")

@@ -241,7 +241,7 @@ public class YACLScreen {
                 .name(Text.translatable("config.playroom.option.laser_gun.laserAimZoom"))
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserAimZoom.description")))
                 .binding(serverDefaults.laserAimZoom, () -> serverConfig.laserAimZoom, newVal -> serverConfig.laserAimZoom = newVal)
-                .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 10).formatValue(value -> Text.literal("%dx".formatted(value))).step(1))
+                .controller(option -> IntegerSliderControllerBuilder.create(option).range(1, 10).formatValue(value -> Text.literal("%dx".formatted(value))).step(1))
                 .build()
             );
 
@@ -318,14 +318,14 @@ public class YACLScreen {
                 .build()
             );
 
-            playerFreeze.option(
+            /*playerFreeze.option(
               Option.<Float>createBuilder()
                 .name(Text.translatable("config.playroom.option.player_freeze.freezeSlowdown"))
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeSlowdown.description")))
                 .binding(serverDefaults.freezeSlowdown, () -> serverConfig.freezeSlowdown, newVal -> serverConfig.freezeSlowdown = newVal)
                 .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 1f).step(0.05f))
                 .build()
-            );
+            );*/
 
             server.group(playerFreeze.build());
             //endregion
