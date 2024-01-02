@@ -15,6 +15,6 @@ public class PlayroomEntityTypeTagProvider extends FabricTagProvider.EntityTypeT
 
     @Override
     protected void configure(RegistryWrapper.WrapperLookup arg) {
-        this.getOrCreateTagBuilder(Tags.IMMUNE_TO_FREEZE).add(EntityType.ENDER_DRAGON, EntityType.WARDEN, EntityType.WITHER, EntityType.STRAY);
+        this.getOrCreateTagBuilder(Tags.IMMUNE_TO_FREEZE).add(EntityType.ENDER_DRAGON, EntityType.WARDEN, EntityType.WITHER, EntityType.STRAY);;
     }
 }

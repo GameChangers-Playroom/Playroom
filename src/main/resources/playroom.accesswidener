@@ -7,3 +7,5 @@ accessible class net/minecraft/client/render/RenderPhase$ShaderProgram
 accessible class net/minecraft/client/render/RenderPhase$WriteMaskState
 accessible class net/minecraft/client/render/RenderPhase$Texture
 accessible class net/minecraft/client/render/RenderLayer$MultiPhaseParameters
+
+extendable class net/minecraft/client/model/ModelPart

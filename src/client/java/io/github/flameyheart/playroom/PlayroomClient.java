@@ -18,7 +18,7 @@ import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Items;
 import io.github.flameyheart.playroom.registry.Particles;
 import io.github.flameyheart.playroom.render.entity.LaserProjectileRenderer;
-import io.github.flameyheart.playroom.render.entity.PlayerModelPositions;
+import io.github.flameyheart.playroom.render.entity.ModelPosition;
 import io.github.flameyheart.playroom.render.hud.HudRenderer;
 import io.github.flameyheart.playroom.render.item.LaserGunRenderer;
 import io.github.flameyheart.playroom.render.particle.TestParticle;
@@ -45,6 +45,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.item.BuiltinModelItemRenderer;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -67,9 +68,9 @@ public class PlayroomClient implements ClientModInitializer {
     public static final BipedEntityModel.ArmPose LASER_GUN_POSE = ClassTinkerers.getEnum(BipedEntityModel.ArmPose.class, "LASER_GUN");
     public static final Map<UUID, Donation> DONATIONS = new LinkedHashMap<>();
     public static final int MAX_SCROLL_TIERS = 5;
+    public static final Map<Entity, Map<String, ModelPosition>> FROZEN_MODEL = new HashMap<>();
 
     public static boolean orbitCameraEnabled = false;
-    public static Map<PlayerEntity, PlayerModelPositions> frozenModel = new HashMap<>();
 
     private static boolean zooming = false;
     private static final ZoomHelper ZOOM_HELPER = new ZoomHelper(
@@ -141,20 +142,17 @@ public class PlayroomClient implements ClientModInitializer {
                         float slowdown = ServerConfig.instance().laserAimSlowdown;
                         player.setVelocity(player.getVelocity().multiply(slowdown, 1, slowdown));
                         ((EntityAccessor) player).callScheduleVelocityUpdate();
-
                     }
                 }
 
                 player.getWorld().getProfiler().pop();
             }
         });
-        LivingEntityEvents.END_BASE_TICK.register(baseEntity -> {
-            if (baseEntity instanceof PlayerEntity player) {
-                ExpandedEntityData eEntity = (ExpandedEntityData) player;
-                boolean showIce = eEntity.playroom$showIce();
-                if (!showIce) {
-                    frozenModel.remove(player);
-                }
+        LivingEntityEvents.END_BASE_TICK.register(entity -> {
+            ExpandedEntityData eEntity = (ExpandedEntityData) entity;
+            boolean showIce = eEntity.playroom$showIce();
+            if (!showIce) {
+                FROZEN_MODEL.remove(entity);
             }
         });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {

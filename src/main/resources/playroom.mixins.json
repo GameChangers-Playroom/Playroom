@@ -17,6 +17,7 @@
         "ServerLoginNetworkHandlerAccessor",
         "ServerLoginNetworkHandlerMixin",
         "ServerPlayerEntityMixin",
+        "datagen.PlayroomDamageTypeTagProvider",
         "geo.AnimationControllerAccessor",
         "network.PlayerListS2CPacketMixin"
     ],

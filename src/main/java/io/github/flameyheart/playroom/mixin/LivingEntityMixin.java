@@ -67,7 +67,7 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Expand
 
     @Override
     protected boolean moveWhileFrozen(boolean original) {
-        if(playroom$showIce()) {
+        if(playroom$showIce() && !((Object) this instanceof PlayerEntity)) {
             return false;
         }
         return super.moveWhileFrozen(original);

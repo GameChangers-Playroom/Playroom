@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import io.github.flameyheart.playroom.Playroom;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.CommandBlockBlockEntity;
 import net.minecraft.entity.Entity;
@@ -53,7 +54,13 @@ public class PlayroomCommand {
             )
           ).then(
             literal("entity-test").executes(context -> {
-                ServerPlayerEntity player = context.getSource().getPlayer();
+                ServerCommandSource source = context.getSource();
+                if (!FabricLoader.getInstance().isDevelopmentEnvironment()) {
+                    source.sendError(Text.literal("This command is only available in development environment.\nThis is to avoid accidental mass destruction."));
+                    return 0;
+                }
+
+                ServerPlayerEntity player = source.getPlayer();
                 if (player == null) return 0;
                 World world = player.getWorld();
                 BlockPos pos = player.getBlockPos().west();
@@ -86,7 +93,7 @@ public class PlayroomCommand {
                 world.setBlockState(pos.south(), Blocks.LEVER.getDefaultState().with(WallMountedBlock.FACING, Direction.SOUTH));
 
                 int finalCount = count;
-                context.getSource().sendFeedback(() -> Text.translatable("commands.playroom.entity_test", finalCount), false);
+                source.sendFeedback(() -> Text.translatable("commands.playroom.entity_test", finalCount), false);
 
                 return count;
             })
