@@ -15,6 +15,7 @@ import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.duck.ExpandedServerLoginNetworkHandler;
 import io.github.flameyheart.playroom.entity.LaserProjectileEntity;
 import io.github.flameyheart.playroom.event.LivingEntityEvents;
+import io.github.flameyheart.playroom.mixin.EntityAccessor;
 import io.github.flameyheart.playroom.mixin.GsonConfigSerializerAccessor;
 import io.github.flameyheart.playroom.mixin.PlayerEntityInvoker;
 import io.github.flameyheart.playroom.registry.Entities;
@@ -204,6 +205,14 @@ public class Playroom implements ModInitializer {
 				byteBuf.writeUuid(id);
 				byteBuf.writeEnumConstant(status);
 				sendPacket(id("donation/update"), byteBuf, p -> Permissions.check(p, "playroom.admin.server.update_donations", 4));
+			});
+		});
+		ServerPlayNetworking.registerGlobalReceiver(id("aiming"), (server, player, handler, buf, responseSender) -> {
+			boolean aiming = buf.readBoolean();
+
+			server.execute(() -> {
+				ExpandedEntityData entity = (ExpandedEntityData) player;
+				entity.playroom$setAiming(aiming);
 			});
 		});
 	}

@@ -7,6 +7,8 @@ import io.github.flameyheart.playroom.Playroom;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.CommandBlockBlockEntity;
+import net.minecraft.block.entity.SignBlockEntity;
+import net.minecraft.block.entity.SignText;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -14,6 +16,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.util.DyeColor;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -67,6 +70,7 @@ public class PlayroomCommand {
                 int count = 0;
                 BlockState commandBlock = Blocks.COMMAND_BLOCK.getDefaultState().with(CommandBlock.FACING, Direction.SOUTH);
                 BlockState button = Blocks.STONE_BUTTON.getDefaultState().with(WallMountedBlock.FACING, Direction.SOUTH);
+                BlockState sign = Blocks.OAK_WALL_SIGN.getDefaultState();
                 for (EntityType<?> type : Registries.ENTITY_TYPE) {
                     Entity entity = type.create(world);
                     if (entity == null) continue;
@@ -75,22 +79,39 @@ public class PlayroomCommand {
                     Identifier id = Registries.ENTITY_TYPE.getId(type);
                     count++;
                     world.setBlockState(pos, commandBlock);
-                    ((CommandBlockBlockEntity) world.getBlockEntity(pos)).getCommandExecutor().setCommand("summon " + id.toString() + " ~ ~2 ~ {NoAI:1,Silent:1,Invulnerable:1}");
+                    ((CommandBlockBlockEntity) world.getBlockEntity(pos)).getCommandExecutor().setCommand("summon " + id + " ~ ~2 ~ {NoAI:1,Silent:1,Invulnerable:1,PersistenceRequired:1}");
                     world.setBlockState(pos.south(), button);
-                    pos = pos.west(2);
+                    world.setBlockState(pos = pos.up(), sign);
+                    var signEntity = ((SignBlockEntity) world.getBlockEntity(pos));
+                    SignText text = signEntity.getText(false).withGlowing(true).withColor(DyeColor.CYAN);
+                    signEntity.setText(text.withMessage(1, Text.translatable(entity.getType().getTranslationKey())), false);
+                    signEntity.setWaxed(true);
+                    pos = pos.down().west(2);
                 }
 
                 pos = player.getBlockPos().east(1);
                 world.setBlockState(pos, commandBlock);
                 ((CommandBlockBlockEntity) world.getBlockEntity(pos)).getCommandExecutor().setCommand("fill ~-2 ~-1 ~ ~-%d ~-1 ~ redstone_block".formatted(count * 2 + 2));
                 world.setBlockState(pos.south(), button);
-                pos = pos.east();
+                world.setBlockState(pos = pos.up(), sign);
+                var signEntity = ((SignBlockEntity) world.getBlockEntity(pos));
+                SignText text = signEntity.getText(false).withGlowing(true).withColor(DyeColor.CYAN);
+                signEntity.setText(text.withMessage(1, Text.literal("Summon all")), false);
+                signEntity.setWaxed(true);
+                pos = pos.down().east();
+
                 world.setBlockState(pos, commandBlock);
                 ((CommandBlockBlockEntity) world.getBlockEntity(pos)).getCommandExecutor().setCommand("fill ~-3 ~-1 ~ ~-%d ~-1 ~ air".formatted(count * 2 + 3));
                 pos = pos.east(2);
+
                 world.setBlockState(pos, Blocks.REPEATING_COMMAND_BLOCK.getDefaultState().with(CommandBlock.FACING, Direction.SOUTH));
                 ((CommandBlockBlockEntity) world.getBlockEntity(pos)).getCommandExecutor().setCommand("execute as @e[type=!player] run data modify entity @s Playroom.TicksFrozen set value 150");
                 world.setBlockState(pos.south(), Blocks.LEVER.getDefaultState().with(WallMountedBlock.FACING, Direction.SOUTH));
+                world.setBlockState(pos = pos.up(), sign);
+                signEntity = ((SignBlockEntity) world.getBlockEntity(pos));
+                text = signEntity.getText(false).withGlowing(true).withColor(DyeColor.CYAN);
+                signEntity.setText(text.withMessage(1, Text.literal("Freeze all")), false);
+                signEntity.setWaxed(true);
 
                 int finalCount = count;
                 source.sendFeedback(() -> Text.translatable("commands.playroom.entity_test", finalCount), false);

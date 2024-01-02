@@ -138,10 +138,6 @@ public class PlayroomClient implements ClientModInitializer {
                     if (eEntity.playroom$showIce() && !player.isOnGround()) {
                         player.setVelocity(player.getVelocity().multiply(0.8, 1, 0.8));
                         ((EntityAccessor) player).callScheduleVelocityUpdate();
-                    } else if (!eEntity.playroom$showIce() && player.isOnGround()) {
-                        float slowdown = ServerConfig.instance().laserAimSlowdown;
-                        player.setVelocity(player.getVelocity().multiply(slowdown, 1, slowdown));
-                        ((EntityAccessor) player).callScheduleVelocityUpdate();
                     }
                 }
 
@@ -280,7 +276,12 @@ public class PlayroomClient implements ClientModInitializer {
     public static boolean isAiming(ItemStack stack) {
         Item item = stack.getItem();
         boolean aiming = item instanceof Aimable aimable && aimable.canAim(stack) && MinecraftClient.getInstance().options.attackKey.isPressed();
-        setZooming(aiming);
+        if (zooming != aiming) {
+            setZooming(aiming);
+            PacketByteBuf buf = PacketByteBufs.create();
+            buf.writeBoolean(aiming);
+            ClientPlayNetworking.send(Playroom.id("aiming"), buf);
+        }
         return aiming;
     }
 

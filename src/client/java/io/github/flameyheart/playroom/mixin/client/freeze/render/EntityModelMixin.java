@@ -6,10 +6,12 @@ import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.render.entity.ModelPosition;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.*;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -31,12 +33,19 @@ import java.util.Map;
   SquidEntityModel.class, StriderEntityModel.class, TadpoleEntityModel.class, VexEntityModel.class, VillagerResemblingModel.class,
   WardenEntityModel.class, WitchEntityModel.class, WitherEntityModel.class, WolfEntityModel.class
 }, remap = false)
-public class EntityModelMixin {
+public class EntityModelMixin<T extends LivingEntity> {
     @Unique private ModelPart playroom$root;
 
-    @Inject(method = "<init>(Lnet/minecraft/client/model/ModelPart;)V", at = @At("TAIL"), require = 0)
+    @Inject(method = "<init>*", at = @At("TAIL"), require = 1)
     private void storeRoot0(CallbackInfo ci, @Local(argsOnly = true) ModelPart root) {
-        playroom$root = root;
+        //PlayroomClient.LOGGER.info("Assigning playroom$root: " + this.getClass().getSimpleName());
+        if (root == null) {
+            PlayroomClient.LOGGER.error("Receiver null root from constructor: " + this.getClass().getSimpleName());
+        }
+        this.playroom$root = root;
+        if (playroom$root == null) {
+            PlayroomClient.LOGGER.error("Failed to assign value to playroom$root, WTF: " + this.getClass().getSimpleName());
+        }
     }
 
 
@@ -44,29 +53,41 @@ public class EntityModelMixin {
       "setAngles(Lnet/minecraft/entity/LivingEntity;FFFFF)V",
       "method_2819(Lnet/minecraft/class_1309;FFFFF)V"
     }, at = @At("TAIL"))
-    private void stopAnimations(CallbackInfo ci, @Local(argsOnly = true) LivingEntity livingEntity) {
-        ExpandedEntityData entity = (ExpandedEntityData) livingEntity;
+    private void stopAnimations(@Coerce Entity livingEntity, float f, float g, float h, float i, float j, CallbackInfo ci) {
+        if (playroom$root == null) return;
+        if (!(livingEntity instanceof ExpandedEntityData entity)) {
+            PlayroomClient.LOGGER.warn("Entity is not ExpandedEntityData: " + livingEntity.getClass().getSimpleName());
+            return;
+        }
         if (entity.playroom$showIce()) {
             Map<String, ModelPart> children = ((ModelPartAccessor) playroom$root).getChildren();
             Map<String, ModelPosition> positions = PlayroomClient.FROZEN_MODEL.computeIfAbsent(livingEntity, v -> new HashMap<>());
             if (!positions.isEmpty()) {
-                positions.forEach((name, position) -> {
-                    ModelPart modelPart = playroom$root.getChild(name);
-                    modelPart.pivotX = position.pivotX();
-                    modelPart.pivotY = position.pivotY();
-                    modelPart.pivotZ = position.pivotZ();
-                    modelPart.roll = position.roll();
-                    modelPart.yaw = position.yaw();
-                    modelPart.pitch = position.pitch();
-                });
+                positions.forEach(this::playroom$resetPositions);
             } else {
-                children.forEach((name, modelPart) -> {
-                    ModelPosition position = new ModelPosition(modelPart.pivotX, modelPart.pivotY, modelPart.pivotZ, modelPart.roll, modelPart.yaw, modelPart.pitch);
-                    positions.put(name, position);
-                });
-
+                children.forEach((name, modelPart) -> playroom$storePositions(name, modelPart, playroom$root, positions));
                 PlayroomClient.FROZEN_MODEL.put(livingEntity, positions);
             }
         }
+    }
+
+    @Unique
+    private void playroom$resetPositions(String name, ModelPosition position) {
+        ModelPart modelPart = position.parentPart().getChild(name);
+        modelPart.pivotX = position.pivotX();
+        modelPart.pivotY = position.pivotY();
+        modelPart.pivotZ = position.pivotZ();
+        modelPart.roll = position.roll();
+        modelPart.yaw = position.yaw();
+        modelPart.pitch = position.pitch();
+        position.children().forEach(this::playroom$resetPositions);
+    }
+
+    @Unique
+    private void playroom$storePositions(String name, ModelPart modelPart, ModelPart parent, Map<String, ModelPosition> positions) {
+        Map<String, ModelPosition> _children = new HashMap<>();
+        ModelPosition position = new ModelPosition(modelPart.pivotX, modelPart.pivotY, modelPart.pivotZ, modelPart.roll, modelPart.yaw, modelPart.pitch, parent, _children);
+        ((ModelPartAccessor) modelPart).getChildren().forEach((childName, childModelPart) -> playroom$storePositions(childName, childModelPart, modelPart, _children));
+        positions.put(name, position);
     }
 }

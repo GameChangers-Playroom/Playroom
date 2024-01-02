@@ -7,6 +7,10 @@ import io.github.flameyheart.playroom.duck.InventoryDuck;
 import io.github.flameyheart.playroom.item.LaserGun;
 import io.github.flameyheart.playroom.registry.Items;
 import io.github.flameyheart.playroom.util.InventorySlot;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
@@ -15,6 +19,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.world.GameRules;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -24,7 +29,23 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PlayerEntity.class)
 public abstract class PlayerEntityMixin extends LivingEntityMixin {
+    private static final @Unique TrackedData<Boolean> playroom$IS_AIMING = DataTracker.registerData(PlayerEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
     @Shadow private ItemStack selectedItem;
+
+    @Inject(method = "initDataTracker", at = @At("HEAD"))
+    private void trackGunFreezeTicks(CallbackInfo ci) {
+        this.dataTracker.startTracking(playroom$IS_AIMING, false);
+    }
+
+    @Override
+    public void playroom$setAiming(boolean aiming) {
+        this.dataTracker.set(playroom$IS_AIMING, aiming);
+    }
+
+    @Override
+    public boolean playroom$isAiming() {
+        return this.dataTracker.get(playroom$IS_AIMING);
+    }
 
     @Inject(method = "addShoulderEntity", at = @At(value = "HEAD"), cancellable = true)
     private void preventShoulderEntities(NbtCompound entityNbt, CallbackInfoReturnable<Boolean> cir) {
@@ -61,6 +82,8 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin {
     private double slowdown(double original) {
         if (this.playroom$isSlowedDown()) {
             return original * ServerConfig.instance().freezeSlowdown;
+        } else if (this.playroom$isAiming()) {
+            return original * ServerConfig.instance().laserAimSlowdown;
         }
         return original;
     }

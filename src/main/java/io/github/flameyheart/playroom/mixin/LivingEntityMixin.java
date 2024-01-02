@@ -26,6 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class LivingEntityMixin extends PlayroomEntity implements ExpandedEntityData {
     @Shadow public int hurtTime;
     private static final @Unique TrackedData<Integer> playroom$GUN_FREEZE_TICKS = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private @Unique boolean playroom$aiming;
     private @Unique Text playroom$prefix;
     private @Unique Text playroom$displayName;
 
@@ -82,6 +83,16 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Expand
     public void playroom$setDisplayName(Text prefix, Text displayName) {
         this.playroom$prefix = prefix;
         this.playroom$displayName = displayName;
+    }
+
+    @Override
+    public void playroom$setAiming(boolean aiming) {
+        // NO OP
+    }
+
+    @Override
+    public boolean playroom$isAiming() {
+        return false;
     }
 
     @Override

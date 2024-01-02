@@ -5,6 +5,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
 
 public interface ExpandedEntityData {
+    void playroom$setAiming(boolean aiming);
+    boolean playroom$isAiming();
     void playroom$setDisplayName(Text prefix, Text displayName);
     Pair<Text, Text> playroom$getDisplayName();
 
@@ -25,7 +27,7 @@ public interface ExpandedEntityData {
     }
 
     default boolean playroom$isSlowedDown() {
-        return playroom$getGunFreezeTicks() > 0 && playroom$slowdownTime() >= playroom$getGunFreezeTicks();
+        return (playroom$getGunFreezeTicks() > 0 && playroom$slowdownTime() >= playroom$getGunFreezeTicks());
     }
 
     default int playroom$slowdownTime() {
