@@ -68,7 +68,7 @@ public class PlayroomClient implements ClientModInitializer {
     public static final BipedEntityModel.ArmPose LASER_GUN_POSE = ClassTinkerers.getEnum(BipedEntityModel.ArmPose.class, "LASER_GUN");
     public static final Map<UUID, Donation> DONATIONS = new LinkedHashMap<>();
     public static final int MAX_SCROLL_TIERS = 5;
-    public static final Map<Entity, Map<String, ModelPosition>> FROZEN_MODEL = new HashMap<>();
+    public static final Map<ExpandedEntityData, Map<String, ModelPosition>> FROZEN_MODEL = new HashMap<>();
 
     public static boolean orbitCameraEnabled = false;
 
