@@ -3,7 +3,7 @@ package io.github.flameyheart.playroom.mixin.client.freeze.model;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.duck.client.FreezableModel;
 import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
+import net.minecraft.client.render.entity.model.AbstractZombieModel;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -11,13 +11,13 @@ import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(PlayerEntityModel.class)
-public abstract class PlayerEntityModelMixin implements FreezableModel {
+@Mixin(AbstractZombieModel.class)
+public abstract class AbstractZombieModelMixin implements FreezableModel {
     @Unique
     protected ModelPart playroom$root;
 
-    @Inject(method = "<init>(Lnet/minecraft/client/model/ModelPart;Z)V", at = @At("TAIL"))
-    private void storeRoot(ModelPart root, boolean thinArms, CallbackInfo ci) {
+    @Inject(method = "<init>(Lnet/minecraft/client/model/ModelPart;)V", at = @At("TAIL"))
+    private void storeRoot0(ModelPart root, CallbackInfo ci) {
         captureRoot(root);
     }
 
@@ -32,7 +32,7 @@ public abstract class PlayerEntityModelMixin implements FreezableModel {
         return playroom$root;
     }
 
-    @Inject(method = "setAngles(Lnet/minecraft/entity/LivingEntity;FFFFF)V", at = @At("TAIL"))
+    @Inject(method = "setAngles(Lnet/minecraft/entity/mob/HostileEntity;FFFFF)V", at = @At("TAIL"))
     private void stopAnimations(@Coerce Object entity, float f, float g, float h, float i, float j, CallbackInfo ci) {
         if (entity instanceof ExpandedEntityData eEntity) {
             playroom$stopAnimation(eEntity);

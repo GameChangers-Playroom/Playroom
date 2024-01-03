@@ -16,6 +16,7 @@
         "freeze.camera.LivingEntityRendererMixin",
         "freeze.camera.PerspectiveMixin",
         "freeze.camera.WorldRendererMixin",
+        "freeze.model.AbstractZombieModelMixin",
         "freeze.model.EntityModelMixin",
         "freeze.model.PlayerEntityModelMixin",
         "freeze.model.QuadrupedEntityModelMixin",
