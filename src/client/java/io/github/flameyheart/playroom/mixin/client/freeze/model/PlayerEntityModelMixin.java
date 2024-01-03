@@ -17,7 +17,7 @@ public abstract class PlayerEntityModelMixin implements FreezableModel {
     protected ModelPart playroom$root;
 
     @Inject(method = "<init>(Lnet/minecraft/client/model/ModelPart;Z)V", at = @At("TAIL"))
-    private void storeRoot0(ModelPart root, boolean thinArms, CallbackInfo ci) {
+    private void storeRoot(ModelPart root, boolean thinArms, CallbackInfo ci) {
         captureRoot(root);
     }
 
