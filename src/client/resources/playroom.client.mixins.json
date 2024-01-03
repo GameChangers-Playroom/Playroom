@@ -17,16 +17,16 @@
         "freeze.camera.PerspectiveMixin",
         "freeze.camera.WorldRendererMixin",
         "freeze.model.EntityModelMixin",
-        "freeze.render.InGameHud$HeartTypeMixin",
-        "freeze.render.InGameHudMixin",
-        "freeze.render.InventoryScreenMixin",
-        "freeze.render.LivingEntityRendererMixin",
-        "freeze.render.ModelPartAccessor",
         "freeze.model.PlayerEntityModelMixin",
         "freeze.model.QuadrupedEntityModelMixin",
         "freeze.model.renderer.BatMixin",
         "freeze.model.renderer.CodMixin",
         "freeze.model.renderer.SalmonMixin",
+        "freeze.render.InGameHud$HeartTypeMixin",
+        "freeze.render.InGameHudMixin",
+        "freeze.render.InventoryScreenMixin",
+        "freeze.render.LivingEntityRendererMixin",
+        "freeze.render.ModelPartAccessor",
         "geo.AnimTriggerPacketMixin",
         "geo.AutoGlowingTextureAccessor",
         "laserGun.BipedEntityModelMixin",
@@ -38,5 +38,5 @@
     ],
     "injectors": {
         "defaultRequire": 1
-  }
+    }
 }

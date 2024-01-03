@@ -1,9 +1,7 @@
 package io.github.flameyheart.playroom.mixin.client.freeze.model;
 
-import io.github.flameyheart.playroom.PlayroomClient;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.duck.client.FreezableModel;
-import io.github.flameyheart.playroom.render.entity.ModelPosition;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.*;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,9 +10,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Mixin(value = {
         AbstractZombieModel.class, AllayEntityModel.class, ArmorStandArmorEntityModel.class, ArmorStandEntityModel.class,
@@ -37,12 +32,12 @@ public abstract class EntityModelMixin implements FreezableModel {
     protected ModelPart playroom$root;
 
     @Inject(method = "<init>(Lnet/minecraft/client/model/ModelPart;)V", at = @At("TAIL"), require = 0)
-    private void storeRoot0(ModelPart root, CallbackInfo ci) {
-        captureRoot(root);
+    private void storeRoot(ModelPart root, CallbackInfo ci) {
+        playroom$captureRoot(root);
     }
 
     @Unique
-    private void captureRoot(ModelPart root) {
+    private void playroom$captureRoot(ModelPart root) {
         if (root == null) throw new NullPointerException("Root is null for " + this.getClass().getSimpleName());
         this.playroom$root = root;
     }
