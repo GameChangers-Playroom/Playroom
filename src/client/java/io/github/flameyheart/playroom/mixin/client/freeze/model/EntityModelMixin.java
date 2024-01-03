@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Mixin(value = {
-        AbstractZombieModel.class, AllayEntityModel.class, ArmorStandArmorEntityModel.class, ArmorStandEntityModel.class,
+        AllayEntityModel.class, ArmorStandArmorEntityModel.class, ArmorStandEntityModel.class,
         AxolotlEntityModel.class, BatEntityModel.class, BeeEntityModel.class, BipedEntityModel.class, BlazeEntityModel.class,
         CamelEntityModel.class, CatEntityModel.class, ChickenEntityModel.class, CodEntityModel.class,
         CreeperEntityModel.class, DolphinEntityModel.class, DonkeyEntityModel.class, DrownedEntityModel.class, EndermanEntityModel.class,
