@@ -17,7 +17,7 @@ public abstract class AbstractZombieModelMixin implements FreezableModel {
     protected ModelPart playroom$root;
 
     @Inject(method = "<init>(Lnet/minecraft/client/model/ModelPart;)V", at = @At("TAIL"))
-    private void storeRoot0(ModelPart root, CallbackInfo ci) {
+    private void storeRoot(ModelPart root, CallbackInfo ci) {
         captureRoot(root);
     }
 
