@@ -99,6 +99,7 @@ public class Playroom implements ModInitializer {
 		});
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			Playroom.server = null;
+			serverTime = 0;
 		});
 		LivingEntityEvents.END_BASE_TICK.register(livingEntity -> {
 			livingEntity.getWorld().getProfiler().push("playroom_freezing");
