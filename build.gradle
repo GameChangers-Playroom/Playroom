@@ -101,6 +101,9 @@ dependencies {
 		exclude group: "io.github.ladysnake", module: "satin"
 	}
 
+	//Local bundled jars
+	include modImplementation(fileTree(dir: "libs", include: ["*.jar"]))
+
 	//Non mod libraries
 	include implementation(annotationProcessor("com.github.llamalad7.mixinextras:mixinextras-fabric:${project.mixin_extras_version}"))
 	include implementation("com.github.Chocohead:Fabric-ASM:v2.3")
