@@ -403,6 +403,10 @@ public class Playroom implements ModInitializer {
 		return EXPERIMENTS.getOrDefault(experiment, false);
 	}
 
+	public static boolean isSSLEnabled() {
+		return sslServer != null && sslServer.isAlive();
+	}
+
 	public static void reload(boolean restartWebhookServer) {
 		ServerConfig.INSTANCE.load();
 		if (restartWebhookServer) {
