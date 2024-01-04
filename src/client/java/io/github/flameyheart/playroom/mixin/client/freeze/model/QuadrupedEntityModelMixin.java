@@ -17,7 +17,7 @@ public abstract class QuadrupedEntityModelMixin implements FreezableModel {
     protected ModelPart playroom$root;
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    private void storeRoot0(ModelPart root, boolean headScaled, float childHeadYOffset, float childHeadZOffset, float invertedChildHeadScale, float invertedChildBodyScale, int childBodyYOffset, CallbackInfo ci) {
+    private void storeRoot(ModelPart root, boolean headScaled, float childHeadYOffset, float childHeadZOffset, float invertedChildHeadScale, float invertedChildBodyScale, int childBodyYOffset, CallbackInfo ci) {
         captureRoot(root);
     }
 

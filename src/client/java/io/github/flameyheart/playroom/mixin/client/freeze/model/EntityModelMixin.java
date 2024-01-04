@@ -4,6 +4,8 @@ import io.github.flameyheart.playroom.PlayroomClient;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.duck.client.FreezableModel;
 import io.github.flameyheart.playroom.render.entity.ModelPosition;
+import io.github.flameyheart.playroom.duck.ExpandedEntityData;
+import io.github.flameyheart.playroom.duck.client.FreezableModel;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.*;
 import org.spongepowered.asm.mixin.Mixin;

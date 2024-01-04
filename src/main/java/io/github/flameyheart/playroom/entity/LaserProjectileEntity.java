@@ -57,9 +57,8 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
         Entity entity = entityHitResult.getEntity();
         this.discard();
         if (getOwner() == null || entity.getUuid().equals(getOwner().getUuid())) return;
-        entity.damage(Damage.laserShot(this.getWorld(), this, getOwner()), (float) getDamage());
-        if (isRapidFire()) entity.timeUntilRegen %= 5;
         if (entity instanceof ExpandedEntityData entityData && entity instanceof LivingEntity && !entity.getType().isIn(Tags.IMMUNE_TO_FREEZE)) {
+            entity.damage(Damage.laserShot(this.getWorld(), this, getOwner()), (float) getDamage());
             playSound(entity.getWorld(), entity, getHitSound());
             if (isRapidFire()) {
                 entityData.playroom$addGunFreezeTicks(ServerConfig.instance().laserRapidFreezeAmount);
