@@ -219,7 +219,12 @@ public class Playroom implements ModInitializer {
 
 	private void handleLoginPackets() {
 		ServerLoginNetworking.registerGlobalReceiver(id("handshake"), (server, handler, understood, buf, synchronizer, responseSender) -> {
-			byte protocolVersion = buf.readByte();
+			byte protocolVersion;
+			if (buf.readableBytes() < 1) {
+				protocolVersion = -1;
+			} else {
+				protocolVersion = buf.readByte();
+			}
 			server.execute(() -> {
 				CompletableFuture<Object> future = HANDSHAKE_QUEUE.remove(handler);
 				if (future == null) {
@@ -228,6 +233,9 @@ public class Playroom implements ModInitializer {
 				}
 
 				if (understood) {
+					if (protocolVersion == -1 && !ServerConfig.instance().allowVanillaPlayers) {
+						handler.disconnect(Text.translatable("playroom.multiplayer.disconnect.unsupported_client"));
+					}
 					if (protocolVersion != Constants.PROTOCOL_VERSION) {
 						if (ServerConfig.instance().requireMatchingProtocol) {
 							handler.disconnect(Text.translatable("playroom.multiplayer.disconnect.protocol_mismatch"));

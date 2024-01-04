@@ -9,5 +9,7 @@ public class PlayroomDataGenerator implements DataGeneratorEntrypoint {
         FabricDataGenerator.Pack pack = generator.createPack();
         pack.addProvider(PlayroomEntityTypeTagProvider::new);
         pack.addProvider(PLayroomItemTagProvider::new);
+        //Apparently data gen does not like damage type
+        //pack.addProvider(PlayroomDamageTypeTagProvider::new);
     }
 }

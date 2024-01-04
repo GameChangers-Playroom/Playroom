@@ -17,12 +17,12 @@ public abstract class AbstractZombieModelMixin implements FreezableModel {
     protected ModelPart playroom$root;
 
     @Inject(method = "<init>(Lnet/minecraft/client/model/ModelPart;)V", at = @At("TAIL"))
-    private void storeRoot0(ModelPart root, CallbackInfo ci) {
-        captureRoot(root);
+    private void storeRoot(ModelPart root, CallbackInfo ci) {
+        playroom$captureRoot(root);
     }
 
     @Unique
-    private void captureRoot(ModelPart root) {
+    private void playroom$captureRoot(ModelPart root) {
         if (root == null) throw new NullPointerException("Root is null for " + this.getClass().getSimpleName());
         this.playroom$root = root;
     }

@@ -1,16 +1,20 @@
 package io.github.flameyheart.playroom.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.event.LivingEntityEvents;
+import io.github.flameyheart.playroom.registry.Tags;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.MathHelper;
@@ -103,6 +107,21 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Expand
     @Override
     public Pair<Text, Text> playroom$getDisplayName() {
         return new Pair<>(playroom$prefix, playroom$displayName);
+    }
+
+    @WrapWithCondition(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;takeKnockback(DDD)V"))
+    private boolean preventDelayedKnockback(LivingEntity instance, double strength, double x, double z, DamageSource source) {
+        return !source.isIn(DamageTypeTags.NO_IMPACT);
+    }
+
+    @WrapWithCondition(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;tiltScreen(DD)V"))
+    private boolean preventDamageTilt(LivingEntity instance, double deltaX, double deltaZ, DamageSource source) {
+        return !source.isIn(Tags.NO_TILT);
+    }
+
+    @WrapWithCondition(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;playHurtSound(Lnet/minecraft/entity/damage/DamageSource;)V"))
+    private boolean skipHurtSound(LivingEntity instance, DamageSource source) {
+        return !source.isIn(Tags.NO_HURT_SOUND);
     }
 
     @ModifyReturnValue(method = "isImmobile", at = @At("RETURN"))
