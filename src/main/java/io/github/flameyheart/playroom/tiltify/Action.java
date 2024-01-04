@@ -1,5 +1,7 @@
 package io.github.flameyheart.playroom.tiltify;
 
-public abstract class Action {
+import net.minecraft.server.network.ServerPlayerEntity;
 
+public interface Action {
+    void execute(ServerPlayerEntity target);
 }
