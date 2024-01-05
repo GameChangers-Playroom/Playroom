@@ -19,6 +19,7 @@ public class PLayroomItemTagProvider extends FabricTagProvider.ItemTagProvider {
           .add(
             Items.DIAMOND,
             Items.EMERALD,
+            Items.QUARTZ,
             Items.SMALL_AMETHYST_BUD,
             Items.MEDIUM_AMETHYST_BUD,
             Items.LARGE_AMETHYST_BUD,
