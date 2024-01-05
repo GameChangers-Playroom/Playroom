@@ -270,6 +270,7 @@ public class Playroom implements ModInitializer {
 
 		//Empty receiver to prevent the client from getting kicked for "unknown packet"
 		ServerLoginNetworking.registerGlobalReceiver(id("warning/mismatch/protocol"), (server, handler, understood, buf, synchronizer, responseSender) -> {});
+		ServerLoginNetworking.registerGlobalReceiver(id("warning/mismatch/version"), (server, handler, understood, buf, synchronizer, responseSender) -> {});
 
 		ServerLoginConnectionEvents.DISCONNECT.register((handler, server) -> {
 			HANDSHAKE_QUEUE.remove(handler);
