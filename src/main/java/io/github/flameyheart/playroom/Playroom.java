@@ -8,6 +8,7 @@ import com.google.gson.stream.JsonWriter;
 import dev.isxander.yacl3.config.v2.api.ConfigClassHandler;
 import dev.isxander.yacl3.config.v2.api.ConfigField;
 import dev.isxander.yacl3.config.v2.api.ReadOnlyFieldAccess;
+import io.github.flameyheart.playroom.command.FireworkCommand;
 import io.github.flameyheart.playroom.command.PlayroomCommand;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.config.annotations.SendToClient;
@@ -47,6 +48,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.NotNull;
 import org.quiltmc.parsers.json.JsonReader;
 import org.quiltmc.parsers.json.gson.GsonReader;
 import org.slf4j.Logger;
@@ -127,6 +129,7 @@ public class Playroom implements ModInitializer {
 		});
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			PlayroomCommand.register(dispatcher);
+			FireworkCommand.register(dispatcher);
 		});
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			if (server.isSingleplayer()) return;
@@ -221,10 +224,13 @@ public class Playroom implements ModInitializer {
 	private void handleLoginPackets() {
 		ServerLoginNetworking.registerGlobalReceiver(id("handshake"), (server, handler, understood, buf, synchronizer, responseSender) -> {
 			byte protocolVersion;
+			String modVersion;
 			if (buf.readableBytes() < 1) {
 				protocolVersion = -1;
+				modVersion = "";
 			} else {
 				protocolVersion = buf.readByte();
+				modVersion = buf.readString();
 			}
 			server.execute(() -> {
 				CompletableFuture<Object> future = HANDSHAKE_QUEUE.remove(handler);
@@ -243,6 +249,14 @@ public class Playroom implements ModInitializer {
 						} else {
 							LOGGER.warn("Client {} has a different protocol version (Received: {} | Current: {}), they may experience inconsistent behavior", ((ExpandedServerLoginNetworkHandler) handler).playroom$getSimpleConnectionInfo(), protocolVersion, Constants.PROTOCOL_VERSION);
 							responseSender.sendPacket(id("warning/mismatch/protocol"), PacketByteBufs.create());
+						}
+					}
+					if (!modVersion.equals(getModVersion())) {
+						if (ServerConfig.instance().requireMatchingVersion) {
+							handler.disconnect(Text.translatable("playroom.multiplayer.disconnect.protocol_mismatch"));
+						} else {
+							LOGGER.warn("Client {} has a different mod version (Received: {} | Current: {}), they may experience inconsistent behavior", ((ExpandedServerLoginNetworkHandler) handler).playroom$getSimpleConnectionInfo(), modVersion, getModVersion());
+							responseSender.sendPacket(id("warning/mismatch/version"), PacketByteBufs.create());
 						}
 					}
 					future.complete(null);
@@ -406,6 +420,11 @@ public class Playroom implements ModInitializer {
 
 	public static boolean isSSLEnabled() {
 		return sslServer != null && sslServer.isAlive();
+	}
+
+	@NotNull
+	public static String getModVersion() {
+		return FabricLoader.getInstance().getModContainer(MOD_ID).get().getMetadata().getVersion().getFriendlyString();
 	}
 
 	public static void reload(boolean restartWebhookServer) {

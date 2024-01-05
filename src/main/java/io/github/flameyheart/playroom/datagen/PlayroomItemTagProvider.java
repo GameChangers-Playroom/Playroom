@@ -8,8 +8,8 @@ import net.minecraft.registry.RegistryWrapper;
 
 import java.util.concurrent.CompletableFuture;
 
-public class PLayroomItemTagProvider extends FabricTagProvider.ItemTagProvider {
-    public PLayroomItemTagProvider(FabricDataOutput output, CompletableFuture<RegistryWrapper.WrapperLookup> registriesFuture) {
+public class PlayroomItemTagProvider extends FabricTagProvider.ItemTagProvider {
+    public PlayroomItemTagProvider(FabricDataOutput output, CompletableFuture<RegistryWrapper.WrapperLookup> registriesFuture) {
         super(output, registriesFuture);
     }
 

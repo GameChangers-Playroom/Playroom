@@ -123,6 +123,15 @@ public class YACLScreen {
             );
 
             networking.option(
+              Option.<Boolean>createBuilder()
+                .name(Text.translatable("config.playroom.option.networking.requireMatchingVersion"))
+                .description(OptionDescription.of(Text.translatable("config.playroom.option.networking.requireMatchingVersion.description")))
+                .binding(serverDefaults.requireMatchingVersion, () -> serverConfig.requireMatchingVersion, newVal -> serverConfig.requireMatchingVersion = newVal)
+                .controller(TickBoxControllerBuilder::create)
+                .build()
+            );
+
+            networking.option(
               Option.<Integer>createBuilder()
                 .name(Text.translatable("config.playroom.option.networking.tiltifyWebhookPort"))
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.networking.tiltifyWebhookPort.description")))

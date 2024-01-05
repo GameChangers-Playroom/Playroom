@@ -32,8 +32,11 @@ public class ServerConfig {
     @SerialEntry(comment = "Allows vanilla players to join the server\n[Default: false]")
     public boolean allowVanillaPlayers = false;
 
-    @SerialEntry(comment = "Will kick players with mismatching protocol versions\n[Default: false]")
-    public boolean requireMatchingProtocol = false;
+    @SerialEntry(comment = "Will kick players with a mismatching protocol version\n[Default: false]")
+    public boolean requireMatchingProtocol = true;
+
+    @SerialEntry(comment = "Will kick players with a mismatching mod version\n[Default: false]")
+    public boolean requireMatchingVersion = false;
 
     @SerialEntry(comment = "The port to use for the Tiltify webhook server\n[Min: 0, Max: 2147483647, Default: 8443]")
     public int tiltifyWebhookPort = 8443;

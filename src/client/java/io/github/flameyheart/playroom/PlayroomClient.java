@@ -248,6 +248,7 @@ public class PlayroomClient implements ClientModInitializer {
 
                 PacketByteBuf byteBuf = PacketByteBufs.create();
                 byteBuf.writeByte(Constants.PROTOCOL_VERSION);
+                byteBuf.writeString(Playroom.getModVersion());
 
                 future.complete(byteBuf);
             });
@@ -257,6 +258,14 @@ public class PlayroomClient implements ClientModInitializer {
         ClientLoginNetworking.registerGlobalReceiver(Playroom.id("warning/mismatch/protocol"), (client, handler, buf, responseSender) -> {
             client.execute(() -> {
                 client.getToastManager().add(new WarningToast(Text.translatable("playroom.warning.protocol.title"), Text.translatable("playroom.warning.protocol.message")));
+            });
+
+            return CompletableFuture.completedFuture(PacketByteBufs.create());
+        });
+
+        ClientLoginNetworking.registerGlobalReceiver(Playroom.id("warning/mismatch/version"), (client, handler, buf, responseSender) -> {
+            client.execute(() -> {
+                client.getToastManager().add(new WarningToast(Text.translatable("playroom.warning.version.title"), Text.translatable("playroom.warning.version.message")));
             });
 
             return CompletableFuture.completedFuture(PacketByteBufs.create());
