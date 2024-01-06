@@ -1,10 +1,6 @@
 package io.github.flameyheart.playroom.mixin.client.freeze.model;
 
-import io.github.flameyheart.playroom.PlayroomClient;
-import io.github.flameyheart.playroom.duck.ExpandedEntityData;
-import io.github.flameyheart.playroom.duck.client.FreezableModel;
-import io.github.flameyheart.playroom.render.entity.ModelPosition;
-import io.github.flameyheart.playroom.duck.ExpandedEntityData;
+import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.duck.client.FreezableModel;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.*;
@@ -14,9 +10,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Mixin(value = {
         AllayEntityModel.class, ArmorStandArmorEntityModel.class, ArmorStandEntityModel.class,
@@ -59,7 +52,7 @@ public abstract class EntityModelMixin implements FreezableModel {
             "*(Lnet/minecraft/class_1297;FFFFF)V",
     }, at = @At("TAIL"))
     private void stopAnimations(@Coerce Object entity, float f, float g, float h, float i, float j, CallbackInfo ci) {
-        if (entity instanceof ExpandedEntityData eEntity) {
+        if (entity instanceof FreezableEntity eEntity) {
             playroom$stopAnimation(eEntity);
         }
     }

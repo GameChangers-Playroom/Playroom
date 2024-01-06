@@ -1,7 +1,7 @@
 package io.github.flameyheart.playroom.duck.client;
 
 import io.github.flameyheart.playroom.PlayroomClient;
-import io.github.flameyheart.playroom.duck.ExpandedEntityData;
+import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.mixin.client.freeze.render.ModelPartAccessor;
 import io.github.flameyheart.playroom.render.entity.ModelPosition;
 import net.minecraft.client.model.ModelPart;
@@ -12,9 +12,9 @@ import java.util.Map;
 public interface FreezableModel {
     ModelPart playroom$getRoot();
 
-    default void playroom$stopAnimation(ExpandedEntityData entityData) {
+    default void playroom$stopAnimation(FreezableEntity entityData) {
         if (playroom$getRoot() == null) return;
-        if (entityData.playroom$showIce()) {
+        if (entityData.playroom$isFrozen()) {
             Map<String, ModelPart> children = ((ModelPartAccessor) playroom$getRoot()).getChildren();
             Map<String, ModelPosition> positions = PlayroomClient.FROZEN_MODEL.computeIfAbsent(entityData, v -> new HashMap<>());
             if (!positions.isEmpty()) {

@@ -3,7 +3,6 @@ package io.github.flameyheart.playroom.render.item;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.item.LaserGun;
 import net.minecraft.util.Identifier;
-import software.bernie.geckolib.model.GeoModel;
 
 public class LaserGunModel extends AlternativeGeoModel<LaserGun> {
     @Override

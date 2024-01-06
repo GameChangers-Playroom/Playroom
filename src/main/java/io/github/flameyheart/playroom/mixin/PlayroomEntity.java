@@ -22,23 +22,35 @@ public abstract class PlayroomEntity {
     @Shadow public abstract boolean isOnGround();
     @Shadow public abstract World getWorld();
 
+    @Shadow public abstract void removeAllPassengers();
+
+    @Shadow public abstract boolean hasPassengers();
+
+    @Shadow public abstract boolean isOnFire();
+
+    @Shadow public abstract int getFireTicks();
+
+    @Shadow public abstract void setFireTicks(int fireTicks);
+
+    @Shadow public abstract boolean isFrozen();
+
     @ModifyReturnValue(method = "isCollidable", at = @At("RETURN"))
-    protected boolean collideWhileFrozen(boolean original) {
+    protected boolean isCollidable(boolean original) {
         return original;
     }
 
     @ModifyReturnValue(method = "canMoveVoluntarily", at = @At("RETURN"))
-    protected boolean moveWhileFrozen(boolean original) {
+    protected boolean canMoveVoluntarily(boolean original) {
         return original;
     }
 
     @Inject(method = "writeNbt", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;writeCustomDataToNbt(Lnet/minecraft/nbt/NbtCompound;)V"))
-    protected void appendNbt(NbtCompound nbt, CallbackInfoReturnable<NbtCompound> cir) {
+    protected void writeNbt(NbtCompound nbt, CallbackInfoReturnable<NbtCompound> cir) {
         // no-op
     }
 
     @Inject(method = "readNbt", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;readCustomDataFromNbt(Lnet/minecraft/nbt/NbtCompound;)V"))
-    protected void appendNbt(NbtCompound nbt, CallbackInfo ci) {
+    protected void readNbt(NbtCompound nbt, CallbackInfo ci) {
         // no-op
     }
 }

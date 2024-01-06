@@ -32,8 +32,11 @@ public class ServerConfig {
     @SerialEntry(comment = "Allows vanilla players to join the server\n[Default: false]")
     public boolean allowVanillaPlayers = false;
 
-    @SerialEntry(comment = "Will kick players with mismatching protocol versions\n[Default: false]")
-    public boolean requireMatchingProtocol = false;
+    @SerialEntry(comment = "Will kick players with a mismatching protocol version\n[Default: false]")
+    public boolean requireMatchingProtocol = true;
+
+    @SerialEntry(comment = "Will kick players with a mismatching mod version\n[Default: false]")
+    public boolean requireMatchingVersion = false;
 
     @SerialEntry(comment = "The port to use for the Tiltify webhook server\n[Min: 0, Max: 2147483647, Default: 8443]")
     public int tiltifyWebhookPort = 8443;
@@ -78,7 +81,7 @@ public class ServerConfig {
     @SerialEntry(comment = "The amount of time added per rapid fire shot\n[Min: 0, Max: 32767, Default: 100]")
     public short laserRapidFreezeAmount = 100;
 
-    @SerialEntry(comment = "The zoom amount for when aiming with the gun\n[Min: 0, Default: ??] [DECIMAL SUPPORTED]")
+    @SerialEntry(comment = "The speed slowdown for when aiming\n0 = 0% | 1 = 100%\n[Min: 0, Default: 0.5, Max: 1] [DECIMAL SUPPORTED]")
     public float laserAimSlowdown = 0.5f;
 
     @SendToClient
@@ -93,31 +96,25 @@ public class ServerConfig {
     //endregion
 
     //region FREEZE TIMES
-    @SendToClient
-    @SerialEntry(comment = "The duration of the zoom effect\n[Min: 0, Default: 10]")
-    public int freezeZoomDuration = 10;
+    @SerialEntry(comment = "The reduction of the fall damage when a player is frozen\n0 = 0% | 1 = 100%\n[Min: 0, Default: 0.7, Max: 1] [DECIMAL SUPPORTED]")
+    public float freezeFallDamageReduction = 0.7f;
 
-    @SendToClient
-    @SerialEntry(comment = "The target FOV for the zoom effect\n[Min: 0, Default: 0.1] [DECIMAL SUPPORTED]")
-    public float freezeZoomFov = 0.1f;
-
-    @SendToClient
-    @SerialEntry(comment = "A value to fine tune the zoom animation\n[Min: 0, Default: 7]")
-    public int freezeZoomOffset = 7;
+    @SerialEntry(comment = "The multiplier of the damage applied to the ice based on the fall damage\n[Min: 0, Default: 3] [DECIMAL SUPPORTED]")
+    public float freezeFallIceDamage = 3;
 
     @SendToClient
     @SerialEntry(comment = "The duration of the slowdown effect\n[Min: 0, Default: ??]")
     public int freezeSlowdownTime = 50;
 
     @SendToClient
+    @SerialEntry(comment = "The duration of the slowdown effect\n[Min: 0, Default: ??]")
+    public float freezeSlowdown = 0.2f;
+
+    @SendToClient
     @SerialEntry(comment = "The duration of the ice\n[Min: 0, Default: ??]")
     public int freezeIceTime = 100;
 
-    /*@SendToClient
-    @SerialEntry(comment = "The multiplier for the player speed\n[Min: 0, Default: ??] [DECIMAL SUPPORTED]")
-    public float freezeSlowdown = 0.5f;*/
-    //endregion
-
+    @Deprecated(forRemoval = true)
     @SerialEntry(comment = "The rewards interaction commands\n[Default: {}]")
     public Map<String, List<String>> commands = new HashMap<>();
 }

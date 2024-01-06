@@ -1,6 +1,6 @@
 package io.github.flameyheart.playroom.mixin.client.freeze.model;
 
-import io.github.flameyheart.playroom.duck.ExpandedEntityData;
+import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.duck.client.FreezableModel;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.QuadrupedEntityModel;
@@ -34,7 +34,7 @@ public abstract class QuadrupedEntityModelMixin implements FreezableModel {
 
     @Inject(method = "setAngles", at = @At("TAIL"))
     private void stopAnimations(@Coerce Object entity, float f, float g, float h, float i, float j, CallbackInfo ci) {
-        if (entity instanceof ExpandedEntityData eEntity) {
+        if (entity instanceof FreezableEntity eEntity) {
             playroom$stopAnimation(eEntity);
         }
     }

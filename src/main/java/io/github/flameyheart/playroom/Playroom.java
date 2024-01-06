@@ -8,16 +8,16 @@ import com.google.gson.stream.JsonWriter;
 import dev.isxander.yacl3.config.v2.api.ConfigClassHandler;
 import dev.isxander.yacl3.config.v2.api.ConfigField;
 import dev.isxander.yacl3.config.v2.api.ReadOnlyFieldAccess;
+import io.github.flameyheart.playroom.command.FireworkCommand;
 import io.github.flameyheart.playroom.command.PlayroomCommand;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.config.annotations.SendToClient;
-import io.github.flameyheart.playroom.duck.ExpandedEntityData;
+import io.github.flameyheart.playroom.duck.AimingEntity;
 import io.github.flameyheart.playroom.duck.ExpandedServerLoginNetworkHandler;
+import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.entity.LaserProjectileEntity;
 import io.github.flameyheart.playroom.event.LivingEntityEvents;
-import io.github.flameyheart.playroom.mixin.EntityAccessor;
 import io.github.flameyheart.playroom.mixin.GsonConfigSerializerAccessor;
-import io.github.flameyheart.playroom.mixin.PlayerEntityInvoker;
 import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Items;
 import io.github.flameyheart.playroom.registry.Particles;
@@ -47,6 +47,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.NotNull;
 import org.quiltmc.parsers.json.JsonReader;
 import org.quiltmc.parsers.json.gson.GsonReader;
 import org.slf4j.Logger;
@@ -99,33 +100,17 @@ public class Playroom implements ModInitializer {
 		});
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			Playroom.server = null;
+			serverTime = 0;
 		});
 		LivingEntityEvents.END_BASE_TICK.register(livingEntity -> {
 			livingEntity.getWorld().getProfiler().push("playroom_freezing");
-			ExpandedEntityData eEntity = (ExpandedEntityData) livingEntity;
-
-			int freezeTicks = eEntity.playroom$getGunFreezeTicks();
-
-			if (!livingEntity.getWorld().isClient && !livingEntity.isDead() && freezeTicks > 0) {
-				if (livingEntity.hasPassengers()) livingEntity.removeAllPassengers();
-				if (livingEntity.hasVehicle()) livingEntity.stopRiding();
-				if(livingEntity instanceof PlayerEntity player) {
-					if (player.isFallFlying()) player.stopFallFlying();
-					((PlayerEntityInvoker) player).invokeDropShoulderEntities();
-				}
-
-				if (livingEntity.isOnFire()) {
-					eEntity.playroom$addGunFreezeTicks(-livingEntity.getFireTicks());
-					livingEntity.setFireTicks(0);
-				} else {
-					eEntity.playroom$addGunFreezeTicks(-1);
-				}
-
-			}
+			FreezableEntity entity = (FreezableEntity) livingEntity;
+			entity.playroom$tick();
 			livingEntity.getWorld().getProfiler().pop();
 		});
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			PlayroomCommand.register(dispatcher);
+			FireworkCommand.register(dispatcher);
 		});
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			if (server.isSingleplayer()) return;
@@ -211,7 +196,7 @@ public class Playroom implements ModInitializer {
 			boolean aiming = buf.readBoolean();
 
 			server.execute(() -> {
-				ExpandedEntityData entity = (ExpandedEntityData) player;
+				AimingEntity entity = (AimingEntity) player;
 				entity.playroom$setAiming(aiming);
 			});
 		});
@@ -220,10 +205,17 @@ public class Playroom implements ModInitializer {
 	private void handleLoginPackets() {
 		ServerLoginNetworking.registerGlobalReceiver(id("handshake"), (server, handler, understood, buf, synchronizer, responseSender) -> {
 			byte protocolVersion;
+			String modVersion;
 			if (buf.readableBytes() < 1) {
 				protocolVersion = -1;
+				modVersion = "";
 			} else {
 				protocolVersion = buf.readByte();
+				if (protocolVersion >= 2) {
+					modVersion = buf.readString();
+				} else {
+					modVersion = "";
+				}
 			}
 			server.execute(() -> {
 				CompletableFuture<Object> future = HANDSHAKE_QUEUE.remove(handler);
@@ -244,6 +236,14 @@ public class Playroom implements ModInitializer {
 							responseSender.sendPacket(id("warning/mismatch/protocol"), PacketByteBufs.create());
 						}
 					}
+					if (!modVersion.equals(getModVersion())) {
+						if (ServerConfig.instance().requireMatchingVersion) {
+							handler.disconnect(Text.translatable("playroom.multiplayer.disconnect.protocol_mismatch"));
+						} else {
+							LOGGER.warn("Client {} has a different mod version (Received: {} | Current: {}), they may experience inconsistent behavior", ((ExpandedServerLoginNetworkHandler) handler).playroom$getSimpleConnectionInfo(), modVersion, getModVersion());
+							responseSender.sendPacket(id("warning/mismatch/version"), PacketByteBufs.create());
+						}
+					}
 					future.complete(null);
 				} else {
 					if (!ServerConfig.instance().allowVanillaPlayers) {
@@ -255,6 +255,7 @@ public class Playroom implements ModInitializer {
 
 		//Empty receiver to prevent the client from getting kicked for "unknown packet"
 		ServerLoginNetworking.registerGlobalReceiver(id("warning/mismatch/protocol"), (server, handler, understood, buf, synchronizer, responseSender) -> {});
+		ServerLoginNetworking.registerGlobalReceiver(id("warning/mismatch/version"), (server, handler, understood, buf, synchronizer, responseSender) -> {});
 
 		ServerLoginConnectionEvents.DISCONNECT.register((handler, server) -> {
 			HANDSHAKE_QUEUE.remove(handler);
@@ -401,6 +402,15 @@ public class Playroom implements ModInitializer {
 
 	public static boolean isExperimentEnabled(String experiment) {
 		return EXPERIMENTS.getOrDefault(experiment, false);
+	}
+
+	public static boolean isSSLEnabled() {
+		return sslServer != null && sslServer.isAlive();
+	}
+
+	@NotNull
+	public static String getModVersion() {
+		return FabricLoader.getInstance().getModContainer(MOD_ID).get().getMetadata().getVersion().getFriendlyString();
 	}
 
 	public static void reload(boolean restartWebhookServer) {

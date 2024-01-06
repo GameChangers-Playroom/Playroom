@@ -1,14 +1,14 @@
 package io.github.flameyheart.playroom.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ServerConfig;
+import io.github.flameyheart.playroom.duck.AimingEntity;
 import io.github.flameyheart.playroom.duck.InventoryDuck;
+import io.github.flameyheart.playroom.duck.SnowOverlay;
 import io.github.flameyheart.playroom.item.LaserGun;
 import io.github.flameyheart.playroom.registry.Items;
 import io.github.flameyheart.playroom.util.InventorySlot;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
-import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
@@ -17,49 +17,80 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.world.GameRules;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.UUID;
-
 @Mixin(PlayerEntity.class)
-public abstract class PlayerEntityMixin extends LivingEntityMixin {
-    private static final @Unique TrackedData<Boolean> playroom$IS_AIMING = DataTracker.registerData(PlayerEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final @Unique UUID playroomAIM_SLOWDOWN_ID = UUID.fromString("3bceceb5-bdd6-43b5-a8f6-64e0eb1893b1");
+public abstract class PlayerEntityMixin extends LivingEntityMixin implements AimingEntity, SnowOverlay {
     @Shadow private ItemStack selectedItem;
+    @Shadow public abstract void stopFallFlying();
+    @Shadow protected abstract void dropShoulderEntities();
+
+    private static final @Unique TrackedData<Boolean> playroom$IS_AIMING = DataTracker.registerData(PlayerEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
+    private static final @Unique TrackedData<Integer> playroom$SNOW_OVERLAY = DataTracker.registerData(PlayerEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     @Inject(method = "initDataTracker", at = @At("HEAD"))
     private void trackGunFreezeTicks(CallbackInfo ci) {
         this.dataTracker.startTracking(playroom$IS_AIMING, false);
+        this.dataTracker.startTracking(playroom$SNOW_OVERLAY, 0);
     }
 
-    @Override
     public void playroom$setAiming(boolean aiming) {
         this.dataTracker.set(playroom$IS_AIMING, aiming);
     }
-
-    @Override
     public boolean playroom$isAiming() {
         return this.dataTracker.get(playroom$IS_AIMING);
     }
 
+    @Override
+    public void playroom$tick() {
+        super.playroom$tick();
+        if (!isFrozen() && playroom$getOverlayTime() > 0) {
+            playroom$addOverlayTime(-1);
+        }
+        if (!this.playroom$isAffected()) return;
+        if (this.isFallFlying()) this.stopFallFlying();
+        dropShoulderEntities();
+    }
+
+    @Override
+    public void playroom$setFreezeTime(int ticks) {
+        super.playroom$setFreezeTime(ticks);
+        if (ticks > 0) {
+            this.playroom$setOverlayTime(15);
+        }
+    }
+
+    @Override
+    public void playroom$setOverlayTime(int ticks) {
+        this.dataTracker.set(playroom$SNOW_OVERLAY, ticks);
+    }
+
+    @Override
+    public int playroom$getOverlayTime() {
+        return this.dataTracker.get(playroom$SNOW_OVERLAY);
+    }
+
+    @Override
+    public float playroom$getOverlayProgress() {
+        return playroom$isFrozen() ? 1 : playroom$getOverlayTime() / 15f;
+    }
+
     @Inject(method = "addShoulderEntity", at = @At(value = "HEAD"), cancellable = true)
     private void preventShoulderEntities(NbtCompound entityNbt, CallbackInfoReturnable<Boolean> cir) {
-        if (this.playroom$isFrozen()) {
+        if (this.playroom$isAffected()) {
             cir.setReturnValue(false);
         }
     }
 
     @Inject(method = "getOffGroundSpeed", at = @At(value = "HEAD"), cancellable = true)
-    private void addIceDrag(CallbackInfoReturnable<Float> cir) {
+    private void airResistance(CallbackInfoReturnable<Float> cir) {
         if (this.playroom$isFrozen()) {
             cir.setReturnValue(0.01f);
         }
@@ -67,30 +98,35 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin {
 
     @ModifyVariable(method = "handleFallDamage", at = @At(value = "HEAD"), index = 2, argsOnly = true)
     private float reduceIceTimeFromFall(float damageMultiplier, float fallDistance) {
-        if (this.playroom$showIce()) {
-            this.playroom$addGunFreezeTicks(-(int) Math.ceil(fallDistance * 3f)); //TODO: config
-            return damageMultiplier * 0.3f; //TODO: config
+        if (this.playroom$isFrozen()) {
+            this.playroom$addFreezeTime(-(int) Math.ceil(fallDistance * ServerConfig.instance().freezeFallIceDamage));
+            return damageMultiplier * (1 - ServerConfig.instance().freezeFallDamageReduction);
         }
         return damageMultiplier;
     }
 
-    @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/GameRules;getBoolean(Lnet/minecraft/world/GameRules$Key;)Z"))
-    private boolean disableRegen(GameRules instance, GameRules.Key<GameRules.BooleanRule> rule) {
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/GameRules;getBoolean(Lnet/minecraft/world/GameRules$Key;)Z"))
+    private boolean disableRegen(boolean original) {
         if (this.playroom$isFrozen() || this.selectedItem.getItem() instanceof LaserGun) {
             return false;
         }
-        return instance.getBoolean(rule);
+        return original;
     }
 
-    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getAttributeValue(Lnet/minecraft/entity/attribute/EntityAttribute;)D", shift = At.Shift.BEFORE))
-    private void slowdown(CallbackInfo ci) {
-        EntityAttributeInstance entityAttributeInstance = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-        if (entityAttributeInstance == null) return;
-        if (entityAttributeInstance.getModifier(playroomAIM_SLOWDOWN_ID) != null && !this.playroom$isAiming()) {
-            entityAttributeInstance.removeModifier(playroomAIM_SLOWDOWN_ID);
-        } else if (entityAttributeInstance.getModifier(playroomAIM_SLOWDOWN_ID) == null && this.playroom$isAiming()) {
-            entityAttributeInstance.addTemporaryModifier(new EntityAttributeModifier(playroomAIM_SLOWDOWN_ID, "Aim slowdown", -ServerConfig.instance().laserAimSlowdown, EntityAttributeModifier.Operation.MULTIPLY_BASE));
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getAttributeValue(Lnet/minecraft/entity/attribute/EntityAttribute;)D"))
+    private double aimSlowdown0(double original) {
+        if (this.playroom$isAiming()) {
+            return original * ServerConfig.instance().laserAimSlowdown;
         }
+        return original;
+    }
+
+    @ModifyExpressionValue(method = "getMovementSpeed", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getAttributeValue(Lnet/minecraft/entity/attribute/EntityAttribute;)D"))
+    private double aimSlowdown1(double original) {
+        if (this.playroom$isAiming()) {
+            return original * ServerConfig.instance().laserAimSlowdown;
+        }
+        return original;
     }
 
     @Inject(method = "dropInventory", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;dropAll()V"))

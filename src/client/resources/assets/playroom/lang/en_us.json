@@ -72,7 +72,9 @@
     "playroom.multiplayer.disconnect.protocol_mismatch": "Mismatching protocol version",
     "playroom.multiplayer.disconnect.invalid_config": "Server sent invalid config",
     "playroom.warning.protocol.title": "Mismatching protocol version",
-    "playroom.warning.protocol.message": "Playroom may behave weirdly",
+    "playroom.warning.protocol.message": "Playroom may not behave properly",
+    "playroom.warning.version.title": "Mismatching Playroom version",
+    "playroom.warning.version.message": "The game may not behave properly",
     "playroom.donation_screen.title": "%s donated %f.2 %s",
     "playroom.subtitles.laser_gun.charge": "Laser gun charges",
     "playroom.subtitles.laser_gun.shoot": "Laser gun shoots",
@@ -116,7 +118,10 @@
     "config.playroom.option.networking.allowVanillaPlayers.description": "Allow vanilla players to join the server",
 
     "config.playroom.option.networking.requireMatchingProtocol": "Require matching protocol",
-    "config.playroom.option.networking.requireMatchingProtocol.description": "Require clients to have the same mod protocol version as the server",
+    "config.playroom.option.networking.requireMatchingProtocol.description": "Require clients to have the same protocol version as the server",
+
+    "config.playroom.option.networking.requireMatchingVersion": "Require matching mod version",
+    "config.playroom.option.networking.requireMatchingVersion.description": "Require clients to have the same mod version as the server",
 
     "config.playroom.option.networking.tiltifyWebhookPort": "Tiltify webhook port",
     "config.playroom.option.networking.tiltifyWebhookPort.description": "The port to use for the Tiltify webhook server",

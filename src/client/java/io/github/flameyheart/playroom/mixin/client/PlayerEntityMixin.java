@@ -1,7 +1,6 @@
 package io.github.flameyheart.playroom.mixin.client;
 
-import io.github.flameyheart.playroom.duck.ExpandedEntityData;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
+import io.github.flameyheart.playroom.duck.client.FancyDisplayName;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -23,10 +22,9 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 	@Inject(method = "getDisplayName", at = @At("RETURN"), cancellable = true)
 	public void getDisplayName(CallbackInfoReturnable<Text> ci) {
 		Object self = this;
-		if (self instanceof AbstractClientPlayerEntity) {
-			ExpandedEntityData data = (ExpandedEntityData) self;
-			if (data != null && data.playroom$getDisplayName().getRight() != null) {
-				ci.setReturnValue(data.playroom$getDisplayName().getRight());
+		if (self instanceof FancyDisplayName player) {
+			if (player.playroom$hasDisplayName()) {
+				ci.setReturnValue(player.playroom$getDisplayName());
 			}
 		}
 	}

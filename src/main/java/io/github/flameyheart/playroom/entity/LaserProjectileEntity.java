@@ -2,7 +2,7 @@ package io.github.flameyheart.playroom.entity;
 
 import io.github.flameyheart.playroom.Constants;
 import io.github.flameyheart.playroom.config.ServerConfig;
-import io.github.flameyheart.playroom.duck.ExpandedEntityData;
+import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.registry.Damage;
 import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Sounds;
@@ -13,7 +13,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -57,11 +56,11 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
         Entity entity = entityHitResult.getEntity();
         this.discard();
         if (getOwner() == null || entity.getUuid().equals(getOwner().getUuid())) return;
-        if (entity instanceof ExpandedEntityData entityData && entity instanceof LivingEntity && !entity.getType().isIn(Tags.IMMUNE_TO_FREEZE)) {
+        if (entity instanceof FreezableEntity entityData && entity instanceof LivingEntity && !entity.getType().isIn(Tags.IMMUNE_TO_FREEZE)) {
             entity.damage(Damage.laserShot(this.getWorld(), this, getOwner()), (float) getDamage());
             playSound(entity.getWorld(), entity, getHitSound());
             if (isRapidFire()) {
-                entityData.playroom$addGunFreezeTicks(ServerConfig.instance().laserRapidFreezeAmount);
+                entityData.playroom$addSlowdownTime(ServerConfig.instance().laserRapidFreezeAmount);
             } else {
                 entityData.playroom$freeze();
             }

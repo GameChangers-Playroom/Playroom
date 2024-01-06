@@ -4,8 +4,12 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import io.github.flameyheart.playroom.Playroom;
+import io.github.flameyheart.playroom.util.LinedStringBuilder;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.block.*;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.CommandBlock;
+import net.minecraft.block.WallMountedBlock;
 import net.minecraft.block.entity.CommandBlockBlockEntity;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
@@ -117,6 +121,19 @@ public class PlayroomCommand {
                 source.sendFeedback(() -> Text.translatable("commands.playroom.entity_test", finalCount), false);
 
                 return count;
+            })
+          ).then(
+            literal("status").executes(context -> {
+                ServerCommandSource source = context.getSource();
+                LinedStringBuilder stringBuilder = new LinedStringBuilder();
+                stringBuilder.append("Webhook server: ");
+                stringBuilder.appendLine(Playroom.isSSLEnabled() ? "Running" : "Offline");
+                stringBuilder.append("Donations received: ");
+                stringBuilder.appendLine(Playroom.DONATIONS.size());
+
+                source.sendFeedback(() -> Text.literal(stringBuilder.toString()), false);
+
+                return 1;
             })
           )
         );

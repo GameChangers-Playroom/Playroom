@@ -5,7 +5,6 @@ import io.github.flameyheart.playroom.PlayroomClient;
 import io.github.flameyheart.playroom.config.ClientConfig;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -16,8 +15,9 @@ public class HudRenderer {
         MinecraftClient client = MinecraftClient.getInstance();
         if (!ClientConfig.instance().debugInfo || client.options.debugEnabled) return;
         drawContext.drawText(client.textRenderer, "Server time: " + Playroom.serverTime, 5, 5, 0xFFFFFF, true);
-        drawContext.drawText(client.textRenderer, "Zooming: " + PlayroomClient.isZooming(), 5, 16, 0xFFFFFF, true);
-        drawContext.drawText(client.textRenderer, "Zoom divisor: " + PlayroomClient.getPreviousZoomDivisor(), 5, 27, 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Aim zoom: " + PlayroomClient.hasAimZoom(), 5, 16, 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Unfreeze zoom: " + PlayroomClient.hasAimZoom(), 5, 27, 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Zoom divisor: " + PlayroomClient.getPreviousAimZoomDivisor(), 5, 38, 0xFFFFFF, true);
         Entity target = client.targetedEntity;
         String content;
         if (target instanceof PlayerEntity targetPlayer) {
@@ -36,6 +36,6 @@ public class HudRenderer {
         } else {
             content = "No targeted entity";
         }
-        drawContext.drawText(client.textRenderer, "Target: " + content, 5, 38, 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Target: " + content, 5, 49, 0xFFFFFF, true);
     }
 }

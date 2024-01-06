@@ -7,9 +7,10 @@ import fi.dy.masa.tweakeroo.config.FeatureToggle;
 import io.github.flameyheart.playroom.compat.ModOptional;
 import io.github.flameyheart.playroom.config.ClientConfig;
 import io.github.flameyheart.playroom.config.ServerConfig;
-import io.github.flameyheart.playroom.duck.ExpandedEntityData;
+import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.duck.PlayerDisplayName;
 import io.github.flameyheart.playroom.duck.client.ExpandedClientLoginNetworkHandler;
+import io.github.flameyheart.playroom.duck.client.FancyDisplayName;
 import io.github.flameyheart.playroom.event.LivingEntityEvents;
 import io.github.flameyheart.playroom.freeze.CameraEntity;
 import io.github.flameyheart.playroom.item.Aimable;
@@ -28,7 +29,6 @@ import io.github.flameyheart.playroom.tiltify.Donation;
 import io.github.flameyheart.playroom.toast.WarningToast;
 import io.github.flameyheart.playroom.util.ClientUtils;
 import io.github.flameyheart.playroom.zoom.ZoomHelper;
-import io.github.flameyheart.playroom.zoom.interpolate.SmoothInterpolator;
 import io.github.flameyheart.playroom.zoom.interpolate.TransitionInterpolator;
 import me.x150.renderer.event.RenderEvents;
 import net.fabricmc.api.ClientModInitializer;
@@ -45,13 +45,11 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.item.BuiltinModelItemRenderer;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,26 +65,31 @@ public class PlayroomClient implements ClientModInitializer {
     public static final Map<Long, Double> ANIMATION_START_TICK = new HashMap<>();
     public static final BipedEntityModel.ArmPose LASER_GUN_POSE = ClassTinkerers.getEnum(BipedEntityModel.ArmPose.class, "LASER_GUN");
     public static final Map<UUID, Donation> DONATIONS = new LinkedHashMap<>();
-    public static final int MAX_SCROLL_TIERS = 5;
-    public static final Map<ExpandedEntityData, Map<String, ModelPosition>> FROZEN_MODEL = new HashMap<>();
+    public static final Map<FreezableEntity, Map<String, ModelPosition>> FROZEN_MODEL = new HashMap<>();
 
     public static boolean orbitCameraEnabled = false;
 
-    private static boolean zooming = false;
-    private static final ZoomHelper ZOOM_HELPER = new ZoomHelper(
+    private static boolean aimZoom = false;
+    private static boolean unfreezeZoom = false;
+    private static final ZoomHelper AIM_ZOOM = new ZoomHelper(
       new TransitionInterpolator(
         () -> ClientConfig.instance().laserAimZoomInTransition,
         () -> ClientConfig.instance().laserAimZoomOutTransition,
         () -> ClientConfig.instance().laserAimZoomInTime,
         () -> ClientConfig.instance().laserAimZoomOutTime
       ),
-      new SmoothInterpolator(() -> MathHelper.lerp(ClientConfig.defaults().laserAimCameraSmoothness / 100.0, 1.0, 0.1)),
-      () -> ServerConfig.instance().laserAimZoom,
-      () -> 3,
-      () -> MAX_SCROLL_TIERS,
-      () -> true
+      () -> ServerConfig.instance().laserAimZoom
     );
-    private static double previousZoomDivisor;
+    public static final ZoomHelper UNFREEZE_ZOOM = new ZoomHelper(
+      new TransitionInterpolator(
+        () -> ClientConfig.instance().laserAimZoomInTransition,
+        () -> ClientConfig.instance().laserAimZoomOutTransition,
+        () -> ClientConfig.instance().laserAimZoomInTime,
+        () -> ClientConfig.instance().laserAimZoomOutTime
+      ),
+      () -> ServerConfig.instance().laserAimZoom
+    );
+    private static double previousAimZoomDivisor;
 
     @Override
     public void onInitializeClient() {
@@ -115,14 +118,15 @@ public class PlayroomClient implements ClientModInitializer {
         RenderEvents.WORLD.register(WorldRenderer::render);
         RenderEvents.HUD.register(HudRenderer::renderDebugInfo);
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            ZOOM_HELPER.tick(isZooming(), 0);
+            AIM_ZOOM.tick(hasAimZoom());
+            UNFREEZE_ZOOM.tick(hasUnfreezeZoom());
             if (client.player != null) {
                 if (Playroom.getServer() == null) Playroom.serverTime++;
-                ExpandedEntityData player = (ExpandedEntityData) client.player;
-                if (!orbitCameraEnabled && player.playroom$showIce()) {
+                FreezableEntity player = (FreezableEntity) client.player;
+                if (!orbitCameraEnabled && player.playroom$isFrozen()) {
                     CameraEntity.setCameraState(orbitCameraEnabled = true);
                     client.player.input.sneaking = false;
-                } else if (orbitCameraEnabled && !player.playroom$showIce()) {
+                } else if (orbitCameraEnabled && !player.playroom$isFrozen()) {
                     CameraEntity.setCameraState(orbitCameraEnabled = false);
                 }
 
@@ -132,21 +136,19 @@ public class PlayroomClient implements ClientModInitializer {
         LivingEntityEvents.END_TRAVEL.register(baseEntity -> {
             if (baseEntity instanceof PlayerEntity player) {
                 player.getWorld().getProfiler().push("playroom_freezing");
-                ExpandedEntityData eEntity = (ExpandedEntityData) player;
+                FreezableEntity entity = (FreezableEntity) player;
 
-                if (player.getWorld().isClient && !player.isDead() && eEntity.playroom$isFrozen()) {
-                    if (eEntity.playroom$showIce() && !player.isOnGround()) {
-                        player.setVelocity(player.getVelocity().multiply(0.8, 1, 0.8));
-                        ((EntityAccessor) player).callScheduleVelocityUpdate();
-                    }
+                if (player.getWorld().isClient && !player.isDead() && entity.playroom$isFrozen() && !player.isOnGround()) {
+                    player.setVelocity(player.getVelocity().multiply(0.8, 1, 0.8));
+                    ((EntityAccessor) player).callScheduleVelocityUpdate();
                 }
 
                 player.getWorld().getProfiler().pop();
             }
         });
         LivingEntityEvents.END_BASE_TICK.register(entity -> {
-            ExpandedEntityData eEntity = (ExpandedEntityData) entity;
-            boolean showIce = eEntity.playroom$showIce();
+            FreezableEntity eEntity = (FreezableEntity) entity;
+            boolean showIce = eEntity.playroom$isFrozen();
             if (!showIce) {
                 FROZEN_MODEL.remove(entity);
             }
@@ -174,7 +176,6 @@ public class PlayroomClient implements ClientModInitializer {
 
             client.execute(() -> deserializeConfig(serverConfig));
         });
-
         ClientPlayNetworking.registerGlobalReceiver(Playroom.id("donation/add"), (client, handler, buf, responseSender) -> {
             UUID id = buf.readUuid();
             String donorName = buf.readString();
@@ -187,7 +188,6 @@ public class PlayroomClient implements ClientModInitializer {
                 DONATIONS.put(id, new Donation(id, donorName, message, amount, currency, autoApproved));
             });
         });
-
         ClientPlayNetworking.registerGlobalReceiver(Playroom.id("donation/update"), (client, handler, buf, responseSender) -> {
             UUID id = buf.readUuid();
             Donation.Status status = buf.readEnumConstant(Donation.Status.class);
@@ -201,7 +201,6 @@ public class PlayroomClient implements ClientModInitializer {
                 }
             });
         });
-
         ClientPlayNetworking.registerGlobalReceiver(Playroom.id("player_name"), (client, handler, buf, responseSender) -> {
             List<PlayerDisplayName> displayNames = buf.readList(packetByteBuf -> {
                 UUID player = packetByteBuf.readUuid();
@@ -212,15 +211,16 @@ public class PlayroomClient implements ClientModInitializer {
             });
 
             client.execute(() -> {
+                if (client.world == null) return;
                 for (PlayerDisplayName displayName : displayNames) {
                     PlayerEntity player = client.world.getPlayerByUuid(displayName.player());
-                    if (player != null) {
-                        ((ExpandedEntityData) player).playroom$setDisplayName(displayName.prefix(), displayName.displayName());
+                    if (player instanceof FancyDisplayName fancyPlayer) {
+                        fancyPlayer.playroom$setDisplayName(displayName.displayName());
+                        fancyPlayer.playroom$setPrefix(displayName.prefix());
                     }
                 }
             });
         });
-
         ClientPlayNetworking.registerGlobalReceiver(Playroom.id("time_sync"), (client, handler, buf, responseSender) -> {
             long serverTime = buf.readLong();
 
@@ -248,6 +248,7 @@ public class PlayroomClient implements ClientModInitializer {
 
                 PacketByteBuf byteBuf = PacketByteBufs.create();
                 byteBuf.writeByte(Constants.PROTOCOL_VERSION);
+                byteBuf.writeString(Playroom.getModVersion());
 
                 future.complete(byteBuf);
             });
@@ -257,6 +258,14 @@ public class PlayroomClient implements ClientModInitializer {
         ClientLoginNetworking.registerGlobalReceiver(Playroom.id("warning/mismatch/protocol"), (client, handler, buf, responseSender) -> {
             client.execute(() -> {
                 client.getToastManager().add(new WarningToast(Text.translatable("playroom.warning.protocol.title"), Text.translatable("playroom.warning.protocol.message")));
+            });
+
+            return CompletableFuture.completedFuture(PacketByteBufs.create());
+        });
+
+        ClientLoginNetworking.registerGlobalReceiver(Playroom.id("warning/mismatch/version"), (client, handler, buf, responseSender) -> {
+            client.execute(() -> {
+                client.getToastManager().add(new WarningToast(Text.translatable("playroom.warning.version.title"), Text.translatable("playroom.warning.version.message")));
             });
 
             return CompletableFuture.completedFuture(PacketByteBufs.create());
@@ -276,8 +285,8 @@ public class PlayroomClient implements ClientModInitializer {
     public static boolean isAiming(ItemStack stack) {
         Item item = stack.getItem();
         boolean aiming = item instanceof Aimable aimable && aimable.canAim(stack) && MinecraftClient.getInstance().options.attackKey.isPressed();
-        if (zooming != aiming) {
-            setZooming(aiming);
+        if (aimZoom != aiming) {
+            setAimZoom(aiming);
             PacketByteBuf buf = PacketByteBufs.create();
             buf.writeBoolean(aiming);
             ClientPlayNetworking.send(Playroom.id("aiming"), buf);
@@ -285,25 +294,33 @@ public class PlayroomClient implements ClientModInitializer {
         return aiming;
     }
 
-    private static void setZooming(boolean zooming) {
-        PlayroomClient.zooming = zooming;
+    private static void setAimZoom(boolean zooming) {
+        PlayroomClient.aimZoom = zooming;
     }
 
-    public static boolean isZooming() {
-        return PlayroomClient.zooming;
+    public static boolean hasAimZoom() {
+        return PlayroomClient.aimZoom;
     }
 
-    public static double getPreviousZoomDivisor() {
-        return previousZoomDivisor;
+    public static void setUnfreezeZoom(boolean zooming) {
+        PlayroomClient.unfreezeZoom = zooming;
     }
 
-    public static double getZoomDivisor(float tickDelta) {
-        if (!zooming) {
-            ZOOM_HELPER.reset();
+    public static boolean hasUnfreezeZoom() {
+        return PlayroomClient.unfreezeZoom;
+    }
+
+    public static double getPreviousAimZoomDivisor() {
+        return previousAimZoomDivisor;
+    }
+
+    public static double getAimZoomDivisor(float tickDelta) {
+        if (!aimZoom) {
+            AIM_ZOOM.reset();
         }
 
-        double zoomDivisor = ZOOM_HELPER.getZoomDivisor(tickDelta);
-        previousZoomDivisor = zoomDivisor;
+        double zoomDivisor = AIM_ZOOM.getZoomDivisor(tickDelta);
+        previousAimZoomDivisor = zoomDivisor;
         return zoomDivisor;
     }
 }

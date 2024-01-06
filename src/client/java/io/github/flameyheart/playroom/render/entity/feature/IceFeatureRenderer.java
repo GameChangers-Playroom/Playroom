@@ -1,7 +1,7 @@
 package io.github.flameyheart.playroom.render.entity.feature;
 
 import io.github.flameyheart.playroom.Playroom;
-import io.github.flameyheart.playroom.duck.ExpandedEntityData;
+import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.registry.Items;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.OverlayTexture;
@@ -26,13 +26,13 @@ public class IceFeatureRenderer<T extends LivingEntity, M extends EntityModel<T>
 
     @Override
     public void render(MatrixStack matrixStack, VertexConsumerProvider vertexConsumers, int light, T entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {
-        if (!((ExpandedEntityData) entity).playroom$showIce()) return;
+        if (!((FreezableEntity) entity).playroom$isFrozen()) return;
 
         MinecraftClient client = MinecraftClient.getInstance();
         matrixStack.push();
 
-        ExpandedEntityData eEntity = (ExpandedEntityData) entity;
-        float iceMelt = eEntity.playroom$iceMeltProgress();
+        FreezableEntity eEntity = (FreezableEntity) entity;
+        float iceMelt = eEntity.playroom$getMeltProgress();
         float entityHeight = entity.getHeight();
         float entityWidth = entity.getWidth();
         float scaleFactor = (entityHeight / 1.8f + entityWidth / 0.6f) / 2;  // model designed for 1.8x0.6 entity

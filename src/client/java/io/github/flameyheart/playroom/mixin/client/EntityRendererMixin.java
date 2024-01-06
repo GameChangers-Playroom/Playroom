@@ -1,6 +1,6 @@
 package io.github.flameyheart.playroom.mixin.client;
 
-import io.github.flameyheart.playroom.duck.ExpandedEntityData;
+import io.github.flameyheart.playroom.duck.client.FancyDisplayName;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -8,7 +8,6 @@ import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
@@ -20,19 +19,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(EntityRenderer.class)
 public abstract class EntityRendererMixin<T extends Entity> {
-
     @Shadow @Final protected EntityRenderDispatcher dispatcher;
-
     @Shadow public abstract TextRenderer getTextRenderer();
 
     @Inject(method = "renderLabelIfPresent", at = @At("TAIL"))
     private void renderFancyLabel(T entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
-        if (entity instanceof PlayerEntity player) {
-            Text prefix = ((ExpandedEntityData) player).playroom$getDisplayName().getLeft();
-            boolean bl = !entity.isSneaky();
-            if (!bl || prefix == null || text == null) {
+        if (entity instanceof FancyDisplayName player) {
+            if (entity.isSneaky() || !player.playroom$hasPrefix() || text == null) {
                 return;
             }
+            Text prefix = player.playroom$getPrefix();
             float f = entity.getNameLabelHeight();
             int i = "deadmau5".equals(text.getString()) ? -10 : 0;
 

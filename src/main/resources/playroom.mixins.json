@@ -10,7 +10,6 @@
         "LivingEntityMixin",
         "PersistentProjectileEntityMixin",
         "PlayerEntityAccessor",
-        "PlayerEntityInvoker",
         "PlayerEntityMixin",
         "PlayerInventoryMixin",
         "PlayroomEntity",
