@@ -1,7 +1,5 @@
 package io.github.flameyheart.playroom.zoom.interpolate;
 
-import java.util.function.Supplier;
-
 public interface Interpolator {
     double tickInterpolation(double targetInterpolation, double currentInterpolation, double tickDelta);
 

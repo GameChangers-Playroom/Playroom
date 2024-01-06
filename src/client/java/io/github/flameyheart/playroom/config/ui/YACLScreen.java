@@ -15,8 +15,6 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
 
-import java.util.function.Function;
-
 public class YACLScreen {
     public static Screen createScreen(Screen parent) {
         ServerConfig serverConfig = ServerConfig.instance();
@@ -283,29 +281,20 @@ public class YACLScreen {
             playerFreeze.collapsed(true);
 
             playerFreeze.option(
-              Option.<Integer>createBuilder()
-                .name(Text.translatable("config.playroom.option.player_freeze.freezeZoomDuration"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeZoomDuration.description")))
-                .binding(serverDefaults.freezeZoomDuration, () -> serverConfig.freezeZoomDuration, newVal -> serverConfig.freezeZoomDuration = newVal)
-                .controller(option -> IntegerSliderControllerBuilder.create(option).range(1, 60).step(1))
+              Option.<Float>createBuilder()
+                .name(Text.translatable("config.playroom.option.player_freeze.freezeFallDamageReduction"))
+                .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeFallDamageReduction.description")))
+                .binding(serverDefaults.freezeFallDamageReduction, () -> serverConfig.freezeFallDamageReduction, newVal -> serverConfig.freezeFallDamageReduction = newVal)
+                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 1f).step(0.01f))
                 .build()
             );
 
             playerFreeze.option(
               Option.<Float>createBuilder()
-                .name(Text.translatable("config.playroom.option.player_freeze.freezeZoomFov"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeZoomFov.description")))
-                .binding(serverDefaults.freezeZoomFov, () -> serverConfig.freezeZoomFov, newVal -> serverConfig.freezeZoomFov = newVal)
-                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 5f).step(0.01f))
-                .build()
-            );
-
-            playerFreeze.option(
-              Option.<Integer>createBuilder()
-                .name(Text.translatable("config.playroom.option.player_freeze.freezeZoomOffset"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeZoomOffset.description")))
-                .binding(serverDefaults.freezeZoomOffset, () -> serverConfig.freezeZoomOffset, newVal -> serverConfig.freezeZoomOffset = newVal)
-                .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 19).step(1))
+                .name(Text.translatable("config.playroom.option.player_freeze.freezeFallIceDamage"))
+                .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeFallIceDamage.description")))
+                .binding(serverDefaults.freezeFallIceDamage, () -> serverConfig.freezeFallIceDamage, newVal -> serverConfig.freezeFallIceDamage = newVal)
+                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 1f).step(0.01f))
                 .build()
             );
 
@@ -315,6 +304,15 @@ public class YACLScreen {
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeSlowdownTime.description")))
                 .binding(serverDefaults.freezeSlowdownTime, () -> serverConfig.freezeSlowdownTime, newVal -> serverConfig.freezeSlowdownTime = newVal)
                 .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 2400).step(10))
+                .build()
+            );
+
+            playerFreeze.option(
+              Option.<Float>createBuilder()
+                .name(Text.translatable("config.playroom.option.player_freeze.freezeSlowdown"))
+                .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeSlowdown.description")))
+                .binding(serverDefaults.freezeSlowdown, () -> serverConfig.freezeSlowdown, newVal -> serverConfig.freezeSlowdown = newVal)
+                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 1f).step(0.01f))
                 .build()
             );
 

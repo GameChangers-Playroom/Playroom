@@ -4,7 +4,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.github.flameyheart.playroom.util.MixinUtil;
 import net.minecraft.client.render.entity.CodEntityRenderer;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.CodEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

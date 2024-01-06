@@ -4,7 +4,6 @@ import io.github.flameyheart.playroom.Constants;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.entity.LaserProjectileEntity;
-import io.github.flameyheart.playroom.mixin.geo.AnimationControllerAccessor;
 import io.github.flameyheart.playroom.registry.Sounds;
 import net.fabricmc.fabric.api.item.v1.FabricItem;
 import net.minecraft.block.BlockState;

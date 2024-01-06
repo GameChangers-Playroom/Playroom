@@ -3,13 +3,9 @@ package io.github.flameyheart.playroom.mixin.client.laserGun;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import io.github.flameyheart.playroom.PlayroomClient;
 import io.github.flameyheart.playroom.config.ClientConfig;
-import io.github.flameyheart.playroom.config.ServerConfig;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.util.math.MathHelper;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(Mouse.class)
@@ -24,6 +20,6 @@ public class MouseMixin {
     )
     private Object applyRelativeSensitivity(Object genericValue) {
         double value = (Double) genericValue;
-        return value / MathHelper.lerp(ClientConfig.instance().laserAimCameraSmoothness / 100.0, 1.0, PlayroomClient.getPreviousZoomDivisor());
+        return value / MathHelper.lerp(ClientConfig.instance().laserAimCameraSmoothness / 100.0, 1.0, PlayroomClient.getPreviousAimZoomDivisor());
     }
 }

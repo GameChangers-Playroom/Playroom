@@ -5,7 +5,6 @@ import dev.isxander.yacl3.config.v2.api.SerialEntry;
 import dev.isxander.yacl3.config.v2.api.serializer.GsonConfigSerializerBuilder;
 import dev.isxander.yacl3.platform.YACLPlatform;
 import io.github.flameyheart.playroom.Playroom;
-import io.github.flameyheart.playroom.config.annotations.SendToClient;
 import io.github.flameyheart.playroom.zoom.TransitionType;
 
 public class ClientConfig {
@@ -34,15 +33,24 @@ public class ClientConfig {
     @SerialEntry(comment = "The relative sensitivity of the camera while aiming\n[Min: 0, Default: 100]")
     public short laserAimCameraSmoothness = 100;
 
-    @SerialEntry(comment = "The zoom in transition when aiming")
+    @SerialEntry(comment = "The zoom in transition when aiming\n[Default: EASE_OUT_EXP]")
     public TransitionType laserAimZoomInTransition = TransitionType.EASE_OUT_EXP;
 
-    @SerialEntry(comment = "The zoom out transition when aiming")
+    @SerialEntry(comment = "The zoom out transition when aiming\n[Default: EASE_IN_EXP]")
     public TransitionType laserAimZoomOutTransition = TransitionType.EASE_IN_EXP;
 
-    @SerialEntry(comment = "The zoom in duration when aiming\n[Min: 0, Default: 0.5] [DECIMAL SUPPORTED]")
-    public double laserAimZoomInTime = 0.5f;
+    @SerialEntry(comment = "The zoom in duration when aiming\n[Min: 0, Default: 0.3] [DECIMAL SUPPORTED]")
+    public double laserAimZoomInTime = 0.3;
 
-    @SerialEntry(comment = "The zoom out duration when aiming\n[Min: 0, Default: 0.5] [DECIMAL SUPPORTED]")
-    public double laserAimZoomOutTime = 0.5f;
+    @SerialEntry(comment = "The zoom out duration when aiming\n[Min: 0, Default: 0.2] [DECIMAL SUPPORTED]")
+    public double laserAimZoomOutTime = 0.2;
+
+    @SerialEntry(comment = "The duration of the zoom effect\n[Min: 0, Default: 0.2] [DECIMAL SUPPORTED]")
+    public double freezeZoomDuration = 0.2;
+
+    @SerialEntry(comment = "The target FOV for the zoom effect\n[Min: 0, Default: 0.1] [DECIMAL SUPPORTED]")
+    public int freezeZoomTarget = 10;
+
+    @SerialEntry(comment = "The zoom in transition when aiming")
+    public TransitionType freezeZoomTransition = TransitionType.EASE_OUT_EXP;
 }

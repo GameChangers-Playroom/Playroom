@@ -2,12 +2,15 @@ package io.github.flameyheart.playroom.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
-import io.github.flameyheart.playroom.duck.ExpandedEntityData;
+import io.github.flameyheart.playroom.config.ServerConfig;
+import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.event.LivingEntityEvents;
 import io.github.flameyheart.playroom.registry.Tags;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
+import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
@@ -15,8 +18,6 @@ import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.tag.DamageTypeTags;
-import net.minecraft.text.Text;
-import net.minecraft.util.Pair;
 import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,84 +30,100 @@ import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(LivingEntity.class)
-public abstract class LivingEntityMixin extends PlayroomEntity implements ExpandedEntityData {
-    @Shadow public int hurtTime;
-    @Shadow @Nullable public abstract EntityAttributeInstance getAttributeInstance(EntityAttribute attribute);
+import java.util.UUID;
 
-    private static final @Unique TrackedData<Integer> playroom$GUN_FREEZE_TICKS = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.INTEGER);
-    private @Unique boolean playroom$aiming;
-    private @Unique Text playroom$prefix;
-    private @Unique Text playroom$displayName;
+@Mixin(LivingEntity.class)
+public abstract class LivingEntityMixin extends PlayroomEntity implements FreezableEntity {
+    @Shadow public abstract void stopRiding();
+    @Shadow public abstract boolean isFallFlying();
+
+    @Shadow public abstract boolean isDead();
+
+    @Shadow public abstract @Nullable EntityAttributeInstance getAttributeInstance(EntityAttribute attribute);
+
+    private static final @Unique TrackedData<Integer> playroom$FREEZE = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final @Unique TrackedData<Integer> playroom$SLOWDOWN = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final @Unique UUID playroom$SLOWDOWN_ID = UUID.fromString("3bceceb5-bdd6-43b5-a8f6-64e0eb1893b1");
+
 
     @Inject(method = "initDataTracker", at = @At("HEAD"))
     private void trackGunFreezeTicks(CallbackInfo ci) {
-        this.dataTracker.startTracking(playroom$GUN_FREEZE_TICKS, 0);
+        this.dataTracker.startTracking(playroom$FREEZE, 0);
+        this.dataTracker.startTracking(playroom$SLOWDOWN, 0);
     }
 
     @Override
-    public int playroom$getGunFreezeTicks() {
-        return this.dataTracker.get(playroom$GUN_FREEZE_TICKS);
-    }
-
-    @Override
-    public void playroom$setGunFreezeTicks(int frozenTicks) {
-        if (getWorld().isClient()) return;
-        this.dataTracker.set(playroom$GUN_FREEZE_TICKS, frozenTicks);
-        if (hasVehicle()) stopRiding();
-    }
-
-    @Override
-    protected void appendNbt(NbtCompound nbt, CallbackInfoReturnable<NbtCompound> cir) {
+    protected void writeNbt(NbtCompound nbt, CallbackInfoReturnable<NbtCompound> cir) {
         NbtCompound compound = new NbtCompound();
-        compound.putInt("TicksFrozen", playroom$getGunFreezeTicks());
+        compound.putInt("Freeze", playroom$getFreezeTime());
+        compound.putInt("Slowdown", playroom$getSlowdownTime());
 
         nbt.put("Playroom", compound);
     }
 
     @Override
-    protected void appendNbt(NbtCompound nbt, CallbackInfo ci) {
+    protected void readNbt(NbtCompound nbt, CallbackInfo ci) {
         NbtCompound compound = nbt.getCompound("Playroom");
-        playroom$setGunFreezeTicks(compound.getInt("TicksFrozen"));
+        playroom$setFreezeTime(compound.getInt("Freeze"));
+        playroom$setSlowdownTime(compound.getInt("Slowdown"));
     }
 
     @Override
-    protected boolean collideWhileFrozen(boolean original) {
-        return super.collideWhileFrozen(original) || playroom$showIce();
+    protected boolean isCollidable(boolean original) {
+        return super.isCollidable(original) || this.playroom$isFrozen();
     }
 
     @Override
-    protected boolean moveWhileFrozen(boolean original) {
-        if(playroom$showIce() && !((Object) this instanceof PlayerEntity)) {
+    protected boolean canMoveVoluntarily(boolean original) {
+        if (this.playroom$isFrozen() && !((Object) this instanceof PlayerEntity)) {
             return false;
         }
-        return super.moveWhileFrozen(original);
+        return super.canMoveVoluntarily(original);
     }
 
     @Override
-    public void playroom$addGunFreezeTicks(int frozenTicks) {
-        playroom$setGunFreezeTicks(MathHelper.clamp(playroom$getGunFreezeTicks() + frozenTicks, 0, playroom$freezeTime()));
+    public void playroom$setSlowdownTime(int ticks) {
+        int time = MathHelper.clamp(ticks, 0, playroom$maxSlowdownTime());
+        this.dataTracker.set(playroom$SLOWDOWN, time);
+
+        EntityAttributeInstance entityAttributeInstance = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        if (entityAttributeInstance == null || playroom$maxSlowdownTime() <= 0) return;
+        if (entityAttributeInstance.getModifier(playroom$SLOWDOWN_ID) != null && time == 0) {
+            entityAttributeInstance.removeModifier(playroom$SLOWDOWN_ID);
+        } else if (entityAttributeInstance.getModifier(playroom$SLOWDOWN_ID) == null && time > 0) {
+            float slowdown = -ServerConfig.instance().freezeSlowdown * ((float) ticks / playroom$maxSlowdownTime());
+            entityAttributeInstance.addTemporaryModifier(new EntityAttributeModifier(playroom$SLOWDOWN_ID, "Aim slowdown", slowdown, EntityAttributeModifier.Operation.MULTIPLY_BASE));
+        }
     }
 
     @Override
-    public void playroom$setDisplayName(Text prefix, Text displayName) {
-        this.playroom$prefix = prefix;
-        this.playroom$displayName = displayName;
+    public int playroom$getSlowdownTime() {
+        return this.dataTracker.get(playroom$SLOWDOWN);
     }
 
     @Override
-    public void playroom$setAiming(boolean aiming) {
-        // NO OP
+    public void playroom$setFreezeTime(int ticks) {
+        this.dataTracker.set(playroom$FREEZE, MathHelper.clamp(ticks, 0, playroom$maxFreezeTime()));
+        if (hasVehicle()) stopRiding();
     }
 
     @Override
-    public boolean playroom$isAiming() {
-        return false;
+    public int playroom$getFreezeTime() {
+        return this.dataTracker.get(playroom$FREEZE);
     }
 
     @Override
-    public Pair<Text, Text> playroom$getDisplayName() {
-        return new Pair<>(playroom$prefix, playroom$displayName);
+    public void playroom$tick() {
+        if (this.getWorld().isClient || this.isDead()) return;
+        FreezableEntity.super.playroom$tick();
+        if (!this.playroom$isAffected()) return;
+        if (this.hasPassengers()) this.removeAllPassengers();
+        if (this.isOnFire()) {
+            int fireTicks = this.getFireTicks();
+            int timeLeft = Math.max(this.playroom$getFreezeTime() - fireTicks, 0);
+            this.playroom$addTime(-fireTicks);
+            this.setFireTicks(timeLeft);
+        }
     }
 
     @WrapWithCondition(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;takeKnockback(DDD)V"))
@@ -126,17 +143,17 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Expand
 
     @ModifyReturnValue(method = "isImmobile", at = @At("RETURN"))
     private boolean immobileIfFrozen(boolean original) {
-        return original || playroom$showIce();
+        return original || playroom$isFrozen();
     }
 
     @Inject(method = "tickMovement", at = @At("HEAD"), cancellable = true)
     private void onTickMovementStart(CallbackInfo ci) {
-        if(playroom$showIce() && hurtTime == 0) ci.cancel();
+        if (playroom$isFrozen()) ci.cancel();
     }
 
     @Inject(method = "tick", at = @At(value = "HEAD"), cancellable = true)
     private void onTickStart(CallbackInfo ci) {
-        if(LivingEntityEvents.START_TICK.invoker().onStartTick((LivingEntity) (Object) this)) ci.cancel();
+        if (LivingEntityEvents.START_TICK.invoker().onStartTick((LivingEntity) (Object) this)) ci.cancel();
     }
 
     @Inject(method = "tick", at = @At(value = "TAIL"))
@@ -146,7 +163,7 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Expand
 
     @Inject(method = "baseTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;push(Ljava/lang/String;)V", shift = At.Shift.AFTER), cancellable = true)
     private void onBaseTickStart(CallbackInfo ci) {
-        if(LivingEntityEvents.START_BASE_TICK.invoker().onStartTick((LivingEntity) (Object) this)) ci.cancel();
+        if (LivingEntityEvents.START_BASE_TICK.invoker().onStartTick((LivingEntity) (Object) this)) ci.cancel();
     }
 
     @Inject(method = "baseTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V", shift = At.Shift.BEFORE))
@@ -176,7 +193,7 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Expand
       at = @At(value = "STORE"),
       ordinal = 0
     )
-    private float iceDrag(float original) {
+    private float slipperiness(float original) {
         if (this.playroom$isFrozen()) {
             return isOnGround() ? 0.98f : 0.01f;
         }
@@ -184,7 +201,7 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Expand
     }
 
     @Inject(method = "getOffGroundSpeed", at = @At(value = "HEAD"), cancellable = true)
-    private void addIceDrag(CallbackInfoReturnable<Float> cir) {
+    private void airResistance(CallbackInfoReturnable<Float> cir) {
         if (this.playroom$isFrozen()) {
             cir.setReturnValue(0.01f);
         }

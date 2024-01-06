@@ -1,8 +1,6 @@
 package io.github.flameyheart.playroom.datagen;
 
 import io.github.flameyheart.playroom.datagen.provider.DamageTypeTagProvider;
-import io.github.flameyheart.playroom.registry.Damage;
-import io.github.flameyheart.playroom.registry.Tags;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.minecraft.registry.RegistryWrapper;
 

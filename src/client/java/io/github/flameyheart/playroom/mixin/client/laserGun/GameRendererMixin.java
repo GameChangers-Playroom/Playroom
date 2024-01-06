@@ -3,9 +3,6 @@ package io.github.flameyheart.playroom.mixin.client.laserGun;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import io.github.flameyheart.playroom.PlayroomClient;
-import io.github.flameyheart.playroom.config.ClientConfig;
-import io.github.flameyheart.playroom.config.ServerConfig;
-import io.github.flameyheart.playroom.duck.ExpandedEntityData;
 import io.github.flameyheart.playroom.item.Aimable;
 import io.github.flameyheart.playroom.item.LaserGun;
 import net.minecraft.client.MinecraftClient;
@@ -62,6 +59,6 @@ public class GameRendererMixin {
 
     @ModifyReturnValue(method = "getFov", at = @At("RETURN"))
     private double modifyFovWithZoom(double fov, Camera camera, float tickDelta, boolean changingFov) {
-        return fov / PlayroomClient.getZoomDivisor(tickDelta);
+        return fov / PlayroomClient.getAimZoomDivisor(tickDelta);
     }
 }

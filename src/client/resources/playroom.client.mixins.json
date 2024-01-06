@@ -3,6 +3,7 @@
     "package": "io.github.flameyheart.playroom.mixin.client",
     "compatibilityLevel": "JAVA_17",
     "client": [
+        "AbstractClientPlayerEntityMixin",
         "ClientLoginNetworkHandlerMixin",
         "EntityRendererMixin",
         "PlayerEntityMixin",

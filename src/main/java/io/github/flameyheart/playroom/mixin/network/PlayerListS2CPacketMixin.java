@@ -45,7 +45,6 @@ public class PlayerListS2CPacketMixin {
                 TextUtil.placeholder("%luckperms:prefix%", player),
                 TextUtil.placeholder("%styled-nicknames:display_name%", player)))
               .toList();
-
             buf.writeCollection(displayNames, (buf1, displayName1) -> {
                 buf1.writeUuid(displayName1.player());
                 buf1.writeText(displayName1.prefix());
