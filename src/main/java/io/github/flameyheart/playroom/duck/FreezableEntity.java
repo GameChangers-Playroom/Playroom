@@ -53,7 +53,17 @@ public interface FreezableEntity {
     default void playroom$slowdown() {
         playroom$setSlowdownTime(playroom$maxSlowdownTime());
     }
-    default void playroom$tick() {
+
+    /**
+     * Ensure to call {@link #playroom$tickFreezeLogic()} inside implementations<br>
+     * Cannot call FreezableEntity.super.playroom$tick() because of a bug in mixin
+     */
+    void playroom$tick();
+
+    /**
+     * Call inside overrides for {@link #playroom$tick()}
+     */
+    default void playroom$tickFreezeLogic() {
         if (playroom$isFrozen()) {
             playroom$addFreezeTime(-1);
         } else if (playroom$isSlowed()) {

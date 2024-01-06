@@ -115,7 +115,7 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
     @Override
     public void playroom$tick() {
         if (this.getWorld().isClient || this.isDead()) return;
-        FreezableEntity.super.playroom$tick();
+        FreezableEntity.super.playroom$tickFreezeLogic();
         if (!this.playroom$isAffected()) return;
         if (this.hasPassengers()) this.removeAllPassengers();
         if (this.isOnFire()) {
