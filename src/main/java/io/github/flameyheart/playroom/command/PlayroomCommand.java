@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import io.github.flameyheart.playroom.Playroom;
+import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.util.LinedStringBuilder;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.BlockState;
@@ -13,6 +14,7 @@ import net.minecraft.block.WallMountedBlock;
 import net.minecraft.block.entity.CommandBlockBlockEntity;
 import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.block.entity.SignText;
+import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -40,7 +42,7 @@ public class PlayroomCommand {
               }
             ).then(
               argument("restart webhook server", BoolArgumentType.bool()).executes(context -> {
-                    Boolean restartWebhookServer = context.getArgument("restart webhook server", Boolean.class);
+                    boolean restartWebhookServer = BoolArgumentType.getBool(context, "restart webhook server");
                     context.getSource().sendFeedback(() -> Text.translatable("commands.playroom.reload"), false);
                     if (restartWebhookServer) {
                         context.getSource().sendFeedback(() -> Text.translatable("commands.playroom.reload.restart_webhook_server"), false);
@@ -53,7 +55,7 @@ public class PlayroomCommand {
           ).then(
             literal("experiment").then(
               argument("experiment", StringArgumentType.word()).executes(context -> {
-                    String experiment = context.getArgument("experiment", String.class);
+                    String experiment = StringArgumentType.getString(context, "experiment");
                     context.getSource().sendFeedback(() -> Text.translatable("commands.playroom.experiment", experiment, Playroom.setExperiment(experiment)), false);
                     return 1;
                 }
@@ -83,7 +85,7 @@ public class PlayroomCommand {
                     Identifier id = Registries.ENTITY_TYPE.getId(type);
                     count++;
                     world.setBlockState(pos, commandBlock);
-                    ((CommandBlockBlockEntity) world.getBlockEntity(pos)).getCommandExecutor().setCommand("summon " + id + " ~ ~2 ~ {NoAI:1,Silent:1,Invulnerable:1,PersistenceRequired:1}");
+                    ((CommandBlockBlockEntity) world.getBlockEntity(pos)).getCommandExecutor().setCommand("summon " + id + " ~ ~2 ~ {NoAI:1,Silent:1,Invulnerable:1,PersistenceRequired:1,NoGravity:1}");
                     world.setBlockState(pos.south(), button);
                     world.setBlockState(pos = pos.up(), sign);
                     var signEntity = ((SignBlockEntity) world.getBlockEntity(pos));
@@ -109,7 +111,7 @@ public class PlayroomCommand {
                 pos = pos.east(2);
 
                 world.setBlockState(pos, Blocks.REPEATING_COMMAND_BLOCK.getDefaultState().with(CommandBlock.FACING, Direction.SOUTH));
-                ((CommandBlockBlockEntity) world.getBlockEntity(pos)).getCommandExecutor().setCommand("execute as @e[type=!player] run data modify entity @s Playroom.TicksFrozen set value 150");
+                ((CommandBlockBlockEntity) world.getBlockEntity(pos)).getCommandExecutor().setCommand("execute as @e[type=!player] run playroom test freeze @s");
                 world.setBlockState(pos.south(), Blocks.LEVER.getDefaultState().with(WallMountedBlock.FACING, Direction.SOUTH));
                 world.setBlockState(pos = pos.up(), sign);
                 signEntity = ((SignBlockEntity) world.getBlockEntity(pos));
@@ -135,6 +137,52 @@ public class PlayroomCommand {
 
                 return 1;
             })
+          ).then(
+            literal("test").then(
+              literal("freeze").then(
+                argument("target", EntityArgumentType.entity()).executes(context -> {
+                      ServerCommandSource source = context.getSource();
+                      Entity player = EntityArgumentType.getEntity(context, "target");
+                      ((FreezableEntity) player).playroom$freeze();
+                      source.sendFeedback(() -> Text.translatable("commands.playroom.test.freeze", player.getDisplayName()), false);
+                      return 1;
+                  }
+                )
+              ).executes(context -> {
+                    ServerCommandSource source = context.getSource();
+                    if (!source.isExecutedByPlayer()) {
+                        source.sendError(Text.translatable("commands.playroom.error.not_player"));
+                        return 0;
+                    }
+                    ServerPlayerEntity player = source.getPlayer();
+                    ((FreezableEntity) player).playroom$freeze();
+                    source.sendFeedback(() -> Text.translatable("commands.playroom.test.freeze", player.getDisplayName()), false);
+                    return 1;
+                }
+              )
+            ).then(
+              literal("slowdown").then(
+                argument("target", EntityArgumentType.entity()).executes(context -> {
+                      ServerCommandSource source = context.getSource();
+                      Entity player = EntityArgumentType.getEntity(context, "target");
+                      ((FreezableEntity) player).playroom$slowdown();
+                      source.sendFeedback(() -> Text.translatable("commands.playroom.test.slowdown", player.getDisplayName()), false);
+                      return 1;
+                  }
+                )
+              ).executes(context -> {
+                    ServerCommandSource source = context.getSource();
+                    if (!source.isExecutedByPlayer()) {
+                        source.sendError(Text.translatable("commands.playroom.error.not_player"));
+                        return 0;
+                    }
+                    ServerPlayerEntity player = source.getPlayer();
+                    ((FreezableEntity) player).playroom$slowdown();
+                    source.sendFeedback(() -> Text.translatable("commands.playroom.test.slowdown", player.getDisplayName()), false);
+                    return 1;
+                }
+              )
+            )
           )
         );
     }

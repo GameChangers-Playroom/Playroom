@@ -16,8 +16,9 @@ public class HudRenderer {
         if (!ClientConfig.instance().debugInfo || client.options.debugEnabled) return;
         drawContext.drawText(client.textRenderer, "Server time: " + Playroom.serverTime, 5, 5, 0xFFFFFF, true);
         drawContext.drawText(client.textRenderer, "Aim zoom: " + PlayroomClient.hasAimZoom(), 5, 16, 0xFFFFFF, true);
-        drawContext.drawText(client.textRenderer, "Unfreeze zoom: " + PlayroomClient.hasAimZoom(), 5, 27, 0xFFFFFF, true);
-        drawContext.drawText(client.textRenderer, "Zoom divisor: " + PlayroomClient.getPreviousAimZoomDivisor(), 5, 38, 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Unfreeze zoom: " + PlayroomClient.hasUnfreezeZoom(), 5, 27, 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Aim zoom divisor: " + PlayroomClient.getPreviousAimZoomDivisor(), 5, 38, 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Unfreeze zoom divisor: " + PlayroomClient.getPreviousUnfreezeZoomDivisor(), 5, 49, 0xFFFFFF, true);
         Entity target = client.targetedEntity;
         String content;
         if (target instanceof PlayerEntity targetPlayer) {
@@ -36,6 +37,6 @@ public class HudRenderer {
         } else {
             content = "No targeted entity";
         }
-        drawContext.drawText(client.textRenderer, "Target: " + content, 5, 49, 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Target: " + content, 5, 60, 0xFFFFFF, true);
     }
 }

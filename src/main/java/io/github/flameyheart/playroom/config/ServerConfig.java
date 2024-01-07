@@ -107,7 +107,7 @@ public class ServerConfig {
     public int freezeSlowdownTime = 50;
 
     @SendToClient
-    @SerialEntry(comment = "The duration of the slowdown effect\n[Min: 0, Default: ??]")
+    @SerialEntry(comment = "The maximum player speed slowdown\n[Min: 0, Default: ??]")
     public float freezeSlowdown = 0.2f;
 
     @SendToClient

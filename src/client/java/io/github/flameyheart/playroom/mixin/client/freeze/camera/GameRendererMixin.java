@@ -34,10 +34,9 @@ public class GameRendererMixin {
         if (client.player == null || ClientConfig.instance().reducedMotion) return fov;
 
         FreezableEntity entity = (FreezableEntity) client.player;
-        boolean zoom = entity.playroom$getFreezeTime() - 1 - tickDelta <= ClientConfig.instance().freezeZoomDuration * 20;
+        boolean zoom = entity.playroom$getFreezeTime() + tickDelta <= ClientConfig.instance().freezeZoomDuration * 20 && entity.playroom$isFrozen();
         if (zoom) {
             if (!PlayroomClient.hasUnfreezeZoom()) PlayroomClient.setUnfreezeZoom(true);
-            return fov / PlayroomClient.UNFREEZE_ZOOM.getZoomDivisor(tickDelta);
         } else {
             if (PlayroomClient.hasUnfreezeZoom()) {
                 PlayroomClient.setUnfreezeZoom(false);
@@ -45,6 +44,6 @@ public class GameRendererMixin {
             }
         }
 
-        return fov;
+        return fov / PlayroomClient.getUnfreezeZoomDivisor(tickDelta);
     }
 }

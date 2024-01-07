@@ -1,6 +1,6 @@
 package io.github.flameyheart.playroom.mixin.client.freeze.render;
 
-import io.github.flameyheart.playroom.duck.SnowOverlay;
+import io.github.flameyheart.playroom.duck.FreezeOverlay;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
@@ -22,7 +22,7 @@ public abstract class InGameHudMixin {
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;getCurrentGameMode()Lnet/minecraft/world/GameMode;", ordinal = 0, shift = At.Shift.BEFORE))
     private void changeHeart(DrawContext context, float tickDelta, CallbackInfo ci) {
         if (this.client.player == null) return;
-        SnowOverlay entity = (SnowOverlay) this.client.player;
+        FreezeOverlay entity = (FreezeOverlay) this.client.player;
 
         if (entity.playroom$getOverlayTime() > 0) {
             this.renderOverlay(context, POWDER_SNOW_OUTLINE, entity.playroom$getOverlayProgress());

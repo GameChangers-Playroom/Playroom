@@ -55,15 +55,11 @@ public interface FreezableEntity {
     }
 
     /**
-     * Ensure to call {@link #playroom$tickFreezeLogic()} inside implementations<br>
-     * Cannot call FreezableEntity.super.playroom$tick() because of a bug in mixin
+     * Cannot call FreezableEntity.super.playroom$tick() because of a bug in mixin<br>
+     * Instead copy the code from the default method here
+     * @see <a href="https://github.com/SpongePowered/Mixin/issues/504">Issue 504</a>
      */
-    void playroom$tick();
-
-    /**
-     * Call inside overrides for {@link #playroom$tick()}
-     */
-    default void playroom$tickFreezeLogic() {
+    default void playroom$tick() {
         if (playroom$isFrozen()) {
             playroom$addFreezeTime(-1);
         } else if (playroom$isSlowed()) {

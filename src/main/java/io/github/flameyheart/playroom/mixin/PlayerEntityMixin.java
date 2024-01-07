@@ -5,7 +5,6 @@ import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.duck.AimingEntity;
 import io.github.flameyheart.playroom.duck.InventoryDuck;
-import io.github.flameyheart.playroom.duck.SnowOverlay;
 import io.github.flameyheart.playroom.item.LaserGun;
 import io.github.flameyheart.playroom.registry.Items;
 import io.github.flameyheart.playroom.util.InventorySlot;
@@ -27,18 +26,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PlayerEntity.class)
-public abstract class PlayerEntityMixin extends LivingEntityMixin implements AimingEntity, SnowOverlay {
+public abstract class PlayerEntityMixin extends LivingEntityMixin implements AimingEntity {
     @Shadow private ItemStack selectedItem;
     @Shadow public abstract void stopFallFlying();
     @Shadow protected abstract void dropShoulderEntities();
 
     private static final @Unique TrackedData<Boolean> playroom$IS_AIMING = DataTracker.registerData(PlayerEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final @Unique TrackedData<Integer> playroom$SNOW_OVERLAY = DataTracker.registerData(PlayerEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     @Inject(method = "initDataTracker", at = @At("HEAD"))
     private void trackGunFreezeTicks(CallbackInfo ci) {
         this.dataTracker.startTracking(playroom$IS_AIMING, false);
-        this.dataTracker.startTracking(playroom$SNOW_OVERLAY, 0);
     }
 
     public void playroom$setAiming(boolean aiming) {
@@ -51,35 +48,9 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Aim
     @Override
     public void playroom$tick() {
         super.playroom$tick();
-        if (!isFrozen() && playroom$getOverlayTime() > 0) {
-            playroom$addOverlayTime(-1);
-        }
         if (!this.playroom$isAffected()) return;
         if (this.isFallFlying()) this.stopFallFlying();
         dropShoulderEntities();
-    }
-
-    @Override
-    public void playroom$setFreezeTime(int ticks) {
-        super.playroom$setFreezeTime(ticks);
-        if (ticks > 0) {
-            this.playroom$setOverlayTime(15);
-        }
-    }
-
-    @Override
-    public void playroom$setOverlayTime(int ticks) {
-        this.dataTracker.set(playroom$SNOW_OVERLAY, ticks);
-    }
-
-    @Override
-    public int playroom$getOverlayTime() {
-        return this.dataTracker.get(playroom$SNOW_OVERLAY);
-    }
-
-    @Override
-    public float playroom$getOverlayProgress() {
-        return playroom$isFrozen() ? 1 : playroom$getOverlayTime() / 15f;
     }
 
     @Inject(method = "addShoulderEntity", at = @At(value = "HEAD"), cancellable = true)

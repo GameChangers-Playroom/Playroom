@@ -28,6 +28,7 @@ import io.github.flameyheart.playroom.render.world.WorldRenderer;
 import io.github.flameyheart.playroom.tiltify.Donation;
 import io.github.flameyheart.playroom.toast.WarningToast;
 import io.github.flameyheart.playroom.util.ClientUtils;
+import io.github.flameyheart.playroom.zoom.TransitionType;
 import io.github.flameyheart.playroom.zoom.ZoomHelper;
 import io.github.flameyheart.playroom.zoom.interpolate.TransitionInterpolator;
 import me.x150.renderer.event.RenderEvents;
@@ -74,7 +75,7 @@ public class PlayroomClient implements ClientModInitializer {
     private static final ZoomHelper AIM_ZOOM = new ZoomHelper(
       new TransitionInterpolator(
         () -> ClientConfig.instance().laserAimZoomInTransition,
-        () -> ClientConfig.instance().laserAimZoomOutTransition,
+        () -> ClientConfig.instance().laserAimZoomOutTransition.opposite(),
         () -> ClientConfig.instance().laserAimZoomInTime,
         () -> ClientConfig.instance().laserAimZoomOutTime
       ),
@@ -82,14 +83,15 @@ public class PlayroomClient implements ClientModInitializer {
     );
     public static final ZoomHelper UNFREEZE_ZOOM = new ZoomHelper(
       new TransitionInterpolator(
-        () -> ClientConfig.instance().laserAimZoomInTransition,
-        () -> ClientConfig.instance().laserAimZoomOutTransition,
-        () -> ClientConfig.instance().laserAimZoomInTime,
-        () -> ClientConfig.instance().laserAimZoomOutTime
+        () -> ClientConfig.instance().freezeZoomTransition,
+        () -> TransitionType.INSTANT,
+        () -> ClientConfig.instance().freezeZoomDuration,
+        () -> 0.
       ),
-      () -> ServerConfig.instance().laserAimZoom
+      () -> ClientConfig.instance().freezeZoomTarget
     );
     private static double previousAimZoomDivisor;
+    private static double previousUnfreezeZoomDivisor;
 
     @Override
     public void onInitializeClient() {
@@ -282,6 +284,24 @@ public class PlayroomClient implements ClientModInitializer {
         return Playroom.deserializeConfig(data);
     }
 
+    public static void setUnfreezeZoom(boolean zooming) {
+        PlayroomClient.unfreezeZoom = zooming;
+    }
+
+    public static boolean hasUnfreezeZoom() {
+        return PlayroomClient.unfreezeZoom;
+    }
+
+    public static double getUnfreezeZoomDivisor(float tickDelta) {
+        double zoomDivisor = UNFREEZE_ZOOM.getZoomDivisor(tickDelta);
+        previousUnfreezeZoomDivisor = zoomDivisor;
+        return zoomDivisor;
+    }
+
+    public static double getPreviousUnfreezeZoomDivisor() {
+        return previousUnfreezeZoomDivisor;
+    }
+
     public static boolean isAiming(ItemStack stack) {
         Item item = stack.getItem();
         boolean aiming = item instanceof Aimable aimable && aimable.canAim(stack) && MinecraftClient.getInstance().options.attackKey.isPressed();
@@ -302,14 +322,6 @@ public class PlayroomClient implements ClientModInitializer {
         return PlayroomClient.aimZoom;
     }
 
-    public static void setUnfreezeZoom(boolean zooming) {
-        PlayroomClient.unfreezeZoom = zooming;
-    }
-
-    public static boolean hasUnfreezeZoom() {
-        return PlayroomClient.unfreezeZoom;
-    }
-
     public static double getPreviousAimZoomDivisor() {
         return previousAimZoomDivisor;
     }
@@ -323,4 +335,5 @@ public class PlayroomClient implements ClientModInitializer {
         previousAimZoomDivisor = zoomDivisor;
         return zoomDivisor;
     }
+
 }

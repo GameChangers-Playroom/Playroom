@@ -15,7 +15,12 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
 
+import java.util.function.Function;
+
 public class YACLScreen {
+    public static final ValueFormatter<Float> DECIMAL_2_FORMATTER = value -> Text.literal(String.format("%,.2f", value).replaceAll("[\u00a0\u202F]", " "));
+    public static final ValueFormatter<Float> HEALTH_FORMATTER = value -> Text.literal(String.format("%,.2f ❤", value).replaceAll("[\u00a0\u202F]", " "));
+
     public static Screen createScreen(Screen parent) {
         ServerConfig serverConfig = ServerConfig.instance();
         ServerConfig serverDefaults = ServerConfig.defaults();
@@ -47,51 +52,86 @@ public class YACLScreen {
             .build()
         );
 
-        general.option(
+        OptionGroup.Builder laserGunClient = OptionGroup.createBuilder().name(Text.translatable("config.playroom.option_group.laser_gun"));
+        laserGunClient.collapsed(true);
+
+        laserGunClient.option(
           Option.<Integer>createBuilder()
-            .name(Text.translatable("config.playroom.option.general.laserAimCameraSmoothness"))
-            .description(OptionDescription.of(Text.translatable("config.playroom.option.general.laserAimCameraSmoothness.description")))
+            .name(Text.translatable("config.playroom.option.laser_client.laserAimCameraSmoothness"))
+            .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_client.laserAimCameraSmoothness.description")))
             .binding((int) clientDefaults.laserAimCameraSmoothness, () -> (int) clientConfig.laserAimCameraSmoothness, newVal -> clientConfig.laserAimCameraSmoothness = newVal.shortValue())
             .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 150).formatValue(value -> Text.literal("%d%%".formatted(value))).step(1))
             .build()
         );
 
-        general.option(
+        laserGunClient.option(
           Option.<Double>createBuilder()
-            .name(Text.translatable("config.playroom.option.general.laserAimZoomInTime"))
-            .description(OptionDescription.of(Text.translatable("config.playroom.option.general.laserAimZoomInTime.description")))
+            .name(Text.translatable("config.playroom.option.laser_client.laserAimZoomInTime"))
+            .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_client.laserAimZoomInTime.description")))
             .binding(clientDefaults.laserAimZoomInTime, () -> clientConfig.laserAimZoomInTime, newVal -> clientConfig.laserAimZoomInTime = newVal)
             .controller(option -> DoubleSliderControllerBuilder.create(option).range(0d, 3d).formatValue(value -> Text.translatable("zoomify.gui.formatter.seconds", "%.1f".formatted(value))).step(0.1))
             .build()
         );
 
-        general.option(
+        laserGunClient.option(
           Option.<Double>createBuilder()
-            .name(Text.translatable("config.playroom.option.general.laserAimZoomOutTime"))
-            .description(OptionDescription.of(Text.translatable("config.playroom.option.general.laserAimZoomOutTime.description")))
+            .name(Text.translatable("config.playroom.option.laser_client.laserAimZoomOutTime"))
+            .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_client.laserAimZoomOutTime.description")))
             .binding(clientDefaults.laserAimZoomOutTime, () -> clientConfig.laserAimZoomOutTime, newVal -> clientConfig.laserAimZoomOutTime = newVal)
             .controller(option -> DoubleSliderControllerBuilder.create(option).range(0d, 3d).formatValue(value -> Text.translatable("zoomify.gui.formatter.seconds", "%.1f".formatted(value))).step(0.1))
             .build()
         );
 
-        general.option(
+        laserGunClient.option(
           Option.<TransitionType>createBuilder()
-            .name(Text.translatable("config.playroom.option.general.laserAimZoomInTransition"))
-            .description(OptionDescription.of(Text.translatable("config.playroom.option.general.laserAimZoomInTransition.description")))
+            .name(Text.translatable("config.playroom.option.laser_client.laserAimZoomInTransition"))
+            .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_client.laserAimZoomInTransition.description")))
             .binding(clientDefaults.laserAimZoomInTransition, () -> clientConfig.laserAimZoomInTransition, newVal -> clientConfig.laserAimZoomInTransition = newVal)
             .controller(option -> EnumControllerBuilder.create(option).enumClass(TransitionType.class).formatValue(value -> Text.translatable(value.getDisplayName())))
             .build()
         );
 
-        general.option(
+        laserGunClient.option(
           Option.<TransitionType>createBuilder()
-            .name(Text.translatable("config.playroom.option.general.laserAimZoomOutTransition"))
-            .description(OptionDescription.of(Text.translatable("config.playroom.option.general.laserAimZoomOutTransition.description")))
-            .binding(clientDefaults.laserAimZoomOutTransition, () -> clientConfig.laserAimZoomOutTransition.opposite(), newVal -> clientConfig.laserAimZoomOutTransition = newVal.opposite())
+            .name(Text.translatable("config.playroom.option.laser_client.laserAimZoomOutTransition"))
+            .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_client.laserAimZoomOutTransition.description")))
+            .binding(clientDefaults.laserAimZoomOutTransition, () -> clientConfig.laserAimZoomOutTransition, newVal -> clientConfig.laserAimZoomOutTransition = newVal)
             .controller(option -> EnumControllerBuilder.create(option).enumClass(TransitionType.class).formatValue(value -> Text.translatable(value.getDisplayName())))
             .build()
         );
 
+        general.group(laserGunClient.build());
+        OptionGroup.Builder freezeClient = OptionGroup.createBuilder().name(Text.translatable("config.playroom.option_group.player_freeze"));
+        freezeClient.collapsed(true);
+
+        freezeClient.option(
+          Option.<Double>createBuilder()
+            .name(Text.translatable("config.playroom.option.freeze_client.freezeZoomDuration"))
+            .description(OptionDescription.of(Text.translatable("config.playroom.option.freeze_client.freezeZoomDuration.description")))
+            .binding(clientDefaults.freezeZoomDuration, () -> clientConfig.freezeZoomDuration, newVal -> clientConfig.freezeZoomDuration = newVal)
+            .controller(option -> DoubleSliderControllerBuilder.create(option).range(0d, 3d).formatValue(value -> Text.translatable("zoomify.gui.formatter.seconds", "%.1f".formatted(value))).step(0.1))
+            .build()
+        );
+
+        freezeClient.option(
+          Option.<TransitionType>createBuilder()
+            .name(Text.translatable("config.playroom.option.freeze_client.freezeZoomTransition"))
+            .description(OptionDescription.of(Text.translatable("config.playroom.option.freeze_client.freezeZoomTransition.description")))
+            .binding(clientDefaults.freezeZoomTransition, () -> clientConfig.freezeZoomTransition, newVal -> clientConfig.freezeZoomTransition = newVal)
+            .controller(option -> EnumControllerBuilder.create(option).enumClass(TransitionType.class).formatValue(value -> Text.translatable(value.getDisplayName())))
+            .build()
+        );
+
+        freezeClient.option(
+          Option.<Integer>createBuilder()
+            .name(Text.translatable("config.playroom.option.freeze_client.freezeZoomTarget"))
+            .description(OptionDescription.of(Text.translatable("config.playroom.option.freeze_client.freezeZoomTarget.description")))
+            .binding(clientDefaults.freezeZoomTarget, () -> clientConfig.freezeZoomTarget, newVal -> clientConfig.freezeZoomTarget = newVal)
+            .controller(option -> IntegerSliderControllerBuilder.create(option).range(1, 20).formatValue(value -> Text.literal("%dx".formatted(value))).step(1))
+            .build()
+        );
+
+        general.group(freezeClient.build());
         builder.category(general.build());
 
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
@@ -203,7 +243,7 @@ public class YACLScreen {
                 .name(Text.translatable("config.playroom.option.laser_gun.laserRangedDivergence"))
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRangedDivergence.description")))
                 .binding(serverDefaults.laserRangedDivergence, () -> serverConfig.laserRangedDivergence, newVal -> serverConfig.laserRangedDivergence = newVal)
-                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 10f).step(0.02f))
+                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 10f).step(0.02f).formatValue(DECIMAL_2_FORMATTER))
                 .build()
             );
 
@@ -221,7 +261,7 @@ public class YACLScreen {
                 .name(Text.translatable("config.playroom.option.laser_gun.laserRapidDivergence"))
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRapidDivergence.description")))
                 .binding(serverDefaults.laserRapidDivergence, () -> serverConfig.laserRapidDivergence, newVal -> serverConfig.laserRapidDivergence = newVal)
-                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 10f).step(0.02f))
+                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 10f).step(0.02f).formatValue(DECIMAL_2_FORMATTER))
                 .build()
             );
 
@@ -239,7 +279,7 @@ public class YACLScreen {
                 .name(Text.translatable("config.playroom.option.laser_gun.laserAimSlowdown"))
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserAimSlowdown.description")))
                 .binding(serverDefaults.laserAimSlowdown, () -> serverConfig.laserAimSlowdown, newVal -> serverConfig.laserAimSlowdown = newVal)
-                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 1f).step(0.05f))
+                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 1f).step(0.05f).formatValue(DECIMAL_2_FORMATTER))
                 .build()
             );
 
@@ -257,9 +297,7 @@ public class YACLScreen {
                 .name(Text.translatable("config.playroom.option.laser_gun.laserRangeDamage"))
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRangeDamage.description")))
                 .binding(serverDefaults.laserRangeDamage, () -> serverConfig.laserRangeDamage, newVal -> serverConfig.laserRangeDamage = newVal)
-                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 5f)
-                  .formatValue(value -> Text.literal(String.format("%,.1f ❤", value).replaceAll("[\u00a0\u202F]", " ")))
-                  .step(0.01f))
+                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 5f).formatValue(HEALTH_FORMATTER).step(0.01f))
                 .build()
             );
 
@@ -268,9 +306,7 @@ public class YACLScreen {
                 .name(Text.translatable("config.playroom.option.laser_gun.laserRapidDamage"))
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRapidDamage.description")))
                 .binding(serverDefaults.laserRapidDamage, () -> serverConfig.laserRapidDamage, newVal -> serverConfig.laserRapidDamage = newVal)
-                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 5f)
-                  .formatValue(value -> Text.literal(String.format("%,.1f ❤", value).replaceAll("[\u00a0\u202F]", " ")))
-                  .step(0.01f))
+                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 5f).formatValue(HEALTH_FORMATTER).step(0.01f))
                 .build()
             );
 
@@ -324,15 +360,6 @@ public class YACLScreen {
                 .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 2400).step(10))
                 .build()
             );
-
-            /*playerFreeze.option(
-              Option.<Float>createBuilder()
-                .name(Text.translatable("config.playroom.option.player_freeze.freezeSlowdown"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeSlowdown.description")))
-                .binding(serverDefaults.freezeSlowdown, () -> serverConfig.freezeSlowdown, newVal -> serverConfig.freezeSlowdown = newVal)
-                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 1f).step(0.05f))
-                .build()
-            );*/
 
             server.group(playerFreeze.build());
             //endregion

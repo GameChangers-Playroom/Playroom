@@ -37,7 +37,7 @@ public class ClientConfig {
     public TransitionType laserAimZoomInTransition = TransitionType.EASE_OUT_EXP;
 
     @SerialEntry(comment = "The zoom out transition when aiming\n[Default: EASE_IN_EXP]")
-    public TransitionType laserAimZoomOutTransition = TransitionType.EASE_IN_EXP;
+    public TransitionType laserAimZoomOutTransition = TransitionType.EASE_OUT_EXP;
 
     @SerialEntry(comment = "The zoom in duration when aiming\n[Min: 0, Default: 0.3] [DECIMAL SUPPORTED]")
     public double laserAimZoomInTime = 0.3;
@@ -45,12 +45,12 @@ public class ClientConfig {
     @SerialEntry(comment = "The zoom out duration when aiming\n[Min: 0, Default: 0.2] [DECIMAL SUPPORTED]")
     public double laserAimZoomOutTime = 0.2;
 
-    @SerialEntry(comment = "The duration of the zoom effect\n[Min: 0, Default: 0.2] [DECIMAL SUPPORTED]")
-    public double freezeZoomDuration = 0.2;
+    @SerialEntry(comment = "The duration of the zoom effect\n[Min: 0, Default: 0.3] [DECIMAL SUPPORTED]")
+    public double freezeZoomDuration = 0.3;
 
     @SerialEntry(comment = "The target FOV for the zoom effect\n[Min: 0, Default: 0.1] [DECIMAL SUPPORTED]")
     public int freezeZoomTarget = 10;
 
-    @SerialEntry(comment = "The zoom in transition when aiming")
+    @SerialEntry(comment = "The zoom in transition when frozen\n[Default: EASE_OUT_EXP]")
     public TransitionType freezeZoomTransition = TransitionType.EASE_OUT_EXP;
 }
