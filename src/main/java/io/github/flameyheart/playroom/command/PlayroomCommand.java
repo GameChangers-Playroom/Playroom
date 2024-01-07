@@ -54,7 +54,7 @@ public class PlayroomCommand {
             literal("experiment").then(
               argument("experiment", StringArgumentType.word()).executes(context -> {
                     String experiment = context.getArgument("experiment", String.class);
-                    context.getSource().sendFeedback(() -> Text.translatable("commands.playroom.experiment", experiment, Playroom.setExperiment(experiment)), false);
+                    context.getSource().sendFeedback(() -> Text.translatable("commands.playroom.experiment", experiment, Playroom.toggleExperiment(experiment)), false);
                     return 1;
                 }
               )

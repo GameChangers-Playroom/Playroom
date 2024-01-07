@@ -25,6 +25,7 @@ import io.github.flameyheart.playroom.registry.Sounds;
 import io.github.flameyheart.playroom.tiltify.Donation;
 import io.github.flameyheart.playroom.tiltify.TiltifyWebhookConnection;
 import io.github.flameyheart.playroom.util.InventorySlot;
+import io.github.flameyheart.playroom.util.PredicateUtil;
 import io.wispforest.owo.registration.reflect.FieldRegistrationHandler;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
@@ -58,6 +59,7 @@ import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -189,7 +191,7 @@ public class Playroom implements ModInitializer {
 				PacketByteBuf byteBuf = PacketByteBufs.create();
 				byteBuf.writeUuid(id);
 				byteBuf.writeEnumConstant(status);
-				sendPacket(id("donation/update"), byteBuf, p -> Permissions.check(p, "playroom.admin.server.update_donations", 4));
+				sendPacket(id("donation/update"), byteBuf, PredicateUtil.permission("playroom.admin.server.update_donations", 4));
 			});
 		});
 		ServerPlayNetworking.registerGlobalReceiver(id("aiming"), (server, player, handler, buf, responseSender) -> {
@@ -389,15 +391,19 @@ public class Playroom implements ModInitializer {
 	}
 
 	public static void sendPacket(Identifier id, Function<PlayerEntity, PacketByteBuf> bufBuilder, Predicate<Entity> predicate) {
+		sendToPlayers(p -> ServerPlayNetworking.send(p, id, bufBuilder.apply(p)), predicate);
+	}
+
+	public static void sendToPlayers(Consumer<ServerPlayerEntity> task, Predicate<Entity> predicate) {
 		for (ServerPlayerEntity player : getServer().getPlayerManager().getPlayerList()) {
 			if (predicate.test(player)) {
-				ServerPlayNetworking.send(player, id, bufBuilder.apply(player));
+				task.accept(player);
 			}
 		}
 	}
 
-	public static boolean setExperiment(String experiment) {
-		return EXPERIMENTS.compute(experiment, (s, aBoolean) -> aBoolean == null || !aBoolean);
+	public static boolean toggleExperiment(String experiment) {
+		return EXPERIMENTS.compute(experiment, (s, enabled) -> enabled == null || !enabled);
 	}
 
 	public static boolean isExperimentEnabled(String experiment) {

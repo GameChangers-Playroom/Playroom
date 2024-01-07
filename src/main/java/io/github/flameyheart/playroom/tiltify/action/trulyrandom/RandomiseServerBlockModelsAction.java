@@ -3,7 +3,7 @@ package io.github.flameyheart.playroom.tiltify.action.trulyrandom;
 import com.bawnorton.trulyrandom.api.TrulyRandomApi;
 import com.bawnorton.trulyrandom.random.module.Module;
 
-public class RandomiseServerBlockModelsAction implements ResetableTrulyRandomAction {
+public class RandomiseServerBlockModelsAction implements ServerResetableTrulyRandomAction {
     @Override
     public TrulyRandomAction.Untargeted getUntargeted() {
         return TrulyRandomApi::randomiseServerBlockModels;
@@ -22,10 +22,5 @@ public class RandomiseServerBlockModelsAction implements ResetableTrulyRandomAct
     @Override
     public Module getModule() {
         return Module.BLOCK_MODELS;
-    }
-
-    @Override
-    public boolean isTargeted() {
-        return false;
     }
 }

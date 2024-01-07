@@ -10,7 +10,7 @@ import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.tiltify.webhook.DonationUpdated;
 import io.github.flameyheart.playroom.tiltify.webhook.WebhookEvent;
 import io.github.flameyheart.playroom.tiltify.webhook.WebhookStructure;
-import io.github.flameyheart.playroom.util.DynamicPlaceholders;
+import io.github.flameyheart.playroom.util.PredicateUtil;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import org.bouncycastle.util.io.pem.PemObject;
@@ -271,15 +271,17 @@ public class TiltifyWebhookConnection extends Thread {
         if (event.data.rewardClaims != null) {
             for (WebhookStructure.RewardClaim claim : event.data.rewardClaims) {
                 // TODO: Redo to use the action system
-                ServerPlayerEntity player = Playroom.getServer().getPlayerManager().getPlayer(claim.customQuestion);
-                if (player == null) {
-                    LOGGER.warn("Failed to find player \"{}\", {}'s donation could not be fully processed", claim.customQuestion, event.data.donorName);
-                    continue; //TODO inform the team it failed to find the player
+                Automation.Task<?> task = Automation.get(claim.rewardId);
+                if (task.requiresPlayer()) {
+                    ServerPlayerEntity player = Playroom.getServer().getPlayerManager().getPlayer(claim.customQuestion);
+                    if (player == null) {
+                        LOGGER.warn("Failed to find player \"{}\", {}'s donation could not be fully processed", claim.customQuestion, event.data.donorName);
+                        Playroom.sendToPlayers(p -> p.sendMessage(Text.translatable("feedback.playroom.webhook.donation.failed")), PredicateUtil.permission("playroom.webhook.fail", 4));
+                        continue;
+                    }
+                } else {
+                    task.execute(null);
                 }
-
-                ServerConfig.instance().commands.get(claim.rewardId.toString()).forEach(command -> {
-                    Playroom.getServer().getCommandManager().executeWithPrefix(Playroom.getCommandSource(), DynamicPlaceholders.parseText(command, player).getString());
-                });
             }
         }
 
