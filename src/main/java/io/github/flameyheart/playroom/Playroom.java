@@ -25,6 +25,7 @@ import io.github.flameyheart.playroom.registry.Sounds;
 import io.github.flameyheart.playroom.tiltify.Donation;
 import io.github.flameyheart.playroom.tiltify.TiltifyWebhookConnection;
 import io.github.flameyheart.playroom.util.InventorySlot;
+import io.github.flameyheart.playroom.util.ThreadUtils;
 import io.wispforest.owo.registration.reflect.FieldRegistrationHandler;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
@@ -92,8 +93,7 @@ public class Playroom implements ModInitializer {
 			Playroom.server = server;
 		});
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-			sslServer = new TiltifyWebhookConnection();
-			sslServer.start();
+			ThreadUtils.tryStart(sslServer = TiltifyWebhookConnection.create());
 		});
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
 			if (sslServer != null) sslServer.interrupt();
@@ -417,8 +417,7 @@ public class Playroom implements ModInitializer {
 		ServerConfig.INSTANCE.load();
 		if (restartWebhookServer) {
 			if (sslServer != null) sslServer.interrupt();
-			sslServer = new TiltifyWebhookConnection();
-			sslServer.start();
+			ThreadUtils.tryStart(sslServer = TiltifyWebhookConnection.create());
 		}
 		sendPacket(id("config/sync"), p -> {
 			boolean canModify = Permissions.check(p, "playroom.admin.server.update_config", 4);
