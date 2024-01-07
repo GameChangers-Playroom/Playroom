@@ -17,10 +17,6 @@ import org.jetbrains.annotations.Nullable;
 public interface TrulyRandomAction extends Action<@Nullable Object> {
     Module getModule();
 
-    default boolean isTargeted() {
-        return true;
-    };
-
     default Targeted getTargeted() {
         return Targeted.EMPTY;
     }
@@ -35,7 +31,7 @@ public interface TrulyRandomAction extends Action<@Nullable Object> {
 
         ServerRandomiser randomiser = TrulyRandom.getRandomiser(server);
         if (randomiser.getModules().isEnabled(getModule())) {
-            if (isTargeted()) {
+            if (requiresPlayer()) {
                 getTargeted().execute(target, true);
             } else {
                 getUntargeted().execute(server, true);
