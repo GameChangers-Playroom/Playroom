@@ -5,6 +5,7 @@ import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.duck.FreezableEntity;
+import io.github.flameyheart.playroom.registry.Damage;
 import io.github.flameyheart.playroom.util.LinedStringBuilder;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.BlockState;
@@ -179,6 +180,26 @@ public class PlayroomCommand {
                     ServerPlayerEntity player = source.getPlayer();
                     ((FreezableEntity) player).playroom$slowdown();
                     source.sendFeedback(() -> Text.translatable("commands.playroom.test.slowdown", player.getDisplayName()), false);
+                    return 1;
+                }
+              )
+            ).then(
+              literal("damage").then(
+                argument("target", EntityArgumentType.entity()).executes(context -> {
+                      ServerCommandSource source = context.getSource();
+                      Entity player = EntityArgumentType.getEntity(context, "target");
+                      player.damage(Damage.laserShot(player.getWorld(), null, null), Float.MAX_VALUE);
+                      return 1;
+                  }
+                )
+              ).executes(context -> {
+                    ServerCommandSource source = context.getSource();
+                    if (!source.isExecutedByPlayer()) {
+                        source.sendError(Text.translatable("commands.playroom.error.not_player"));
+                        return 0;
+                    }
+                    ServerPlayerEntity player = source.getPlayer();
+                    player.damage(Damage.laserShot(player.getWorld(), null, null), Float.MAX_VALUE);
                     return 1;
                 }
               )
