@@ -130,9 +130,9 @@ public class PlayroomCommand {
                 ServerCommandSource source = context.getSource();
                 LinedStringBuilder stringBuilder = new LinedStringBuilder();
                 stringBuilder.append("Webhook server: ");
-                stringBuilder.appendLine(Playroom.isSSLEnabled() ? "Running" : "Offline");
-                stringBuilder.append("Donations received: ");
-                stringBuilder.appendLine(Playroom.DONATIONS.size());
+                stringBuilder.append(Playroom.isSSLEnabled() ? "Running" : "Offline");
+                stringBuilder.appendLine("Donations received: ");
+                stringBuilder.append(Playroom.DONATIONS.size());
 
                 source.sendFeedback(() -> Text.literal(stringBuilder.toString()), false);
 
