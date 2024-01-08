@@ -197,6 +197,11 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
         return original || playroom$isFrozen();
     }
 
+    @ModifyReturnValue(method = "isUsingItem", at = @At("RETURN"))
+    private boolean preventUsingItemsFrozen(boolean original) {
+        return original && !playroom$isFrozen();
+    }
+
     @Inject(method = "tickMovement", at = @At("HEAD"), cancellable = true)
     private void onTickMovementStart(CallbackInfo ci) {
         //if (playroom$isFrozen()) ci.cancel();
