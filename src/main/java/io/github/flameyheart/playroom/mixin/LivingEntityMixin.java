@@ -4,6 +4,8 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.duck.FreezableEntity;
+import io.github.flameyheart.playroom.duck.FreezeOverlay;
+import io.github.flameyheart.playroom.entity.attribute.DynamicEntityAttributeModifier;
 import io.github.flameyheart.playroom.event.LivingEntityEvents;
 import io.github.flameyheart.playroom.registry.Tags;
 import net.minecraft.entity.LivingEntity;
@@ -33,16 +35,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.UUID;
 
 @Mixin(LivingEntity.class)
-public abstract class LivingEntityMixin extends PlayroomEntity implements FreezableEntity {
-    @Shadow public abstract void stopRiding();
-    @Shadow public abstract boolean isFallFlying();
+public abstract class LivingEntityMixin extends PlayroomEntity implements FreezableEntity, FreezeOverlay {
+    @Shadow
+    public abstract void stopRiding();
 
-    @Shadow public abstract boolean isDead();
+    @Shadow
+    public abstract boolean isFallFlying();
 
-    @Shadow public abstract @Nullable EntityAttributeInstance getAttributeInstance(EntityAttribute attribute);
+    @Shadow
+    public abstract boolean isDead();
+
+    @Shadow
+    public abstract @Nullable EntityAttributeInstance getAttributeInstance(EntityAttribute attribute);
 
     private static final @Unique TrackedData<Integer> playroom$FREEZE = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private static final @Unique TrackedData<Integer> playroom$SLOWDOWN = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final @Unique TrackedData<Integer> playroom$SNOW_OVERLAY = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private static final @Unique UUID playroom$SLOWDOWN_ID = UUID.fromString("3bceceb5-bdd6-43b5-a8f6-64e0eb1893b1");
 
 
@@ -50,6 +58,7 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
     private void trackGunFreezeTicks(CallbackInfo ci) {
         this.dataTracker.startTracking(playroom$FREEZE, 0);
         this.dataTracker.startTracking(playroom$SLOWDOWN, 0);
+        this.dataTracker.startTracking(playroom$SNOW_OVERLAY, 0);
     }
 
     @Override
@@ -91,8 +100,14 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
         if (entityAttributeInstance.getModifier(playroom$SLOWDOWN_ID) != null && time == 0) {
             entityAttributeInstance.removeModifier(playroom$SLOWDOWN_ID);
         } else if (entityAttributeInstance.getModifier(playroom$SLOWDOWN_ID) == null && time > 0) {
-            float slowdown = -ServerConfig.instance().freezeSlowdown * ((float) ticks / playroom$maxSlowdownTime());
-            entityAttributeInstance.addTemporaryModifier(new EntityAttributeModifier(playroom$SLOWDOWN_ID, "Aim slowdown", slowdown, EntityAttributeModifier.Operation.MULTIPLY_BASE));
+            entityAttributeInstance.addTemporaryModifier(
+              new DynamicEntityAttributeModifier(
+                playroom$SLOWDOWN_ID,
+                "Aim slowdown",
+                () -> -ServerConfig.instance().freezeSlowdown * ((double) playroom$getSlowdownTime() / playroom$maxSlowdownTime()),
+                EntityAttributeModifier.Operation.MULTIPLY_BASE
+              )
+            );
         }
     }
 
@@ -105,6 +120,9 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
     public void playroom$setFreezeTime(int ticks) {
         this.dataTracker.set(playroom$FREEZE, MathHelper.clamp(ticks, 0, playroom$maxFreezeTime()));
         if (hasVehicle()) stopRiding();
+        if (ticks > 0) {
+            this.playroom$setOverlayTime(15);
+        }
     }
 
     @Override
@@ -112,18 +130,51 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
         return this.dataTracker.get(playroom$FREEZE);
     }
 
+    /**
+     * Use the same code as in FreezableEntity to get around a bug in mixin
+     *
+     * @see <a href="https://github.com/SpongePowered/Mixin/issues/504">Issue 504</a>
+     **/
     @Override
     public void playroom$tick() {
         if (this.getWorld().isClient || this.isDead()) return;
-        FreezableEntity.super.playroom$tickFreezeLogic();
-        if (!this.playroom$isAffected()) return;
-        if (this.hasPassengers()) this.removeAllPassengers();
-        if (this.isOnFire()) {
-            int fireTicks = this.getFireTicks();
-            int timeLeft = Math.max(this.playroom$getFreezeTime() - fireTicks, 0);
-            this.playroom$addTime(-fireTicks);
-            this.setFireTicks(timeLeft);
+        if (playroom$isFrozen()) {
+            playroom$addFreezeTime(-1);
+        } else if (playroom$isSlowed()) {
+            playroom$addSlowdownTime(-1);
         }
+        if (this.playroom$isAffected()) {
+            if (this.hasPassengers()) this.removeAllPassengers();
+            if (this.isOnFire()) {
+                int fireTicks = this.getFireTicks();
+                int timeLeft = Math.max(this.playroom$getFreezeTime() - fireTicks, 0);
+                this.playroom$addTime(-fireTicks);
+                this.setFireTicks(timeLeft);
+            }
+        }
+        if (!playroom$isAffected() && playroom$getOverlayTime() > 0) {
+            playroom$addOverlayTime(-1);
+        }
+    }
+
+    @Override
+    public void playroom$setOverlayTime(int ticks) {
+        this.dataTracker.set(playroom$SNOW_OVERLAY, ticks);
+    }
+
+    @Override
+    public int playroom$getOverlayTime() {
+        return playroom$isSlowed() ? playroom$getSlowdownTime() : this.dataTracker.get(playroom$SNOW_OVERLAY);
+    }
+
+    @Override
+    public float playroom$getOverlayProgress() {
+        return playroom$isFrozen() ? 1 : playroom$getOverlayTime() / (float) playroom$getMaxOverlayTime();
+    }
+
+    @Override
+    public int playroom$getMaxOverlayTime() {
+        return playroom$isSlowed() ? playroom$maxSlowdownTime() : 15;
     }
 
     @WrapWithCondition(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;takeKnockback(DDD)V"))
@@ -146,9 +197,14 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
         return original || playroom$isFrozen();
     }
 
+    @ModifyReturnValue(method = "isUsingItem", at = @At("RETURN"))
+    private boolean preventUsingItemsFrozen(boolean original) {
+        return original && !playroom$isFrozen();
+    }
+
     @Inject(method = "tickMovement", at = @At("HEAD"), cancellable = true)
     private void onTickMovementStart(CallbackInfo ci) {
-        if (playroom$isFrozen()) ci.cancel();
+        //if (playroom$isFrozen()) ci.cancel();
     }
 
     @Inject(method = "tick", at = @At(value = "HEAD"), cancellable = true)

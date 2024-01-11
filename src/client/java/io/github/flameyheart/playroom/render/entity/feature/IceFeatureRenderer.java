@@ -54,8 +54,6 @@ public class IceFeatureRenderer<T extends LivingEntity, M extends EntityModel<T>
 
         ModelIdentifier modelId = new ModelIdentifier(Playroom.MOD_ID, "ice_blocks", "inventory");
         ItemRenderer itemRenderer = client.getItemRenderer();
-        //TODO: DON'T LEAVE THIS COMMENTED
-        matrixStack.translate(0,  scaleFactor * -(1 - iceMelt) / 2, 0);
         if (isOf(type, ELDER_GUARDIAN, ENDER_DRAGON, GHAST, GIANT, WITHER)) {
             scaleFactor = 1.0f;
         } if (isOf(type, BAT)) {
@@ -63,8 +61,8 @@ public class IceFeatureRenderer<T extends LivingEntity, M extends EntityModel<T>
         } if (isOf(type, MAGMA_CUBE, SLIME)) {
             scaleFactor = 0.5f;
         }
+        matrixStack.translate(0,  scaleFactor * -(1 - iceMelt) / 2, 0);
         matrixStack.scale(scaleFactor, scaleFactor * iceMelt, scaleFactor);
-        //matrixStack.translate(0, -entityHeight, 0);
         itemRenderer.renderItem(
                 Items.ICE_BLOCKS.getDefaultStack(),
                 ModelTransformationMode.NONE,

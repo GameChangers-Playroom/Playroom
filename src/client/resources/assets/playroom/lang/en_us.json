@@ -4,10 +4,13 @@
     "soundCategory.playroom": "Playroom",
     "key.playroom.donation_screen": "View donation history [In dev]",
 
+    "commands.playroom.error.not_player": "This command must be run by a player",
     "commands.playroom.reload": "Reloading Playroom config",
     "commands.playroom.reload.restart_webhook_server": "Restarting the Tiltify webhook server",
     "commands.playroom.experiment": "Experiment \"%s\" set to %s",
     "commands.playroom.entity_test": "Created test for %d entities",
+    "commands.playroom.test.freeze": "Freezing %s",
+    "commands.playroom.test.slowdown": "Slowing down %s",
 
     "death.attack.laser_shot.0": "%s did not had an ice time",
     "death.attack.laser_shot.1": "%s was knocked down cold",
@@ -98,20 +101,29 @@
     "config.playroom.option.general.debugInfo": "Debug info",
     "config.playroom.option.general.debugInfo.description": "Shows debug info in the top left corner",
 
-    "config.playroom.option.general.laserAimCameraSmoothness": "Laser gun aim camera smoothness",
-    "config.playroom.option.general.laserAimCameraSmoothness.description": "The relative sensitivity of the camera while aiming",
+    "config.playroom.option.laser_client.laserAimCameraSmoothness": "Laser gun aim camera smoothness",
+    "config.playroom.option.laser_client.laserAimCameraSmoothness.description": "The relative sensitivity of the camera while aiming",
 
-    "config.playroom.option.general.laserAimZoomInTime": "Laser gun aim zoom in time",
-    "config.playroom.option.general.laserAimZoomInTime.description": "The time it takes to zoom in",
+    "config.playroom.option.laser_client.laserAimZoomInTime": "Laser gun aim zoom in time",
+    "config.playroom.option.laser_client.laserAimZoomInTime.description": "The time it takes to zoom in",
 
-    "config.playroom.option.general.laserAimZoomOutTime": "Laser gun aim zoom out time",
-    "config.playroom.option.general.laserAimZoomOutTime.description": "The time it takes to zoom out",
+    "config.playroom.option.laser_client.laserAimZoomOutTime": "Laser gun aim zoom out time",
+    "config.playroom.option.laser_client.laserAimZoomOutTime.description": "The time it takes to zoom out",
 
-    "config.playroom.option.general.laserAimZoomInTransition": "Laser gun aim zoom in transition",
-    "config.playroom.option.general.laserAimZoomInTransition.description": "The transition function for zooming in",
+    "config.playroom.option.laser_client.laserAimZoomInTransition": "Laser gun aim zoom in transition",
+    "config.playroom.option.laser_client.laserAimZoomInTransition.description": "The transition function for zooming in",
 
-    "config.playroom.option.general.laserAimZoomOutTransition": "Laser gun aim zoom out transition",
-    "config.playroom.option.general.laserAimZoomOutTransition.description": "The transition function for zooming out",
+    "config.playroom.option.laser_client.laserAimZoomOutTransition": "Laser gun aim zoom out transition",
+    "config.playroom.option.laser_client.laserAimZoomOutTransition.description": "The transition function for zooming out",
+
+    "config.playroom.option.freeze_client.freezeZoomDuration": "Freeze zoom duration",
+    "config.playroom.option.freeze_client.freezeZoomDuration.description": "The duration of the zoom effect",
+
+    "config.playroom.option.freeze_client.freezeZoomTransition": "Freeze zoom out transition",
+    "config.playroom.option.freeze_client.freezeZoomTransition.description": "The zoom in transition when frozen",
+
+    "config.playroom.option.freeze_client.freezeZoomTarget": "Freeze zoom scale",
+    "config.playroom.option.freeze_client.freezeZoomTarget.description": "The target FOV for the zoom effect",
 
 
     "config.playroom.option.networking.allowVanillaPlayers": "Allow vanilla players",
@@ -186,9 +198,29 @@
     "config.playroom.option.player_freeze.freezeIceTime.description": "The duration of the ice",
 
     "config.playroom.option.player_freeze.freezeSlowdown": "Freeze slowdown",
-    "config.playroom.option.player_freeze.freezeSlowdown.description": "The multiplier for the player speed",
+    "config.playroom.option.player_freeze.freezeSlowdown.description": "The maximum player speed slowdown\nThe slowdown is linearly interpolated between 0 and the maximum value between 0 and freezeSlowdownTime",
+
+    "config.playroom.option.player_freeze.freezeFallDamageReduction": "Fall damage reduction",
+    "config.playroom.option.player_freeze.freezeFallDamageReduction.description": "The reduction of the fall damage when a player is frozen",
+
+    "config.playroom.option.player_freeze.freezeFallIceDamage": "Fall damage ice damage",
+    "config.playroom.option.player_freeze.freezeFallIceDamage.description": "The multiplier of the damage applied to the ice based on the fall damage",
 
     "config.playroom.option.server.commands": "Editing the commands in game is not supported yet, please edit the config file",
 
-    "zoomify.gui.formatter.seconds": "%s secs"
+    "zoomify.gui.formatter.seconds": "%s secs",
+    "zoomify.transition.instant": "Instant",
+    "zoomify.transition.linear": "Linear",
+    "zoomify.transition.ease_in_sine": "Ease In Sine",
+    "zoomify.transition.ease_out_sine": "Ease Out Sine",
+    "zoomify.transition.ease_in_out_sine": "Ease In Out Sine",
+    "zoomify.transition.ease_in_quad": "Ease In Quad",
+    "zoomify.transition.ease_out_quad": "Ease Out Quad",
+    "zoomify.transition.ease_in_out_quad": "Ease In Out Quad",
+    "zoomify.transition.ease_in_cubic": "Ease In Cubic",
+    "zoomify.transition.ease_out_cubic": "Ease Out Cubic",
+    "zoomify.transition.ease_in_out_cubic": "Ease In Out Cubic",
+    "zoomify.transition.ease_in_exp": "Ease In Exponential",
+    "zoomify.transition.ease_out_exp": "Ease Out Exponential",
+    "zoomify.transition.ease_in_out_exp": "Ease In Out Exponential"
 }

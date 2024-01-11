@@ -10,11 +10,14 @@ import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.tiltify.webhook.DonationUpdated;
 import io.github.flameyheart.playroom.tiltify.webhook.WebhookEvent;
 import io.github.flameyheart.playroom.tiltify.webhook.WebhookStructure;
+import io.github.flameyheart.playroom.util.ClassUtils;
+import io.github.flameyheart.playroom.util.DynamicPlaceholders;
 import io.github.flameyheart.playroom.util.PredicateUtil;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,12 +36,16 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Handles all incoming traffic from the Tiltify webhook
  **/
 public class TiltifyWebhookConnection extends Thread {
     private static final Logger LOGGER = LoggerFactory.getLogger("Playroom Tiltify Webhook Connection");
+    private static final AtomicReference<Boolean> CAN_RUN = new AtomicReference<>();
+
     /**
      * Jackson JSON mapper for the parsing of the JSON data into Java objects
      **/
@@ -59,7 +66,7 @@ public class TiltifyWebhookConnection extends Thread {
      * The constructor for the Tiltify Webhook Connection thread
      * it already sets the thread name and daemon status
      **/
-    public TiltifyWebhookConnection() {
+    private TiltifyWebhookConnection() {
         super("Tiltify Webhook Connection");
         setDaemon(true);
 
@@ -68,6 +75,22 @@ public class TiltifyWebhookConnection extends Thread {
             LOGGER.error("Closing Tiltify Webhook thread due to unhandled exception");
             this.interrupt();
         });
+    }
+
+    @Nullable
+    public static TiltifyWebhookConnection create() {
+        Boolean canRun = CAN_RUN.get();
+        if (canRun == null) {
+            boolean hasBc = ClassUtils.exists("org.bouncycastle.util.io.pem.PemReader");
+            CAN_RUN.set(hasBc);
+            canRun = hasBc;
+            if (!canRun) LOGGER.warn("Bouncy Castle is not installed, the Tiltify Webhook integration will not be available");
+        }
+        if (canRun) {
+            return new TiltifyWebhookConnection();
+        } else {
+            return null;
+        }
     }
 
     /**

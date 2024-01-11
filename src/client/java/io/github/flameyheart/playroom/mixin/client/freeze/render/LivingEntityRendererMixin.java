@@ -2,6 +2,7 @@ package io.github.flameyheart.playroom.mixin.client.freeze.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import io.github.flameyheart.playroom.duck.FreezableEntity;
+import io.github.flameyheart.playroom.duck.FreezeOverlay;
 import io.github.flameyheart.playroom.render.entity.feature.IceFeatureRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
@@ -37,10 +38,10 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
 
     @ModifyArgs(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/model/EntityModel;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;IIFFFF)V"))
     private void setColour(Args args) {
-        if(playroom$entity instanceof FreezableEntity entity) {
-            if (entity.playroom$isFrozen()) {
+        if(playroom$entity instanceof FreezeOverlay overlay) {
+            if (overlay.playroom$getOverlayTime() > 0) {
                 //Fade from blue to white as the frozen ticks go down
-                float colour = Math.max(1 - entity.playroom$getMeltProgress() * 2, 0.35f);
+                float colour = Math.max(1 - overlay.playroom$getOverlayProgress() * 2, 0.35f);
                 args.set(4, colour);
                 args.set(5, colour);
             }
