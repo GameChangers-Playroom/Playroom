@@ -49,6 +49,7 @@ import net.minecraft.client.render.item.BuiltinModelItemRenderer;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
@@ -115,7 +116,10 @@ public class PlayroomClient implements ClientModInitializer {
     }
 
     private void registerEventListeners() {
-        ClientUtils.listenKeybind(DONATIONS_SCREEN_KEYBIND, (client) -> client.setScreen(new DonationListScreen()));
+        ClientUtils.listenKeybind(DONATIONS_SCREEN_KEYBIND, (client) -> {
+            if (client.getOverlay() != null) return;
+            client.setScreen(new DonationListScreen());
+        });
 
         RenderEvents.WORLD.register(WorldRenderer::render);
         RenderEvents.HUD.register(HudRenderer::renderDebugInfo);
@@ -179,15 +183,10 @@ public class PlayroomClient implements ClientModInitializer {
             client.execute(() -> deserializeConfig(serverConfig));
         });
         ClientPlayNetworking.registerGlobalReceiver(Playroom.id("donation/add"), (client, handler, buf, responseSender) -> {
-            UUID id = buf.readUuid();
-            String donorName = buf.readString();
-            String message = buf.readString();
-            float amount = buf.readFloat();
-            String currency = buf.readString();
-            boolean autoApproved = buf.readBoolean();
+            Donation donation = buf.decode(NbtOps.INSTANCE, Donation.CODEC);
 
             client.execute(() -> {
-                DONATIONS.put(id, new Donation(id, donorName, message, amount, currency, autoApproved));
+                DONATIONS.put(donation.id(), donation);
             });
         });
         ClientPlayNetworking.registerGlobalReceiver(Playroom.id("donation/update"), (client, handler, buf, responseSender) -> {

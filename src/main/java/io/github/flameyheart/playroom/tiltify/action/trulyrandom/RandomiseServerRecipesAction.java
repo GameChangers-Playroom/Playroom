@@ -15,7 +15,7 @@ public class RandomiseServerRecipesAction implements ServerResetableTrulyRandomA
     }
 
     @Override
-    public int getTicksUntilReset() {
+    public int getDuration() {
         return 20 * 60 * 10;
     }
 

@@ -7,6 +7,7 @@ import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.registry.Damage;
 import io.github.flameyheart.playroom.util.LinedStringBuilder;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -60,6 +61,21 @@ public class PlayroomCommand {
                     context.getSource().sendFeedback(() -> Text.translatable("commands.playroom.experiment", experiment, Playroom.toggleExperiment(experiment)), false);
                     return 1;
                 }
+              )
+            )
+          ).then(
+            literal("permission").then(
+              argument("target", EntityArgumentType.entity()).then(
+                argument("permission", StringArgumentType.word()).executes(context -> {
+                    ServerCommandSource source = context.getSource();
+                    Entity target = EntityArgumentType.getEntity(context, "target");
+                    String permission = StringArgumentType.getString(context, "permission");
+
+                    boolean check = Permissions.check(source, permission);
+
+                    source.sendFeedback(() -> Text.translatable("commands.playroom.permission", target.getDisplayName(), permission, check), false);
+                    return check ? 1 : 0;
+                })
               )
             )
           ).then(

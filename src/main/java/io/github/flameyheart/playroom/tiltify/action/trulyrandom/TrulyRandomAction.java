@@ -26,18 +26,18 @@ public interface TrulyRandomAction extends Action<@Nullable Object> {
     }
 
     default boolean execute(ServerPlayerEntity target, @Nullable Object data) {
+        Playroom.LOGGER.info("Executing action " + getModule().name() + " for " + (target == null ? "everyone" : target.getName().getString()));
         MinecraftServer server = Playroom.getServer();
         if (server == null) return false;
 
         ServerRandomiser randomiser = TrulyRandom.getRandomiser(server);
-        if (randomiser.getModules().isEnabled(getModule())) {
-            if (requiresPlayer()) {
-                getTargeted().execute(target, true);
-            } else {
-                getUntargeted().execute(server, true);
-            }
+        if (requiresPlayer()) {
+            getTargeted().execute(target, true);
+            return true;
+        } else {
+            getUntargeted().execute(server, true);
+            return randomiser.getModules().isEnabled(getModule());
         }
-        return true;
     }
 
     interface Targeted {

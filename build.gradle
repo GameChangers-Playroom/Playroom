@@ -115,6 +115,8 @@ dependencies {
 	implementation("org.bouncycastle:bcprov-jdk18on:1.77")
 	implementation("org.quiltmc.parsers:gson:0.2.1")
 
+	implementation annotationProcessor("com.github.bawnorton.mixinsquared:mixinsquared-fabric:0.1.1")
+
 	//Compatibility
 	modCompileOnly("curse.maven:project-297344:4623488") //Tweakeroo 0.17.1
 	modCompileOnly("fi.dy.masa.malilib:malilib-fabric-${project.minecraft_version}:0.16.0")

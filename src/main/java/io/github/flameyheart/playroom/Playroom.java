@@ -22,10 +22,13 @@ import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Items;
 import io.github.flameyheart.playroom.registry.Particles;
 import io.github.flameyheart.playroom.registry.Sounds;
+import io.github.flameyheart.playroom.tiltify.Automation;
 import io.github.flameyheart.playroom.tiltify.Donation;
+import io.github.flameyheart.playroom.tiltify.ExecuteAction;
 import io.github.flameyheart.playroom.tiltify.TiltifyWebhookConnection;
 import io.github.flameyheart.playroom.util.InventorySlot;
-import io.github.flameyheart.playroom.util.PredicateUtil;
+import io.github.flameyheart.playroom.util.PredicateUtils;
+import io.github.flameyheart.playroom.util.ScheduleUtils;
 import io.github.flameyheart.playroom.util.ThreadUtils;
 import io.wispforest.owo.registration.reflect.FieldRegistrationHandler;
 import me.lucko.fabric.api.permissions.v0.Permissions;
@@ -39,6 +42,7 @@ import net.fabricmc.fabric.api.networking.v1.*;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
@@ -72,7 +76,9 @@ public class Playroom implements ModInitializer {
 	public static final Map<UUID, Donation> DONATIONS = new LinkedHashMap<>();
 	public static final Map<UUID, InventorySlot> GUN_STACKS = new LinkedHashMap<>();
 	private static final Map<String, Boolean> EXPERIMENTS = new HashMap<>();
+	private static final Queue<ExecuteAction> TASK_QUEUE = new LinkedList<>();
 	private static TiltifyWebhookConnection sslServer;
+	private static ScheduleUtils scheduler;
 	private static MinecraftServer server;
 	public static long serverTime = 0;
 
@@ -93,16 +99,26 @@ public class Playroom implements ModInitializer {
 	private void registerEventListeners() {
 		ServerLifecycleEvents.SERVER_STARTING.register(server -> {
 			Playroom.server = server;
+			Playroom.scheduler = new ScheduleUtils();
 		});
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
 			ThreadUtils.tryStart(sslServer = TiltifyWebhookConnection.create());
 		});
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-			if (sslServer != null) sslServer.interrupt();
+			ThreadUtils.interrupt(sslServer);
+			if (!TASK_QUEUE.isEmpty()) {
+				LOGGER.warn("There are still {} tasks in the queue, they will be lost!", TASK_QUEUE.size());
+				while (!TASK_QUEUE.isEmpty()) {
+					ExecuteAction action = TASK_QUEUE.poll();
+					LOGGER.warn("Lost task: {} [{}]", action.task().name(), action.player());
+				}
+			}
 		});
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			Playroom.server = null;
-			serverTime = 0;
+			Playroom.serverTime = 0;
+			Playroom.scheduler.close();
+			Playroom.scheduler = null;
 		});
 		LivingEntityEvents.END_BASE_TICK.register(livingEntity -> {
 			livingEntity.getWorld().getProfiler().push("playroom_freezing");
@@ -140,12 +156,28 @@ public class Playroom implements ModInitializer {
 			}
 		});
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
+			Playroom.scheduler.tick(server);
 			long time = server.getOverworld().getTime();
-			serverTime = time;
+			if (ThreadUtils.isAlive(sslServer) && time % 1200 == 0) {
+				sslServer.requestsLastMinute = 0;
+			}
+			Playroom.serverTime = time;
 			if (time % 100 == 0 && !getServer().isSingleplayer()) {
 				PacketByteBuf buf = PacketByteBufs.create();
 				buf.writeLong(time);
 				sendPacket(id("time_sync"), buf);
+			}
+
+			if (!TASK_QUEUE.isEmpty()) {
+				ExecuteAction action = TASK_QUEUE.poll();
+				Automation.Task<?> task = action.task();
+				ServerPlayerEntity player = action.player();
+				boolean success = task.execute(player);
+				if (!success) {
+					String playerName = player == null ? "Server" : player.getName().getString();
+					Playroom.sendToPlayers(p -> p.sendMessage(Text.translatable("feedback.playroom.webhook.execution.failed", task.name(), playerName)), PredicateUtils.permission("playroom.webhook.fail", 4));
+					LOGGER.warn("Failed to execute webhook action '{}' for player '{}'", task.name(), playerName);
+				}
 			}
 		});
 	}
@@ -191,7 +223,7 @@ public class Playroom implements ModInitializer {
 				PacketByteBuf byteBuf = PacketByteBufs.create();
 				byteBuf.writeUuid(id);
 				byteBuf.writeEnumConstant(status);
-				sendPacket(id("donation/update"), byteBuf, PredicateUtil.permission("playroom.admin.server.update_donations", 4));
+				sendPacket(id("donation/update"), byteBuf, PredicateUtils.permission("playroom.admin.server.update_donations", 4));
 			});
 		});
 		ServerPlayNetworking.registerGlobalReceiver(id("aiming"), (server, player, handler, buf, responseSender) -> {
@@ -362,12 +394,7 @@ public class Playroom implements ModInitializer {
 	public static void addDonation(Donation donation) {
 		DONATIONS.put(donation.id(), donation);
 		PacketByteBuf buf = PacketByteBufs.create();
-		buf.writeUuid(donation.id());
-		buf.writeString(donation.donorName());
-		buf.writeString(donation.message());
-		buf.writeFloat(donation.amount());
-		buf.writeString(donation.currency());
-		buf.writeBoolean(donation.status() == Donation.Status.AUTO_APPROVED);
+		buf.encode(NbtOps.INSTANCE, Donation.CODEC, donation);
 
 		sendPacket(id("donation/add"), buf);
 	}
@@ -410,8 +437,16 @@ public class Playroom implements ModInitializer {
 		return EXPERIMENTS.getOrDefault(experiment, false);
 	}
 
+	public static void queueTask(ExecuteAction task) {
+		TASK_QUEUE.add(task);
+	}
+
 	public static boolean isSSLEnabled() {
 		return sslServer != null && sslServer.isAlive();
+	}
+
+	public static void schedule(Runnable task, long delay) {
+		scheduler.schedule(server, delay, task);
 	}
 
 	@NotNull

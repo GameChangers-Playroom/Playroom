@@ -11,9 +11,11 @@ import io.github.flameyheart.playroom.tiltify.webhook.DonationUpdated;
 import io.github.flameyheart.playroom.tiltify.webhook.WebhookEvent;
 import io.github.flameyheart.playroom.tiltify.webhook.WebhookStructure;
 import io.github.flameyheart.playroom.util.ClassUtils;
-import io.github.flameyheart.playroom.util.DynamicPlaceholders;
-import io.github.flameyheart.playroom.util.PredicateUtil;
+import io.github.flameyheart.playroom.util.LinedStringBuilder;
+import io.github.flameyheart.playroom.util.PredicateUtils;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.HoverEvent;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
@@ -33,10 +35,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -45,6 +44,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public class TiltifyWebhookConnection extends Thread {
     private static final Logger LOGGER = LoggerFactory.getLogger("Playroom Tiltify Webhook Connection");
     private static final AtomicReference<Boolean> CAN_RUN = new AtomicReference<>();
+    public transient int requestsLastMinute = 0;
+    private transient long lastWarning = 0;
 
     /**
      * Jackson JSON mapper for the parsing of the JSON data into Java objects
@@ -140,6 +141,14 @@ public class TiltifyWebhookConnection extends Thread {
                 try {
                     if (serverSocket.isClosed()) break;
                     SSLSocket clientSocket = (SSLSocket) serverSocket.accept();
+                    // Warn if more than 50 requests are received within a minute,
+                    // letting us know if there is a request spam or DoS/DDoS attack,
+                    // the warning is only printed once every 5 seconds
+                    // to prevent spamming the console
+                    if (++requestsLastMinute > 50 && lastWarning < System.currentTimeMillis() - 5000) {
+                        lastWarning = System.currentTimeMillis();
+                        LOGGER.warn("Received {} requests within a minute!", requestsLastMinute);
+                    }
                     handleClientConnection(clientSocket);
                 } catch (Throwable e) {
                     // Handle exceptions accordingly
@@ -290,27 +299,62 @@ public class TiltifyWebhookConnection extends Thread {
         // Certify that the donation hasn't been processed already
         if (Playroom.hasDonation(event.meta.id)) return;
 
+        // Build the reward list to send to the player
+        List<Donation.Reward> rewards = new ArrayList<>();
+        boolean hasError = false;
+
         // if the donation has a reward claim, execute the corresponding action for the target player
         if (event.data.rewardClaims != null) {
             for (WebhookStructure.RewardClaim claim : event.data.rewardClaims) {
-                // TODO: Redo to use the action system
                 Automation.Task<?> task = Automation.get(claim.rewardId);
+                if (task == null) {
+                    LOGGER.warn("Failed to find task for reward \"{}\", {}'s donation could not be fully processed", claim.rewardId, event.data.donorName);
+                    MutableText message = Text.translatable("feedback.playroom.webhook.donation.failed.task");
+                    message.styled(style -> {
+                        LinedStringBuilder text = new LinedStringBuilder();
+                        text.append("Donor: ");
+                        text.append(event.data.donorName);
+                        text.appendLine("Reward: ");
+                        text.append(claim.rewardId.toString());
+                        return style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(text.toString())));
+                    });
+                    Playroom.sendToPlayers(p -> p.sendMessage(message), PredicateUtils.permission("playroom.webhook.fail", 4));
+                    rewards.add(new Donation.Reward(claim.rewardId, claim.customQuestion, Donation.Reward.Status.TASK_NOT_FOUND));
+                    hasError = true;
+                    continue;
+                }
                 if (task.requiresPlayer()) {
                     ServerPlayerEntity player = Playroom.getServer().getPlayerManager().getPlayer(claim.customQuestion);
                     if (player == null) {
                         LOGGER.warn("Failed to find player \"{}\", {}'s donation could not be fully processed", claim.customQuestion, event.data.donorName);
-                        Playroom.sendToPlayers(p -> p.sendMessage(Text.translatable("feedback.playroom.webhook.donation.failed")), PredicateUtil.permission("playroom.webhook.fail", 4));
+                        MutableText message = Text.translatable("feedback.playroom.webhook.donation.failed.player");
+                        message.styled(style -> {
+                            LinedStringBuilder text = new LinedStringBuilder();
+                            text.append("Donor: ");
+                            text.append(event.data.donorName);
+                            text.appendLine("Message: ");
+                            text.append(claim.customQuestion);
+                            text.appendLine("Reward: ");
+                            text.append(claim.rewardId.toString());
+                            text.appendLine("Task: ");
+                            text.append(task.name());
+                            return style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(text.toString())));
+                        });
+                        Playroom.sendToPlayers(p -> p.sendMessage(message), PredicateUtils.permission("playroom.webhook.fail", 4));
+                        rewards.add(new Donation.Reward(claim.rewardId, claim.customQuestion, Donation.Reward.Status.PLAYER_NOT_FOUND));
+                        hasError = true;
                         continue;
                     }
+                    Playroom.queueTask(new ExecuteAction(task, player));
                 } else {
-                    task.execute(null);
+                    Playroom.queueTask(new ExecuteAction(task, null));
                 }
+                rewards.add(new Donation.Reward(claim.rewardId, claim.customQuestion, Donation.Reward.Status.AUTO_APPROVED));
             }
         }
 
         // Add the event to the list of donations, with its according status of automatically executed
-        // TODO
-        //Playroom.addDonation(new Donation());
+        Playroom.addDonation(new Donation(event.meta.id, event.data.donorName, rewards, event.data.amount.value, event.data.amount.currency, hasError ? Donation.Status.REWARD_ERROR : Donation.Status.NORMAL));
     }
 
     /**

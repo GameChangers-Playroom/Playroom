@@ -98,6 +98,10 @@ public class Automation {
             return action.requiresPlayer();
         }
 
+        public String name() {
+            return action.getClass().getSimpleName();
+        }
+
         public boolean execute(ServerPlayerEntity player) {
             if (action.requiresPlayer() && player == null) {
                 throw new IllegalStateException(action.getClass().getSimpleName() + " requires a player!");

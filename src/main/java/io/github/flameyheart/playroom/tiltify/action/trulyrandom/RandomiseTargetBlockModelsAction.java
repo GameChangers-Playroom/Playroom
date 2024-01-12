@@ -15,7 +15,7 @@ public class RandomiseTargetBlockModelsAction implements ResetableTrulyRandomAct
     }
 
     @Override
-    public int getTicksUntilReset() {
+    public int getDuration() {
         return 20 * 60 * 5;
     }
 

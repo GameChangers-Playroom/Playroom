@@ -15,7 +15,7 @@ public class RandomiseServerItemModelsAction implements ServerResetableTrulyRand
     }
 
     @Override
-    public int getTicksUntilReset() {
+    public int getDuration() {
         return 20 * 60 * 5;
     }
 

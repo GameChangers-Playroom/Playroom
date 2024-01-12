@@ -11,6 +11,7 @@
     "commands.playroom.entity_test": "Created test for %d entities",
     "commands.playroom.test.freeze": "Freezing %s",
     "commands.playroom.test.slowdown": "Slowing down %s",
+    "commands.playroom.permission": "%s's status for the permission %s is %s",
 
     "death.attack.laser_shot.0": "%s did not had an ice time",
     "death.attack.laser_shot.1": "%s was knocked down cold",
@@ -68,6 +69,9 @@
     ],
 
     "feedback.playroom.webhook.ready": "Tiltify Webhook server started",
+    "feedback.playroom.webhook.donation.failed.player": "Failed to find the player for a donation",
+    "feedback.playroom.webhook.donation.failed.task": "Failed to find the task for a donation",
+    "feedback.playroom.webhook.execution.failed": "Failed to execute the donation command %s targeting %s",
 
     "playroom.multiplayer.disconnect.unsupported_client": "Unsupported client \nPlayroom is required to join the server",
     "playroom.multiplayer.disconnect.unexpected_handshake": "Unexpected handshake packet from client",
@@ -78,7 +82,7 @@
     "playroom.warning.protocol.message": "Playroom may not behave properly",
     "playroom.warning.version.title": "Mismatching Playroom version",
     "playroom.warning.version.message": "The game may not behave properly",
-    "playroom.donation_screen.title": "%s donated %f.2 %s",
+    "playroom.donation_screen.title": "%s donated %.2f %s",
     "playroom.subtitles.laser_gun.charge": "Laser gun charges",
     "playroom.subtitles.laser_gun.shoot": "Laser gun shoots",
     "playroom.subtitles.laser_gun.mode": "Laser gun changes mode",

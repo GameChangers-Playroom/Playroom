@@ -7,4 +7,13 @@ public class ThreadUtils {
         if (thread == null) return;
         thread.start();
     }
+
+    public static void interrupt(@Nullable Thread thread) {
+        if (thread == null) return;
+        thread.interrupt();
+    }
+
+    public static boolean isAlive(@Nullable Thread thread) {
+        return thread != null && thread.isAlive();
+    }
 }

@@ -27,7 +27,7 @@ public class DonationScreen extends BaseScreen<FlowLayout> {
         title.shadow(true);
 
         var message = rootComponent.childById(LabelComponent.class, "message");
-        message.text(Text.literal(donation.message())).shadow(true);
+        message.text(Text.literal("donation.message()")).shadow(true);
         message.shadow(true);
     }
 }

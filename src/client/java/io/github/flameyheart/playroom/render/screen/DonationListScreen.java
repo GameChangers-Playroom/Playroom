@@ -46,7 +46,7 @@ public class DonationListScreen extends BaseScreen<FlowLayout> {
             template.surface(Surface.BLANK);
         });
 
-        List<TooltipComponent> tooltip = client.textRenderer.wrapLines(Text.literal(donation.message()), client.getWindow().getScaledWidth() - 16)
+        List<TooltipComponent> tooltip = client.textRenderer.wrapLines(Text.literal("donation.message()"), client.getWindow().getScaledWidth() - 16)
           .stream().map(TooltipComponent::of).toList();
         template.tooltip(tooltip);
 

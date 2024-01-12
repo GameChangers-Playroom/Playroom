@@ -5,7 +5,7 @@ import net.minecraft.entity.Entity;
 
 import java.util.function.Predicate;
 
-public class PredicateUtil {
+public class PredicateUtils {
     public static Predicate<Entity> permission(String permission, int level) {
         return player -> Permissions.check(player, permission, level);
     }
