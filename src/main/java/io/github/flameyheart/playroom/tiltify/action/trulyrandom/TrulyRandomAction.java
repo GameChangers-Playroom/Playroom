@@ -6,9 +6,13 @@ import com.bawnorton.trulyrandom.random.ServerRandomiser;
 import com.bawnorton.trulyrandom.random.module.Module;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.tiltify.Action;
+import io.github.flameyheart.playroom.util.PredicateUtils;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.UUID;
 
 /**
  * Actions that are executed by TrulyRandomApi. Provide the executor as a method reference, either targeted (player)
@@ -26,8 +30,12 @@ public interface TrulyRandomAction extends Action<@Nullable Object> {
         return Untargeted.EMPTY;
     }
 
-    default boolean execute(ServerPlayerEntity target, @Nullable Object data) {
-        Playroom.LOGGER.info("Executing action " + getModule().name() + " for " + (target == null ? "everyone" : target.getName().getString()));
+    default boolean execute(ServerPlayerEntity target, @Nullable Object data, UUID id) {
+        if (target != null) {
+            target.sendMessage(Text.translatable("feedback.playroom.trulyrandom.apply.local", getModule().name()));
+        } else {
+            Playroom.sendToPlayers(p -> p.sendMessage(Text.translatable("feedback.playroom.trulyrandom.apply.server", getModule().name())));
+        }
         MinecraftServer server = Playroom.getServer();
         if (server == null) return false;
 

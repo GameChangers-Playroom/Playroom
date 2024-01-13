@@ -8,9 +8,11 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 
+import java.util.UUID;
+
 public class GiveItemAction implements Action<ItemStack> {
     @Override
-    public boolean execute(ServerPlayerEntity target, ItemStack stack) {
+    public boolean execute(ServerPlayerEntity target, ItemStack stack, UUID id) {
         ItemEntity itemEntity;
         boolean bl = target.getInventory().insertStack(stack);
         if (!bl && !stack.isEmpty()) {

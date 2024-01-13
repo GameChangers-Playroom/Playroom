@@ -182,24 +182,11 @@ public class PlayroomClient implements ClientModInitializer {
 
             client.execute(() -> deserializeConfig(serverConfig));
         });
-        ClientPlayNetworking.registerGlobalReceiver(Playroom.id("donation/add"), (client, handler, buf, responseSender) -> {
+        ClientPlayNetworking.registerGlobalReceiver(Playroom.id("donation"), (client, handler, buf, responseSender) -> {
             Donation donation = buf.decode(NbtOps.INSTANCE, Donation.CODEC);
 
             client.execute(() -> {
                 DONATIONS.put(donation.id(), donation);
-            });
-        });
-        ClientPlayNetworking.registerGlobalReceiver(Playroom.id("donation/update"), (client, handler, buf, responseSender) -> {
-            UUID id = buf.readUuid();
-            Donation.Status status = buf.readEnumConstant(Donation.Status.class);
-
-            client.execute(() -> {
-                Donation donation = DONATIONS.get(id);
-                if (donation != null) {
-                    donation.updateStatus(status);
-                } else {
-                    Playroom.LOGGER.warn("Received donation update for unknown donation with id {}", id);
-                }
             });
         });
         ClientPlayNetworking.registerGlobalReceiver(Playroom.id("player_name"), (client, handler, buf, responseSender) -> {

@@ -6,9 +6,9 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.registry.Damage;
+import io.github.flameyheart.playroom.tiltify.Donation;
 import io.github.flameyheart.playroom.util.LinedStringBuilder;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.CommandBlock;
@@ -30,14 +30,16 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
+import java.util.UUID;
+
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
 
 public class PlayroomCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
-          literal("playroom").then(
-            literal("reload").executes(context -> {
+          literal("playroom").requires(Permissions.require("playroom.command.playroom", 2)).then(
+            literal("reload").requires(Permissions.require("playroom.command.playroom.reload", 4)).executes(context -> {
                   context.getSource().sendFeedback(() -> Text.translatable("commands.playroom.reload"), false);
                   Playroom.reload(false);
                   return 1;
@@ -53,9 +55,9 @@ public class PlayroomCommand {
                     return 1;
                 }
               )
-            )
+            ).requires(Permissions.require("playroom.command.playroom.reload.restart", 4))
           ).then(
-            literal("experiment").then(
+            literal("experiment").requires(Permissions.require("playroom.command.playroom.experiment", false)).then(
               argument("experiment", StringArgumentType.word()).executes(context -> {
                     String experiment = StringArgumentType.getString(context, "experiment");
                     context.getSource().sendFeedback(() -> Text.translatable("commands.playroom.experiment", experiment, Playroom.toggleExperiment(experiment)), false);
@@ -64,7 +66,7 @@ public class PlayroomCommand {
               )
             )
           ).then(
-            literal("permission").then(
+            literal("check-permission").requires(Permissions.require("playroom.command.playroom.check-permission", 4)).then(
               argument("target", EntityArgumentType.entity()).then(
                 argument("permission", StringArgumentType.word()).executes(context -> {
                     ServerCommandSource source = context.getSource();
@@ -79,9 +81,9 @@ public class PlayroomCommand {
               )
             )
           ).then(
-            literal("entity-test").executes(context -> {
+            literal("entity-test").requires(Permissions.require("playroom.command.playroom.entity-test", Playroom.isDev())).executes(context -> {
                 ServerCommandSource source = context.getSource();
-                if (!FabricLoader.getInstance().isDevelopmentEnvironment()) {
+                if (!Playroom.isDev()) {
                     source.sendError(Text.literal("This command is only available in development environment.\nThis is to avoid accidental mass destruction."));
                     return 0;
                 }
@@ -128,7 +130,7 @@ public class PlayroomCommand {
                 pos = pos.east(2);
 
                 world.setBlockState(pos, Blocks.REPEATING_COMMAND_BLOCK.getDefaultState().with(CommandBlock.FACING, Direction.SOUTH));
-                ((CommandBlockBlockEntity) world.getBlockEntity(pos)).getCommandExecutor().setCommand("execute as @e[type=!player] run playroom test freeze @s");
+                ((CommandBlockBlockEntity) world.getBlockEntity(pos)).getCommandExecutor().setCommand("execute as @e[type=!entity] run playroom test freeze @s");
                 world.setBlockState(pos.south(), Blocks.LEVER.getDefaultState().with(WallMountedBlock.FACING, Direction.SOUTH));
                 world.setBlockState(pos = pos.up(), sign);
                 signEntity = ((SignBlockEntity) world.getBlockEntity(pos));
@@ -142,7 +144,7 @@ public class PlayroomCommand {
                 return count;
             })
           ).then(
-            literal("status").executes(context -> {
+            literal("status").requires(Permissions.require("playroom.command.playroom.status", 4)).executes(context -> {
                 ServerCommandSource source = context.getSource();
                 LinedStringBuilder stringBuilder = new LinedStringBuilder();
                 stringBuilder.append("Webhook server: ");
@@ -155,17 +157,22 @@ public class PlayroomCommand {
                 return 1;
             })
           ).then(
-            literal("test").then(
-              literal("freeze").then(
+            literal("test").requires(Permissions.require("playroom.command.playroom.test", 2)).then(
+              literal("freeze").requires(Permissions.require("playroom.command.playroom.test.freeze", 2)).then(
                 argument("target", EntityArgumentType.entity()).executes(context -> {
                       ServerCommandSource source = context.getSource();
-                      Entity player = EntityArgumentType.getEntity(context, "target");
-                      ((FreezableEntity) player).playroom$freeze();
-                      source.sendFeedback(() -> Text.translatable("commands.playroom.test.freeze", player.getDisplayName()), false);
+                      Entity entity = EntityArgumentType.getEntity(context, "target");
+                      if (!(entity instanceof FreezableEntity)) {
+                          source.sendError(Text.translatable("commands.playroom.error.not_freezable", entity.getDisplayName()));
+                          return 0;
+                      }
+                      ((FreezableEntity) entity).playroom$freeze();
+                      ((FreezableEntity) entity).playroom$freeze();
+                      source.sendFeedback(() -> Text.translatable("commands.playroom.test.freeze", entity.getDisplayName()), false);
                       return 1;
                   }
                 )
-              ).executes(context -> {
+              ).requires(Permissions.require("playroom.command.playroom.test.freeze.target", 2)).executes(context -> {
                     ServerCommandSource source = context.getSource();
                     if (!source.isExecutedByPlayer()) {
                         source.sendError(Text.translatable("commands.playroom.error.not_player"));
@@ -178,16 +185,20 @@ public class PlayroomCommand {
                 }
               )
             ).then(
-              literal("slowdown").then(
+              literal("slowdown").requires(Permissions.require("playroom.command.playroom.test.slowdown", 2)).then(
                 argument("target", EntityArgumentType.entity()).executes(context -> {
                       ServerCommandSource source = context.getSource();
-                      Entity player = EntityArgumentType.getEntity(context, "target");
-                      ((FreezableEntity) player).playroom$slowdown();
-                      source.sendFeedback(() -> Text.translatable("commands.playroom.test.slowdown", player.getDisplayName()), false);
+                      Entity entity = EntityArgumentType.getEntity(context, "target");
+                      if (!(entity instanceof FreezableEntity)) {
+                          source.sendError(Text.translatable("commands.playroom.error.not_freezable", entity.getDisplayName()));
+                          return 0;
+                      }
+                      ((FreezableEntity) entity).playroom$slowdown();
+                      source.sendFeedback(() -> Text.translatable("commands.playroom.test.slowdown", entity.getDisplayName()), false);
                       return 1;
                   }
                 )
-              ).executes(context -> {
+              ).requires(Permissions.require("playroom.command.playroom.test.slowdown.target", 2)).executes(context -> {
                     ServerCommandSource source = context.getSource();
                     if (!source.isExecutedByPlayer()) {
                         source.sendError(Text.translatable("commands.playroom.error.not_player"));
@@ -200,7 +211,7 @@ public class PlayroomCommand {
                 }
               )
             ).then(
-              literal("damage").then(
+              literal("damage").requires(Permissions.require("playroom.command.playroom.test.damage", 2)).then(
                 argument("target", EntityArgumentType.entity()).executes(context -> {
                       ServerCommandSource source = context.getSource();
                       Entity player = EntityArgumentType.getEntity(context, "target");
@@ -208,7 +219,7 @@ public class PlayroomCommand {
                       return 1;
                   }
                 )
-              ).executes(context -> {
+              ).requires(Permissions.require("playroom.command.playroom.test.damage.target", 2)).executes(context -> {
                     ServerCommandSource source = context.getSource();
                     if (!source.isExecutedByPlayer()) {
                         source.sendError(Text.translatable("commands.playroom.error.not_player"));
@@ -218,6 +229,46 @@ public class PlayroomCommand {
                     player.damage(Damage.laserShot(player.getWorld(), null, null), Float.MAX_VALUE);
                     return 1;
                 }
+              )
+            )
+          ).then(
+            literal("donation").requires(Permissions.require("playroom.command.playroom.donation", 2)).then(
+              argument("donation id", StringArgumentType.word()).then(
+                argument("status", Playroom.DONATION_STATUS_ARGUMENT).suggests(Playroom.DONATION_STATUS_ARGUMENT::listSuggestions).executes(context -> {
+                    ServerCommandSource source = context.getSource();
+                    UUID donationId = UUID.fromString(StringArgumentType.getString(context, "donation id"));
+                    Donation.Status status = context.getArgument("status", Donation.Status.class);
+                    if (!Playroom.hasDonation(donationId)) {
+                        source.sendError(Text.translatable("commands.playroom.error.donation.not_found", donationId.toString()));
+                        return -1;
+                    }
+                    Donation donation = Playroom.getDonation(donationId);
+                    donation.updateStatus(status);
+                    source.sendFeedback(() -> Text.translatable("commands.playroom.donation.status", donationId.toString(), status.name()), true);
+
+                    Playroom.updateDonation(donation);
+                    return 1;
+                })
+              ).then(
+                argument("reward id", StringArgumentType.word()).then(
+                  argument("status", Playroom.REWARD_STATUS_ARGUMENT).suggests(Playroom.REWARD_STATUS_ARGUMENT::listSuggestions).executes(context -> {
+                      ServerCommandSource source = context.getSource();
+                      UUID donationId = UUID.fromString(StringArgumentType.getString(context, "donation id"));
+                      UUID rewardId = UUID.fromString(StringArgumentType.getString(context, "reward id"));
+                      Donation.Reward.Status status = context.getArgument("status", Donation.Reward.Status.class);
+                      if (!Playroom.hasDonation(donationId)) {
+                          source.sendError(Text.translatable("commands.playroom.error.donation.not_found", donationId.toString()));
+                          return -1;
+                      }
+                      Donation donation = Playroom.getDonation(donationId);
+                      Donation.Reward reward = donation.reward(rewardId);
+                      reward.updateStatus(status);
+                      source.sendFeedback(() -> Text.translatable("commands.playroom.donation.reward.status", donationId.toString(), rewardId.toString(), status.name()), true);
+
+                      Playroom.updateDonation(donation);
+                      return 1;
+                  })
+                )
               )
             )
           )

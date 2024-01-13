@@ -30,6 +30,7 @@ import io.github.flameyheart.playroom.util.InventorySlot;
 import io.github.flameyheart.playroom.util.PredicateUtils;
 import io.github.flameyheart.playroom.util.ScheduleUtils;
 import io.github.flameyheart.playroom.util.ThreadUtils;
+import io.wispforest.owo.command.EnumArgumentType;
 import io.wispforest.owo.registration.reflect.FieldRegistrationHandler;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
@@ -53,6 +54,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.timer.TimerCallback;
 import org.jetbrains.annotations.NotNull;
 import org.quiltmc.parsers.json.JsonReader;
 import org.quiltmc.parsers.json.gson.GsonReader;
@@ -71,7 +73,9 @@ import java.util.stream.Collectors;
 
 public class Playroom implements ModInitializer {
 	public static final String MOD_ID = "playroom";
-    public static final Logger LOGGER = LoggerFactory.getLogger("Playroom");
+	public static final Logger LOGGER = LoggerFactory.getLogger("Playroom");
+	public static final EnumArgumentType<Donation.Status> DONATION_STATUS_ARGUMENT = EnumArgumentType.create(Donation.Status.class);
+	public static final EnumArgumentType<Donation.Reward.Status> REWARD_STATUS_ARGUMENT = EnumArgumentType.create(Donation.Reward.Status.class);
 	private static final Map<ServerLoginNetworkHandler, CompletableFuture<Object>> HANDSHAKE_QUEUE = new LinkedHashMap<>();
 	public static final Map<UUID, Donation> DONATIONS = new LinkedHashMap<>();
 	public static final Map<UUID, InventorySlot> GUN_STACKS = new LinkedHashMap<>();
@@ -202,28 +206,6 @@ public class Playroom implements ModInitializer {
 					boolean canModify = Permissions.check(p, "playroom.admin.server.update_config", 4);
 					return PacketByteBufs.create().writeString(serializeConfig(canModify));
 				}, p -> true);
-			});
-		});
-		ServerPlayNetworking.registerGlobalReceiver(id("donation/update"), (server, player, handler, buf, responseSender) -> {
-			if (!Permissions.check(player, "playroom.admin.server.update_donations", 4)) {
-				LOGGER.warn("Player {} tried to update the server donations without permission!", player.getName());
-				return;
-			}
-			UUID id = buf.readUuid();
-			Donation.Status status = buf.readEnumConstant(Donation.Status.class);
-
-			server.execute(() -> {
-				Donation donation = DONATIONS.get(id);
-				if (donation == null) {
-					LOGGER.warn("Player {} tried to update a donation that doesn't exist!", player.getName());
-					return;
-				}
-				donation.updateStatus(status);
-
-				PacketByteBuf byteBuf = PacketByteBufs.create();
-				byteBuf.writeUuid(id);
-				byteBuf.writeEnumConstant(status);
-				sendPacket(id("donation/update"), byteBuf, PredicateUtils.permission("playroom.admin.server.update_donations", 4));
 			});
 		});
 		ServerPlayNetworking.registerGlobalReceiver(id("aiming"), (server, player, handler, buf, responseSender) -> {
@@ -396,11 +378,23 @@ public class Playroom implements ModInitializer {
 		PacketByteBuf buf = PacketByteBufs.create();
 		buf.encode(NbtOps.INSTANCE, Donation.CODEC, donation);
 
-		sendPacket(id("donation/add"), buf);
+		sendPacket(id("donation"), buf);
 	}
 
 	public static boolean hasDonation(UUID id) {
 		return DONATIONS.containsKey(id);
+	}
+
+	public static void updateDonation(Donation donation) {
+		DONATIONS.put(donation.id(), donation);
+		PacketByteBuf buf = PacketByteBufs.create();
+		buf.encode(NbtOps.INSTANCE, Donation.CODEC, donation);
+
+		sendPacket(id("donation"), buf, PredicateUtils.permission("playroom.admin.server.update_donations", 4));
+	}
+
+	public static Donation getDonation(UUID id) {
+		return DONATIONS.get(id);
 	}
 
 	public static ServerCommandSource getCommandSource() {
@@ -421,11 +415,26 @@ public class Playroom implements ModInitializer {
 		sendToPlayers(p -> ServerPlayNetworking.send(p, id, bufBuilder.apply(p)), predicate);
 	}
 
+	public static void sendToPlayers(Consumer<ServerPlayerEntity> task) {
+		sendToPlayers(task, p -> true);
+	}
+
 	public static void sendToPlayers(Consumer<ServerPlayerEntity> task, Predicate<Entity> predicate) {
 		for (ServerPlayerEntity player : getServer().getPlayerManager().getPlayerList()) {
 			if (predicate.test(player)) {
 				task.accept(player);
 			}
+		}
+	}
+
+	public static void sendToPlayer(String playerName, Consumer<ServerPlayerEntity> task) {
+		sendToPlayer(playerName, task, p -> true);
+	}
+
+	public static void sendToPlayer(String playerName, Consumer<ServerPlayerEntity> task, Predicate<Entity> predicate) {
+		ServerPlayerEntity player = getServer().getPlayerManager().getPlayer(playerName);
+		if (player != null && predicate.test(player)) {
+			task.accept(player);
 		}
 	}
 
@@ -445,8 +454,8 @@ public class Playroom implements ModInitializer {
 		return sslServer != null && sslServer.isAlive();
 	}
 
-	public static void schedule(Runnable task, long delay) {
-		scheduler.schedule(server, delay, task);
+	public static void schedule(Runnable task, long delay, UUID uuid) {
+		scheduler.schedule(server, uuid, delay, task);
 	}
 
 	@NotNull
@@ -464,5 +473,9 @@ public class Playroom implements ModInitializer {
 			boolean canModify = Permissions.check(p, "playroom.admin.server.update_config", 4);
 			return PacketByteBufs.create().writeString(serializeConfig(canModify));
 		}, p -> true);
+	}
+
+	public static boolean isDev() {
+		return FabricLoader.getInstance().isDevelopmentEnvironment();
 	}
 }
