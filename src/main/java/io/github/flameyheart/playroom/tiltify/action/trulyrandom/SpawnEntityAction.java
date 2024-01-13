@@ -11,9 +11,11 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 
+import java.util.UUID;
+
 public class SpawnEntityAction implements Action<Entity> {
     @Override
-    public boolean execute(ServerPlayerEntity target, Entity entity) {
+    public boolean execute(ServerPlayerEntity target, Entity entity, UUID id) {
         if (entity == null) return false;
         if (entity instanceof MobEntity mob) {
             mob.initialize(target.getServerWorld(), target.getServerWorld().getLocalDifficulty(mob.getBlockPos()), SpawnReason.TRIGGERED, null, null);

@@ -1,16 +1,16 @@
 package io.github.flameyheart.playroom.util;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.timer.Timer;
 import net.minecraft.world.timer.TimerCallback;
 
-import java.util.Comparator;
-import java.util.PriorityQueue;
-import java.util.Queue;
-import java.util.UUID;
+import java.util.*;
 
 public class ScheduleUtils {
-    private final Queue<Event> events = new PriorityQueue<>(createEventComparator());
+    private final PriorityQueue<Event> events = new PriorityQueue<>(createEventComparator());
+    private final Map<UUID, Event> eventsByName = new HashMap<>();
 
     public void close() {
         events.clear();
@@ -24,28 +24,33 @@ public class ScheduleUtils {
         }
     }
 
-    private static <T> Comparator<Event> createEventComparator() {
+    private static Comparator<Event> createEventComparator() {
         return Comparator.comparingLong(event -> event.triggerTime);
     }
 
-    public void schedule(long delay, Runnable callback) {
-        events.add(new Event(delay, callback));
+    public void schedule(UUID id, long triggerTime, Runnable callback) {
+        if (eventsByName.containsKey(id)) {
+            events.remove(eventsByName.get(id));
+        }
+        Event event = new Event(triggerTime, callback);
+        events.add(event);
+        eventsByName.put(id, event);
     }
 
-    public void schedule(MinecraftServer server, long delay, Runnable callback) {
-        events.add(new Event(server.getOverworld().getTime() + delay, callback));
+    public void schedule(MinecraftServer server, UUID id, long delay, Runnable callback) {
+        schedule(id, server.getOverworld().getTime() + delay, callback);
     }
 
-    public static void scheduleDelay(MinecraftServer server, long delay, TimerCallback<MinecraftServer> callback) {
+    public static void scheduleDelay(UUID id, MinecraftServer server, long delay, TimerCallback<MinecraftServer> callback) {
         if (server == null) return;
         Timer<MinecraftServer> timer = server.getSaveProperties().getMainWorldProperties().getScheduledEvents();
-        timer.setEvent("subathon#" + UUID.randomUUID(), server.getSaveProperties().getMainWorldProperties().getTime() + delay, callback);
+        timer.setEvent("playroom#" + id, server.getSaveProperties().getMainWorldProperties().getTime() + delay, callback);
     }
 
     public static void schedule(MinecraftServer server, long time, TimerCallback<MinecraftServer> callback) {
         if (server == null) return;
         Timer<MinecraftServer> timer = server.getSaveProperties().getMainWorldProperties().getScheduledEvents();
-        timer.setEvent("subathon#" + UUID.randomUUID(), time, callback);
+        timer.setEvent("playroom#" + UUID.randomUUID(), time, callback);
     }
 
     record Event(long triggerTime, Runnable callback) {}

@@ -6,7 +6,7 @@
                     <flow-layout direction="vertical" id="donations">
                         <children>
                             <label>
-                                <text translate="true">text.subathon.screen.notifications.tip</text>
+                                <text translate="true">text.playroom.screen.notifications.tip</text>
                                 <shadow>true</shadow>
                                 <margins>
                                     <top>2</top>
@@ -51,11 +51,11 @@
         <donation>
             <flow-layout direction="horizontal" id="donation.{{id}}">
                 <children>
-                    <label>
-                        <text>{{message}}</text>
+                    <label id="message">
+                        <text/>
                         <shadow>true</shadow>
                         <margins>
-                            <top>4</top>
+                            <top>3</top>
                         </margins>
                     </label>
                 </children>
@@ -72,5 +72,41 @@
                 </margins>
             </flow-layout>
         </donation>
+        <staff-donation>
+            <flow-layout direction="horizontal" id="donation.{{id}}">
+                <children>
+                    <label id="status">
+                        <text translate="true">text.playroom.donation.status.unknown</text>
+                        <margins>
+                            <top>2</top>
+                            <right>4</right>
+                        </margins>
+                        <sizing>
+                            <horizontal method="fixed">9</horizontal>
+                            <vertical method="fixed">9</vertical>
+                        </sizing>
+                    </label>
+                    <label id="message">
+                        <text/>
+                        <shadow>true</shadow>
+                        <margins>
+                            <top>2</top>
+                        </margins>
+                    </label>
+                </children>
+                <sizing>
+                    <horizontal method="fill">100</horizontal>
+                </sizing>
+                <padding>
+                    <right>10</right>
+                    <left>10</left>
+                    <vertical>4</vertical>
+                </padding>
+                <margins>
+                    <top>0</top>
+                    <right>3</right>
+                </margins>
+            </flow-layout>
+        </staff-donation>
     </templates>
 </owo-ui>

@@ -5,9 +5,12 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.server.network.ServerPlayerEntity;
 
+import java.util.UUID;
+
 public class GivePotionAction implements Action<GivePotionAction.PotionData> {
     @Override
-    public boolean execute(ServerPlayerEntity target, PotionData potion) {
+    public boolean execute(ServerPlayerEntity target, PotionData potion, UUID id) {
+        if (target == null || potion == null) return false;
         target.addStatusEffect(new StatusEffectInstance(potion.effect, potion.time, potion.amplifier));
         return true;
     }

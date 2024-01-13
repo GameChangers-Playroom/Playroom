@@ -13,6 +13,7 @@ public final class Donation {
     public static final Codec<Donation> CODEC = RecordCodecBuilder.create(instance -> instance.group(
       Uuids.CODEC.fieldOf("id").forGetter(Donation::id),
       Codec.STRING.fieldOf("donorName").forGetter(Donation::donorName),
+      Codec.STRING.fieldOf("message").forGetter(Donation::message),
       Codec.list(Reward.CODEC).fieldOf("rewards").forGetter(Donation::rewards),
       Codec.FLOAT.fieldOf("amount").forGetter(Donation::amount),
       Codec.STRING.fieldOf("currency").forGetter(Donation::currency),
@@ -21,14 +22,16 @@ public final class Donation {
 
     private final UUID id;
     private final String donorName;
+    private final String message;
     private final List<Reward> rewards;
     private final float amount;
     private final String currency;
     private Status status;
 
-    public Donation(UUID id, String donorName, List<Reward> rewards, float amount, String currency, Status status) {
+    public Donation(UUID id, String donorName, String message, List<Reward> rewards, float amount, String currency, Status status) {
         this.id = id;
         this.donorName = donorName;
+        this.message = message;
         this.rewards = rewards;
         this.amount = amount;
         this.currency = currency;
@@ -43,8 +46,16 @@ public final class Donation {
         return donorName;
     }
 
+    public String message() {
+        return message;
+    }
+
     public List<Reward> rewards() {
         return rewards;
+    }
+
+    public Reward reward(UUID id) {
+        return rewards.stream().filter(reward -> reward.claimId().equals(id)).findFirst().orElse(null);
     }
 
     public float amount() {
@@ -94,23 +105,37 @@ public final class Donation {
 
     public static final class Reward {
         public static final Codec<Reward> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-          Uuids.CODEC.fieldOf("id").forGetter(Reward::id),
+          Uuids.CODEC.fieldOf("rewardId").forGetter(Reward::rewardId),
+          Uuids.CODEC.fieldOf("claimId").forGetter(Reward::claimId),
+          Codec.STRING.fieldOf("name").forGetter(Reward::name),
           Codec.STRING.fieldOf("message").forGetter(Reward::message),
           Status.CODEC.fieldOf("status").forGetter(Reward::status)
         ).apply(instance, Reward::new));
 
-        private final UUID id;
+        private final UUID rewardId;
+        private final UUID claimId;
+        private final String name;
         private final String message;
         private Status status;
 
-        public Reward(UUID id, String message, Status status) {
-            this.id = id;
+        public Reward(UUID rewardId, UUID claimId, String name, String message, Status status) {
+            this.rewardId = rewardId;
+            this.claimId = claimId;
+            this.name = name;
             this.message = message;
             this.status = status;
         }
 
-        public UUID id() {
-            return id;
+        public UUID rewardId() {
+            return rewardId;
+        }
+
+        public UUID claimId() {
+            return claimId;
+        }
+
+        public String name() {
+            return name;
         }
 
         public String message() {
@@ -123,29 +148,6 @@ public final class Donation {
 
         public void updateStatus(Status status) {
             this.status = status;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (Reward) obj;
-            return Objects.equals(this.id, that.id) &&
-              Objects.equals(this.message, that.message) &&
-              Objects.equals(this.status, that.status);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(id, message, status);
-        }
-
-        @Override
-        public String toString() {
-            return "Reward[" +
-              "id=" + id + ", " +
-              "message=" + message + ", " +
-              "status=" + status + ']';
         }
 
         public enum Status {

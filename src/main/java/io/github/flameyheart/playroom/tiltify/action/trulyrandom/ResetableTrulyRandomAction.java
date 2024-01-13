@@ -5,17 +5,19 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.UUID;
+
 public interface ResetableTrulyRandomAction extends TrulyRandomAction {
     @Override
-    default boolean execute(ServerPlayerEntity target, @Nullable Object data) {
+    default boolean execute(ServerPlayerEntity target, @Nullable Object data, UUID id) {
         Playroom.schedule(() -> {
             if (requiresPlayer()) {
                 onResetTargeted().execute(target);
             } else {
                 onResetUntargeted().execute(Playroom.getServer());
             }
-        }, getDuration());
-        return TrulyRandomAction.super.execute(target, data);
+        }, getDuration(), id);
+        return TrulyRandomAction.super.execute(target, data, id);
     }
 
     default Untargeted onResetUntargeted() {

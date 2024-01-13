@@ -14,6 +14,7 @@ import io.github.flameyheart.playroom.util.ClassUtils;
 import io.github.flameyheart.playroom.util.LinedStringBuilder;
 import io.github.flameyheart.playroom.util.PredicateUtils;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -312,14 +313,16 @@ public class TiltifyWebhookConnection extends Thread {
                     MutableText message = Text.translatable("feedback.playroom.webhook.donation.failed.task");
                     message.styled(style -> {
                         LinedStringBuilder text = new LinedStringBuilder();
-                        text.append("Donor: ");
-                        text.append(event.data.donorName);
-                        text.appendLine("Reward: ");
-                        text.append(claim.rewardId.toString());
-                        return style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(text.toString())));
+                        text.append("Donation: ").append(event.meta.id);
+                        text.appendLine("Donor: ").append(event.data.donorName);
+                        text.appendLine("Message: ").append(claim.customQuestion);
+                        text.appendLine("Reward: ").append(claim.rewardId.toString());
+                        return style
+                          .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(text.toString())))
+                          .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, claim.rewardId.toString()));
                     });
                     Playroom.sendToPlayers(p -> p.sendMessage(message), PredicateUtils.permission("playroom.webhook.fail", 4));
-                    rewards.add(new Donation.Reward(claim.rewardId, claim.customQuestion, Donation.Reward.Status.TASK_NOT_FOUND));
+                    rewards.add(new Donation.Reward(claim.rewardId, claim.id, "Not found", claim.customQuestion, Donation.Reward.Status.TASK_NOT_FOUND));
                     hasError = true;
                     continue;
                 }
@@ -330,18 +333,18 @@ public class TiltifyWebhookConnection extends Thread {
                         MutableText message = Text.translatable("feedback.playroom.webhook.donation.failed.player");
                         message.styled(style -> {
                             LinedStringBuilder text = new LinedStringBuilder();
-                            text.append("Donor: ");
-                            text.append(event.data.donorName);
-                            text.appendLine("Message: ");
-                            text.append(claim.customQuestion);
-                            text.appendLine("Reward: ");
-                            text.append(claim.rewardId.toString());
-                            text.appendLine("Task: ");
-                            text.append(task.name());
-                            return style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(text.toString())));
+                            text.append("Donation: ").append(event.meta.id);
+                            text.appendLine("Donor: ").append(event.data.donorName);
+                            text.appendLine("Message: ").append(claim.customQuestion);
+                            text.appendLine("Reward: ").append(claim.rewardId.toString());
+                            text.appendLine("Task: ").append(task.name());
+                            text.appendLine().appendLine("Click to get the task class");
+                            return style
+                              .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(text.toString())))
+                              .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, task.className()));
                         });
                         Playroom.sendToPlayers(p -> p.sendMessage(message), PredicateUtils.permission("playroom.webhook.fail", 4));
-                        rewards.add(new Donation.Reward(claim.rewardId, claim.customQuestion, Donation.Reward.Status.PLAYER_NOT_FOUND));
+                        rewards.add(new Donation.Reward(claim.rewardId, claim.id, task.name(), claim.customQuestion, Donation.Reward.Status.PLAYER_NOT_FOUND));
                         hasError = true;
                         continue;
                     }
@@ -349,12 +352,12 @@ public class TiltifyWebhookConnection extends Thread {
                 } else {
                     Playroom.queueTask(new ExecuteAction(task, null));
                 }
-                rewards.add(new Donation.Reward(claim.rewardId, claim.customQuestion, Donation.Reward.Status.AUTO_APPROVED));
+                rewards.add(new Donation.Reward(claim.rewardId, claim.id, task.name(), claim.customQuestion, Donation.Reward.Status.AUTO_APPROVED));
             }
         }
 
         // Add the event to the list of donations, with its according status of automatically executed
-        Playroom.addDonation(new Donation(event.meta.id, event.data.donorName, rewards, event.data.amount.value, event.data.amount.currency, hasError ? Donation.Status.REWARD_ERROR : Donation.Status.NORMAL));
+        Playroom.addDonation(new Donation(event.meta.id, event.data.donorName, event.data.donorComment, rewards, event.data.amount.value, event.data.amount.currency, hasError ? Donation.Status.REWARD_ERROR : Donation.Status.NORMAL));
     }
 
     /**
