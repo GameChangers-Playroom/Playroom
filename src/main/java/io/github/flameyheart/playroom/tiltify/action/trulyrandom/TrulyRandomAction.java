@@ -1,6 +1,7 @@
 package io.github.flameyheart.playroom.tiltify.action.trulyrandom;
 
 import com.bawnorton.trulyrandom.TrulyRandom;
+import com.bawnorton.trulyrandom.random.Randomiser;
 import com.bawnorton.trulyrandom.random.ServerRandomiser;
 import com.bawnorton.trulyrandom.random.module.Module;
 import io.github.flameyheart.playroom.Playroom;
@@ -30,12 +31,15 @@ public interface TrulyRandomAction extends Action<@Nullable Object> {
         MinecraftServer server = Playroom.getServer();
         if (server == null) return false;
 
-        ServerRandomiser randomiser = TrulyRandom.getRandomiser(server);
         if (requiresPlayer()) {
+            assert target != null;
             getTargeted().execute(target, true);
-            return true;
+            Randomiser randomiser = TrulyRandom.getClientRandomiser(server, target.getUuid());
+            return randomiser.getModules().isEnabled(getModule());
+
         } else {
             getUntargeted().execute(server, true);
+            ServerRandomiser randomiser = TrulyRandom.getRandomiser(server);
             return randomiser.getModules().isEnabled(getModule());
         }
     }

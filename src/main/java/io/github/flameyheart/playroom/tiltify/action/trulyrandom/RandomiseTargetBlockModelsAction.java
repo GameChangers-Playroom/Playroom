@@ -21,7 +21,7 @@ public class RandomiseTargetBlockModelsAction implements ResetableTrulyRandomAct
 
     @Override
     public Module getModule() {
-        return Module.ITEM_MODELS;
+        return Module.BLOCK_MODELS;
     }
 
 }
