@@ -10,7 +10,7 @@ import java.util.UUID;
 public interface ResetableTrulyRandomAction extends TrulyRandomAction {
     @Override
     default boolean execute(ServerPlayerEntity target, @Nullable Object data, UUID id) {
-        Playroom.schedule(() -> {
+        Playroom.scheduleOrExtend(() -> {
             if (requiresPlayer()) {
                 onResetTargeted().execute(target);
             } else {

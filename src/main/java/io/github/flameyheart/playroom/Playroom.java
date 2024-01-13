@@ -458,6 +458,10 @@ public class Playroom implements ModInitializer {
 		scheduler.schedule(server, uuid, delay, task);
 	}
 
+	public static void scheduleOrExtend(Runnable task, long delay, UUID uuid) {
+		scheduler.scheduleOrExtend(server, uuid, delay, task);
+	}
+
 	@NotNull
 	public static String getModVersion() {
 		return FabricLoader.getInstance().getModContainer(MOD_ID).get().getMetadata().getVersion().getFriendlyString();

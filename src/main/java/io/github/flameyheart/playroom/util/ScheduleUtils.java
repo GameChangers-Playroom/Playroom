@@ -1,7 +1,5 @@
 package io.github.flameyheart.playroom.util;
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.timer.Timer;
 import net.minecraft.world.timer.TimerCallback;
@@ -41,6 +39,15 @@ public class ScheduleUtils {
         schedule(id, server.getOverworld().getTime() + delay, callback);
     }
 
+    public void scheduleOrExtend(MinecraftServer server, UUID id, long delay, Runnable callback) {
+        if (eventsByName.containsKey(id)) {
+            Event event = eventsByName.get(id);
+            event.triggerTime += delay;
+            return;
+        }
+        schedule(id, server.getOverworld().getTime() + delay, callback);
+    }
+
     public static void scheduleDelay(UUID id, MinecraftServer server, long delay, TimerCallback<MinecraftServer> callback) {
         if (server == null) return;
         Timer<MinecraftServer> timer = server.getSaveProperties().getMainWorldProperties().getScheduledEvents();
@@ -53,5 +60,34 @@ public class ScheduleUtils {
         timer.setEvent("playroom#" + UUID.randomUUID(), time, callback);
     }
 
-    record Event(long triggerTime, Runnable callback) {}
+    static final class Event {
+        private final Runnable callback;
+        private long triggerTime;
+
+        Event(long triggerTime, Runnable callback) {
+            this.triggerTime = triggerTime;
+            this.callback = callback;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (Event) obj;
+            return this.triggerTime == that.triggerTime &&
+                    Objects.equals(this.callback, that.callback);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(triggerTime, callback);
+        }
+
+        @Override
+        public String toString() {
+            return "Event[" +
+                    "triggerTime=" + triggerTime + ", " +
+                    "callback=" + callback + ']';
+        }
+    }
 }
