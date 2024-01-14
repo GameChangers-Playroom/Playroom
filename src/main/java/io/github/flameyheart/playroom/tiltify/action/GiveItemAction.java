@@ -2,7 +2,6 @@ package io.github.flameyheart.playroom.tiltify.action;
 
 import io.github.flameyheart.playroom.tiltify.Action;
 import net.minecraft.entity.ItemEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;

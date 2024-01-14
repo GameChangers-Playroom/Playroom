@@ -12,6 +12,6 @@ import java.util.Locale;
 public class EnumArgumentTypeMixin {
     @WrapOperation(method = "create*", at = @At(value = "INVOKE", target = "Ljava/lang/String;toLowerCase(Ljava/util/Locale;)Ljava/lang/String;"))
     private static String fixClassName(String instance, Locale locale, Operation<String> original) {
-        return instance.replace("\\.", "/").replaceAll("\\$", ".");
+        return original.call(instance, locale).replace("\\.", "/").replaceAll("\\$", ".");
     }
 }

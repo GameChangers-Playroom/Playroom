@@ -6,7 +6,6 @@ import com.bawnorton.trulyrandom.random.ServerRandomiser;
 import com.bawnorton.trulyrandom.random.module.Module;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.tiltify.Action;
-import io.github.flameyheart.playroom.util.PredicateUtils;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;

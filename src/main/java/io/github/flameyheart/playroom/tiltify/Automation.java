@@ -1,6 +1,5 @@
 package io.github.flameyheart.playroom.tiltify;
 
-import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.tiltify.action.GivePotionAction;
 import io.github.flameyheart.playroom.util.ItemStackBuilder;
 import net.minecraft.enchantment.Enchantment;
@@ -19,7 +18,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
 
 public class Automation {
     private static final Map<String, Task<?>> ACTION_MAP = new HashMap<>();

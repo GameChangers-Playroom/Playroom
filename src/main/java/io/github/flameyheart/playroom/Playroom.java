@@ -54,7 +54,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.timer.TimerCallback;
 import org.jetbrains.annotations.NotNull;
 import org.quiltmc.parsers.json.JsonReader;
 import org.quiltmc.parsers.json.gson.GsonReader;
@@ -291,6 +290,7 @@ public class Playroom implements ModInitializer {
 			synchronizer.waitFor(future);
 			PacketByteBuf byteBuf = PacketByteBufs.create();
 			byteBuf.writeString(serializeConfig(false));
+			byteBuf.writeLong(serverTime);
 			sender.sendPacket(id("handshake"), byteBuf);
 		});
 	}

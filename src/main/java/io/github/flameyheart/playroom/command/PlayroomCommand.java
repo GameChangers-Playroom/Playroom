@@ -2,6 +2,7 @@ package io.github.flameyheart.playroom.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.duck.FreezableEntity;
@@ -230,6 +231,27 @@ public class PlayroomCommand {
                     return 1;
                 }
               )
+            ).then(
+              literal("fire").requires(Permissions.require("playroom.command.playroom.test.fire", 2)).then(
+                argument("time", IntegerArgumentType.integer(0)).executes(context -> {
+                    ServerCommandSource source = context.getSource();
+                    if (!source.isExecutedByPlayer()) {
+                        source.sendError(Text.translatable("commands.playroom.error.not_player"));
+                        return 0;
+                    }
+                    ServerPlayerEntity player = source.getPlayer();
+                    player.setFireTicks(IntegerArgumentType.getInteger(context, "time"));
+                    return 1;
+                })
+              ).then(
+                argument("target", EntityArgumentType.entity()).then(argument("time", IntegerArgumentType.integer(0)).executes(context -> {
+                      ServerCommandSource source = context.getSource();
+                      Entity player = EntityArgumentType.getEntity(context, "target");
+                      player.setFireTicks(IntegerArgumentType.getInteger(context, "time"));
+                      return 1;
+                  })
+                )
+              ).requires(Permissions.require("playroom.command.playroom.test.fire.target", 2))
             )
           ).then(
             literal("donation").requires(Permissions.require("playroom.command.playroom.donation", 2)).then(

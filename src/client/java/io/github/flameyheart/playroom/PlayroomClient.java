@@ -185,9 +185,7 @@ public class PlayroomClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(Playroom.id("donation"), (client, handler, buf, responseSender) -> {
             Donation donation = buf.decode(NbtOps.INSTANCE, Donation.CODEC);
 
-            client.execute(() -> {
-                DONATIONS.put(donation.id(), donation);
-            });
+            client.execute(() -> DONATIONS.put(donation.id(), donation));
         });
         ClientPlayNetworking.registerGlobalReceiver(Playroom.id("player_name"), (client, handler, buf, responseSender) -> {
             List<PlayerDisplayName> displayNames = buf.readList(packetByteBuf -> {
@@ -227,8 +225,10 @@ public class PlayroomClient implements ClientModInitializer {
         ClientLoginNetworking.registerGlobalReceiver(Playroom.id("handshake"), (client, handler, buf, listenerAdder) -> {
             CompletableFuture<PacketByteBuf> future = new CompletableFuture<>();
             String serverConfig = buf.readString();
+            long serverTime = buf.readLong();
 
             client.execute(() -> {
+                Playroom.serverTime = serverTime;
                 if (!deserializeConfig(serverConfig)) {
                     ((ExpandedClientLoginNetworkHandler) handler).playroom$disconnect(Text.translatable("playroom.multiplayer.disconnect.invalid_config"));
                     return;

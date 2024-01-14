@@ -5,6 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.flameyheart.playroom.util.CodecUtils;
 import net.minecraft.util.Uuids;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -94,6 +95,11 @@ public final class Donation {
 
     @Override
     public String toString() {
+        StringBuilder rewards = new StringBuilder();
+        for (Reward reward : this.rewards) {
+            rewards.append(reward.toString()).append(",\n");
+        }
+
         return "Donation[" +
           "id=" + id + ", " +
           "donorName=" + donorName + ", " +
@@ -148,6 +154,16 @@ public final class Donation {
 
         public void updateStatus(Status status) {
             this.status = status;
+        }
+
+        @Override
+        public String toString() {
+            return "Reward[" +
+              "rewardId=" + rewardId + ", " +
+              "claimId=" + claimId + ", " +
+              "name=" + name + ", " +
+              "message=" + message + ", " +
+              "status=" + status + ']';
         }
 
         public enum Status {

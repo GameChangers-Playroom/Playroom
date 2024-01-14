@@ -1,6 +1,5 @@
 package io.github.flameyheart.playroom.render.screen;
 
-import io.github.flameyheart.playroom.PlayroomClient;
 import io.github.flameyheart.playroom.tiltify.Donation;
 import io.github.flameyheart.playroom.util.LinedStringBuilder;
 import io.github.flameyheart.playroom.util.MapBuilder;
@@ -16,7 +15,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.tooltip.TooltipComponent;
 import net.minecraft.text.Text;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Environment(EnvType.CLIENT)
