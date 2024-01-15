@@ -438,8 +438,21 @@ public class Playroom implements ModInitializer {
 		}
 	}
 
+	public static void setExperimentStatus(String experiment, boolean status) {
+		EXPERIMENTS.put(experiment, status);
+	}
+
 	public static boolean toggleExperiment(String experiment) {
-		return EXPERIMENTS.compute(experiment, (s, enabled) -> enabled == null || !enabled);
+		boolean status = EXPERIMENTS.compute(experiment, (s, enabled) -> enabled == null || !enabled);
+		if (getServer() != null) {
+			sendPacket(id("experiment"), p -> {
+				PacketByteBuf buf = PacketByteBufs.create();
+				buf.writeString(experiment);
+				buf.writeBoolean(status);
+				return buf;
+			}, p -> true);
+		}
+		return status;
 	}
 
 	public static boolean isExperimentEnabled(String experiment) {

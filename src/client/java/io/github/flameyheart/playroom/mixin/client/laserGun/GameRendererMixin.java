@@ -30,9 +30,8 @@ public class GameRendererMixin {
     @Inject(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;bobView(Lnet/minecraft/client/util/math/MatrixStack;F)V", shift = At.Shift.BEFORE))
     private void bobViewGun(MatrixStack matrices, Camera camera, float tickDelta, CallbackInfo ci) {
         ItemStack stack = this.client.player.getMainHandStack();
-        Item item = stack.getItem();
 
-        if (item instanceof Aimable && !PlayroomClient.isAiming(stack)) {
+        if (!PlayroomClient.isAiming(stack)) {
             playroom$gunBobView(matrices, tickDelta);
         }
     }

@@ -24,6 +24,7 @@ import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.server.world.ServerChunkManager;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -212,7 +213,12 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
     }
 
     @WrapWithCondition(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;playHurtSound(Lnet/minecraft/entity/damage/DamageSource;)V"))
-    private boolean skipHurtSound(LivingEntity instance, DamageSource source) {
+    private boolean skipHurtSound0(LivingEntity instance, DamageSource source) {
+        return !source.isIn(Tags.NO_HURT_SOUND);
+    }
+
+    @WrapWithCondition(method = "onDamaged", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;playSound(Lnet/minecraft/sound/SoundEvent;FF)V"))
+    private boolean skipHurtSound1(LivingEntity instance, SoundEvent soundEvent, float volume, float pitch, DamageSource source) {
         return !source.isIn(Tags.NO_HURT_SOUND);
     }
 

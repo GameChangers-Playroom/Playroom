@@ -58,7 +58,7 @@ public class PlayroomCommand {
               )
             ).requires(Permissions.require("playroom.command.playroom.reload.restart", 4))
           ).then(
-            literal("experiment").requires(Permissions.require("playroom.command.playroom.experiment", false)).then(
+            literal("experiment").requires(Permissions.require("playroom.command.playroom.experiment", Playroom.isDev())).then(
               argument("experiment", StringArgumentType.word()).executes(context -> {
                     String experiment = StringArgumentType.getString(context, "experiment");
                     context.getSource().sendFeedback(() -> Text.translatable("commands.playroom.experiment", experiment, Playroom.toggleExperiment(experiment)), false);

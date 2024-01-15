@@ -219,6 +219,15 @@ public class PlayroomClient implements ClientModInitializer {
                 Playroom.serverTime = serverTime;
             });
         });
+        ClientPlayNetworking.registerGlobalReceiver(Playroom.id("experiment"), (client, handler, buf, responseSender) -> {
+            String experiment = buf.readString();
+            boolean status = buf.readBoolean();
+
+            client.execute(() -> {
+                if (Playroom.getServer() != null) return;
+                Playroom.setExperimentStatus(experiment, status);
+            });
+        });
     }
 
     private void handleLoginPackets() {
