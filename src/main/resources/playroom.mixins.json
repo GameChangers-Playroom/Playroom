@@ -17,6 +17,7 @@
         "ServerLoginNetworkHandlerAccessor",
         "ServerLoginNetworkHandlerMixin",
         "ServerPlayerEntityMixin",
+        "SnowballEntityMixin",
         "compat.geo.AnimationControllerAccessor",
         "compat.owo.EnumArgumentTypeMixin",
         "network.PlayerListS2CPacketMixin"

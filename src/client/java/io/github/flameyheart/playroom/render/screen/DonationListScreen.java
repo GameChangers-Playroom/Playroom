@@ -12,6 +12,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.tooltip.TooltipComponent;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
@@ -60,10 +61,14 @@ public class DonationListScreen extends BaseScreen<FlowLayout> {
             tooltip.add(TooltipComponent.of(Text.literal(donation.id().toString()).asOrderedText()));
             tooltip.add(TooltipComponent.of(Text.literal("").asOrderedText()));
         }
-        tooltip.add(TooltipComponent.of(Text.literal("Message:").setStyle(Style.EMPTY.withUnderline(true)).asOrderedText()));
-        tooltip.add(TooltipComponent.of(Text.literal(donation.message()).asOrderedText()));
-        tooltip.add(TooltipComponent.of(Text.literal("").asOrderedText()));
-        tooltip.add(TooltipComponent.of(Text.literal("Rewards:").setStyle(Style.EMPTY.withUnderline(true)).asOrderedText()));
+        if (StringUtils.isNotBlank(donation.message())) {
+            tooltip.add(TooltipComponent.of(Text.literal("Message:").setStyle(Style.EMPTY.withUnderline(true)).asOrderedText()));
+            tooltip.add(TooltipComponent.of(Text.literal(donation.message()).asOrderedText()));
+        }
+        if (!donation.rewards().isEmpty()) {
+            tooltip.add(TooltipComponent.of(Text.literal("").asOrderedText()));
+            tooltip.add(TooltipComponent.of(Text.literal("Rewards:").setStyle(Style.EMPTY.withUnderline(true)).asOrderedText()));
+        }
         for (Donation.Reward reward : donation.rewards()) {
             tooltip.add(TooltipComponent.of(Text.literal(reward.name()).asOrderedText()));
         }

@@ -204,7 +204,7 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
 
     @WrapWithCondition(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;takeKnockback(DDD)V"))
     private boolean preventDelayedKnockback(LivingEntity instance, double strength, double x, double z, DamageSource source) {
-        return !source.isIn(DamageTypeTags.NO_IMPACT);
+        return !source.isIn(DamageTypeTags.NO_IMPACT) && !playroom$isFrozen();
     }
 
     @WrapWithCondition(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;tiltScreen(DD)V"))

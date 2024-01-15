@@ -55,14 +55,21 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
     protected void onEntityHit(@NotNull EntityHitResult entityHitResult) {
         Entity entity = entityHitResult.getEntity();
         this.discard();
-        if (getOwner() == null || entity.getUuid().equals(getOwner().getUuid())) return;
-        if (entity instanceof FreezableEntity entityData && entity instanceof LivingEntity && !entity.getType().isIn(Tags.IMMUNE_TO_FREEZE)) {
-            entity.damage(Damage.laserShot(this.getWorld(), this, getOwner()), (float) getDamage());
-            playSound(entity.getWorld(), entity, getHitSound());
-            if (isRapidFire()) {
-                entityData.playroom$addSlowdownTime(ServerConfig.instance().laserRapidFreezeAmount);
-            } else {
-                entityData.playroom$freeze();
+        if (getOwner() == null || entity.getUuid().equals(getOwner().getUuid()) || !(entity instanceof FreezableEntity freezableEntity) || !(entity instanceof LivingEntity living)) {
+            return;
+        }
+        if (!entity.getType().isIn(Tags.IMMUNE_TO_FREEZE)) {
+            if (getOwner() instanceof LivingEntity) {
+                ((LivingEntity) getOwner()).onAttacking(entity);
+            }
+            if (entity.damage(Damage.laserShot(this.getWorld(), this, getOwner()), (float) getDamage())) {
+                this.onHit(living);
+                playSound(entity.getWorld(), entity, getHitSound());
+                if (isRapidFire()) {
+                    freezableEntity.playroom$addSlowdownTime(ServerConfig.instance().laserRapidFreezeAmount);
+                } else {
+                    freezableEntity.playroom$freeze();
+                }
             }
         }
     }
