@@ -15,8 +15,6 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
 
-import java.util.function.Function;
-
 public class YACLScreen {
     public static final ValueFormatter<Float> DECIMAL_2_FORMATTER = value -> Text.literal(String.format("%,.2f", value).replaceAll("[\u00a0\u202F]", " "));
     public static final ValueFormatter<Float> HEALTH_FORMATTER = value -> Text.literal(String.format("%,.2f ❤", value).replaceAll("[\u00a0\u202F]", " "));
@@ -372,7 +370,7 @@ public class YACLScreen {
             ClientConfig.INSTANCE.save();
             if (Playroom.getServer() != null && Playroom.getServer().isSingleplayer()) {
                 ServerConfig.INSTANCE.save();
-            } else {
+            } else if(MinecraftClient.getInstance().world != null) {
                 PacketByteBuf buf = PacketByteBufs.create();
                 buf.writeString(Playroom.serializeConfig(true));
                 ClientPlayNetworking.send(Playroom.id("config/update"), buf);
