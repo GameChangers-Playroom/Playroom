@@ -2,7 +2,7 @@
     "category.playroom.keybinds": "Playroom",
     "itemGroup.playroom.items": "Playroom",
     "soundCategory.playroom": "Playroom",
-    "key.playroom.donation_screen": "View donation history [In dev]",
+    "key.playroom.donations_screen": "View donation history",
 
     "commands.playroom.error.not_player": "This command must be run by a player",
     "commands.playroom.error.not_freezable": "%s can't be frozen",
