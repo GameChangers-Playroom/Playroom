@@ -168,6 +168,10 @@ public class TiltifyWebhookConnection extends Thread {
                         if (message.equals("Socket closed") && !running) {
                             return;
                         }
+                        if (message.equals("Connection reset")) {
+                            LOGGER.warn("Connection reset");
+                            continue;
+                        }
                     } else if (e instanceof SSLException) {
                         String message = e.getMessage();
                         // Don't print full stack trace for "Unsupported or unrecognized SSL message" exception
