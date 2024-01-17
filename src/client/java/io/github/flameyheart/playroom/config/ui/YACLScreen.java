@@ -370,10 +370,12 @@ public class YACLScreen {
             ClientConfig.INSTANCE.save();
             if (Playroom.getServer() != null && Playroom.getServer().isSingleplayer()) {
                 ServerConfig.INSTANCE.save();
-            } else if(MinecraftClient.getInstance().world != null) {
+            } else if (MinecraftClient.getInstance().world != null) {
                 PacketByteBuf buf = PacketByteBufs.create();
                 buf.writeString(Playroom.serializeConfig(true));
                 ClientPlayNetworking.send(Playroom.id("config/update"), buf);
+            } else {
+                ServerConfig.INSTANCE.save();
             }
         });
         return builder.build().generateScreen(parent);
