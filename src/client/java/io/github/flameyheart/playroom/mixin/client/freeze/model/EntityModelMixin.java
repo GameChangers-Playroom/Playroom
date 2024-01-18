@@ -32,12 +32,12 @@ public abstract class EntityModelMixin implements FreezableModel {
     protected ModelPart playroom$root;
 
     @Inject(method = "<init>(Lnet/minecraft/client/model/ModelPart;)V", at = @At("TAIL"), require = 0)
-    private void storeRoot(ModelPart root, CallbackInfo ci) {
-        playroom$captureRoot(root);
+    private void storeRoot0(ModelPart root, CallbackInfo ci) {
+        captureRoot(root);
     }
 
     @Unique
-    private void playroom$captureRoot(ModelPart root) {
+    private void captureRoot(ModelPart root) {
         if (root == null) throw new NullPointerException("Root is null for " + this.getClass().getSimpleName());
         this.playroom$root = root;
     }

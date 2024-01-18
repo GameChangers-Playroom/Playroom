@@ -49,6 +49,7 @@ import net.minecraft.client.render.item.BuiltinModelItemRenderer;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
@@ -115,7 +116,10 @@ public class PlayroomClient implements ClientModInitializer {
     }
 
     private void registerEventListeners() {
-        ClientUtils.listenKeybind(DONATIONS_SCREEN_KEYBIND, (client) -> client.setScreen(new DonationListScreen()));
+        ClientUtils.listenKeybind(DONATIONS_SCREEN_KEYBIND, (client) -> {
+            if (client.getOverlay() != null) return;
+            client.setScreen(new DonationListScreen());
+        });
 
         RenderEvents.WORLD.register(WorldRenderer::render);
         RenderEvents.HUD.register(HudRenderer::renderDebugInfo);
@@ -178,30 +182,10 @@ public class PlayroomClient implements ClientModInitializer {
 
             client.execute(() -> deserializeConfig(serverConfig));
         });
-        ClientPlayNetworking.registerGlobalReceiver(Playroom.id("donation/add"), (client, handler, buf, responseSender) -> {
-            UUID id = buf.readUuid();
-            String donorName = buf.readString();
-            String message = buf.readString();
-            float amount = buf.readFloat();
-            String currency = buf.readString();
-            boolean autoApproved = buf.readBoolean();
+        ClientPlayNetworking.registerGlobalReceiver(Playroom.id("donation"), (client, handler, buf, responseSender) -> {
+            Donation donation = buf.decode(NbtOps.INSTANCE, Donation.CODEC);
 
-            client.execute(() -> {
-                DONATIONS.put(id, new Donation(id, donorName, message, amount, currency, autoApproved));
-            });
-        });
-        ClientPlayNetworking.registerGlobalReceiver(Playroom.id("donation/update"), (client, handler, buf, responseSender) -> {
-            UUID id = buf.readUuid();
-            Donation.Status status = buf.readEnumConstant(Donation.Status.class);
-
-            client.execute(() -> {
-                Donation donation = DONATIONS.get(id);
-                if (donation != null) {
-                    donation.updateStatus(status);
-                } else {
-                    Playroom.LOGGER.warn("Received donation update for unknown donation with id {}", id);
-                }
-            });
+            client.execute(() -> DONATIONS.put(donation.id(), donation));
         });
         ClientPlayNetworking.registerGlobalReceiver(Playroom.id("player_name"), (client, handler, buf, responseSender) -> {
             List<PlayerDisplayName> displayNames = buf.readList(packetByteBuf -> {
@@ -235,14 +219,25 @@ public class PlayroomClient implements ClientModInitializer {
                 Playroom.serverTime = serverTime;
             });
         });
+        ClientPlayNetworking.registerGlobalReceiver(Playroom.id("experiment"), (client, handler, buf, responseSender) -> {
+            String experiment = buf.readString();
+            boolean status = buf.readBoolean();
+
+            client.execute(() -> {
+                if (Playroom.getServer() != null) return;
+                Playroom.setExperimentStatus(experiment, status);
+            });
+        });
     }
 
     private void handleLoginPackets() {
         ClientLoginNetworking.registerGlobalReceiver(Playroom.id("handshake"), (client, handler, buf, listenerAdder) -> {
             CompletableFuture<PacketByteBuf> future = new CompletableFuture<>();
             String serverConfig = buf.readString();
+            long serverTime = buf.readLong();
 
             client.execute(() -> {
+                Playroom.serverTime = serverTime;
                 if (!deserializeConfig(serverConfig)) {
                     ((ExpandedClientLoginNetworkHandler) handler).playroom$disconnect(Text.translatable("playroom.multiplayer.disconnect.invalid_config"));
                     return;

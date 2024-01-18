@@ -6,7 +6,7 @@ import io.github.flameyheart.playroom.compat.ModOptional;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.item.LaserGun;
 import io.github.flameyheart.playroom.mixin.client.geo.AutoGlowingTextureAccessor;
-import io.github.flameyheart.playroom.mixin.geo.AnimationControllerAccessor;
+import io.github.flameyheart.playroom.mixin.compat.geo.AnimationControllerAccessor;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;

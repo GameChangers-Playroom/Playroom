@@ -2,7 +2,7 @@
 import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
-	id 'fabric-loom' version '1.3-SNAPSHOT'
+	id 'fabric-loom' version '1.5-SNAPSHOT'
 	id 'com.modrinth.minotaur' version '2.+'
 	id 'maven-publish'
 }
@@ -101,8 +101,11 @@ dependencies {
 		exclude group: "io.github.ladysnake", module: "satin"
 	}
 
+	//Local bundled jars
+	include modImplementation(fileTree(dir: "libs", include: ["*.jar"]))
+
 	//Non mod libraries
-	include implementation(annotationProcessor("com.github.llamalad7.mixinextras:mixinextras-fabric:${project.mixin_extras_version}"))
+	//include implementation(annotationProcessor("com.github.llamalad7.mixinextras:mixinextras-fabric:${project.mixin_extras_version}"))
 	include implementation("com.github.Chocohead:Fabric-ASM:v2.3")
 	include implementation("com.fasterxml.jackson.core:jackson-core:2.16.0")
 	include implementation("com.fasterxml.jackson.core:jackson-annotations:2.16.0")
@@ -111,6 +114,8 @@ dependencies {
 
 	implementation("org.bouncycastle:bcprov-jdk18on:1.77")
 	implementation("org.quiltmc.parsers:gson:0.2.1")
+
+	implementation annotationProcessor("com.github.bawnorton.mixinsquared:mixinsquared-fabric:0.1.1")
 
 	//Compatibility
 	modCompileOnly("curse.maven:project-297344:4623488") //Tweakeroo 0.17.1

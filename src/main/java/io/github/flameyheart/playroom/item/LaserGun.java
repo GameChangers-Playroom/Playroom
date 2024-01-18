@@ -3,6 +3,7 @@ package io.github.flameyheart.playroom.item;
 import io.github.flameyheart.playroom.Constants;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ServerConfig;
+import io.github.flameyheart.playroom.duck.AimingEntity;
 import io.github.flameyheart.playroom.entity.LaserProjectileEntity;
 import io.github.flameyheart.playroom.registry.Sounds;
 import net.fabricmc.fabric.api.item.v1.FabricItem;
@@ -172,24 +173,23 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     @Override
     public TypedActionResult<ItemStack> use(World world, @NotNull PlayerEntity player, Hand hand) {
         ItemStack stack = player.getStackInHand(hand);
-        if (!canUse(stack, hand)) {
-            return TypedActionResult.fail(stack);
-        } else {
-            if (!player.isSneaking()) {
-                if (isRapidFire(stack)) {
-                    getPlayroomTag(stack).putLong("FireCooldown", ServerConfig.instance().laserRapidFireCooldown);
-                    handleRapidFire(world, player, hand, stack);
-                } else if (ServerConfig.instance().laserRangeChargeTime > 0) {
-                    playSound(world, player, Sounds.LASER_GUN_CHARGE);
-                } else {
-                    handleRangedMode(stack, world, player, hand);
-                }
-            }
+        if (!canUse(stack, hand)) return TypedActionResult.fail(stack);
 
-            handleUseLogic(player, hand, stack, world);
-            player.setCurrentHand(hand);
-            return TypedActionResult.pass(stack);
+        if (canFire(stack, hand, player)) {
+            if (isRapidFire(stack)) {
+                getPlayroomTag(stack).putLong("FireCooldown", ServerConfig.instance().laserRapidFireCooldown);
+                handleRapidFire(world, player, hand, stack);
+            } else if (ServerConfig.instance().laserRangeChargeTime > 0) {
+                playSound(world, player, Sounds.LASER_GUN_CHARGE);
+            } else {
+                handleRangedMode(stack, world, player, hand);
+            }
+        } else {
+            swapMode(player, hand, stack, world);
         }
+
+        player.setCurrentHand(hand);
+        return TypedActionResult.pass(stack);
     }
 
     private boolean canUse(ItemStack stack, Hand hand) {
@@ -197,23 +197,23 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     }
 
     private boolean canFire(ItemStack stack, Hand hand, PlayerEntity player) {
-        return canUse(stack, hand) && !player.isSneaking();
+        boolean aiming = ((AimingEntity) player).playroom$isAiming();
+        boolean sneaking = player.isSneaking();
+        return canUse(stack, hand) && (aiming || !sneaking);
     }
 
-    private void handleUseLogic(PlayerEntity player, Hand hand, ItemStack stack, World world) {
+    private void swapMode(PlayerEntity player, Hand hand, ItemStack stack, World world) {
         if (!canUse(stack, hand)) return;
         boolean rapidFire = getPlayroomTag(stack).getBoolean("RapidFire");
 
-        if (player.isSneaking()) {
-            getPlayroomTag(stack).putBoolean("RapidFire", !rapidFire);
-            setCooldown(stack, CooldownReason.SWAP_MODE, ServerConfig.instance().laserSwapModeCooldown);
+        getPlayroomTag(stack).putBoolean("RapidFire", !rapidFire);
+        setCooldown(stack, CooldownReason.SWAP_MODE, ServerConfig.instance().laserSwapModeCooldown);
 
-            if (world instanceof ServerWorld serverWorld) {
-                SoundEvent soundEvent = rapidFire ? Sounds.LASER_GUN_MODE_RAPID : Sounds.LASER_GUN_MODE_RANGE;
-                world.playSound(null, player.getX(), player.getY(), player.getZ(), soundEvent, Constants.PLAYROOM_SOUND_CATEGORY, 0.5F, 2.0F);
-                long geoId = GeoItem.getOrAssignId(stack, serverWorld);
-                triggerAnim(player, geoId, "controller", rapidFire ? "range_mode" : "rapidfire_mode");
-            }
+        if (world instanceof ServerWorld serverWorld) {
+            SoundEvent soundEvent = rapidFire ? Sounds.LASER_GUN_MODE_RAPID : Sounds.LASER_GUN_MODE_RANGE;
+            world.playSound(null, player.getX(), player.getY(), player.getZ(), soundEvent, Constants.PLAYROOM_SOUND_CATEGORY, 0.5F, 2.0F);
+            long geoId = GeoItem.getOrAssignId(stack, serverWorld);
+            triggerAnim(player, geoId, "controller", rapidFire ? "range_mode" : "rapidfire_mode");
         }
     }
 

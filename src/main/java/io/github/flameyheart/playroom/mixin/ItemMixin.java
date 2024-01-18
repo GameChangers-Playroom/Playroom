@@ -36,10 +36,11 @@ public abstract class ItemMixin {
         TagKey<Item> itemTag = Tags.CRUNCHY_CRYSTALS;
         if (registryEntry.isIn(itemTag)) {
             if (playroom$foodComponent == null) {
-                playroom$foodComponent = new FoodComponent.Builder().hunger(1).saturationModifier(0.1f)
+                playroom$foodComponent = new FoodComponent.Builder().hunger(8).saturationModifier(2.4f)
                   .statusEffect(new StatusEffectInstance(StatusEffects.INSTANT_DAMAGE, 1, 0), 1.0f)
-                  .statusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 300, 1), 1.0f)
-                  .statusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 300, 1), 1.0f)
+                  .statusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 300, 0), 1.0f)
+                  .statusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 300, 0), 1.0f)
+                  .alwaysEdible()
                   .build();
             }
             cir.setReturnValue(playroom$foodComponent);

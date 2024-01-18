@@ -78,9 +78,10 @@ public class ServerConfig {
     @SerialEntry(comment = "The divergence of the rapid fire mode ice shot\n[Min: 0, Default: 0] [DECIMAL SUPPORTED]")
     public float laserRapidDivergence = 0;
 
-    @SerialEntry(comment = "The amount of time added per rapid fire shot\n[Min: 0, Max: 32767, Default: 100]")
-    public short laserRapidFreezeAmount = 100;
+    @SerialEntry(comment = "The amount of time added per rapid fire shot\n[Min: 0, Max: 32767, Default: 10]")
+    public short laserRapidFreezeAmount = 10;
 
+    @SendToClient
     @SerialEntry(comment = "The speed slowdown for when aiming\n0 = 0% | 1 = 100%\n[Min: 0, Default: 0.5, Max: 1] [DECIMAL SUPPORTED]")
     public float laserAimSlowdown = 0.5f;
 
