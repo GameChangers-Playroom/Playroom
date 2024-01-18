@@ -3,6 +3,7 @@
     "itemGroup.playroom.items": "Playroom",
     "soundCategory.playroom": "Playroom",
     "key.playroom.donations_screen": "View donation history",
+    "key.playroom.swap_mode": "Swap gun mode",
 
     "commands.playroom.error.not_player": "This command must be run by a player",
     "commands.playroom.error.not_freezable": "%s can't be frozen",
