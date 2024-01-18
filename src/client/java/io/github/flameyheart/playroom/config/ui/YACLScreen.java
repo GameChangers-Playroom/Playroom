@@ -214,7 +214,7 @@ public class YACLScreen {
                 .name(Text.translatable("config.playroom.option.laser_gun.laserRapidFireCooldown"))
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRapidFireCooldown.description")))
                 .binding((int) serverDefaults.laserRapidFireCooldown, () -> (int) serverConfig.laserRapidFireCooldown, newVal -> serverConfig.laserRapidFireCooldown = newVal.shortValue())
-                .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 200).step(5))
+                .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 20).step(1))
                 .build()
             );
 

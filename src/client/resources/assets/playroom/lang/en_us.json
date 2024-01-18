@@ -175,8 +175,8 @@
     "config.playroom.option.laser_gun.laserRangeChargeTime": "Ranged mode charge time",
     "config.playroom.option.laser_gun.laserRangeChargeTime.description": "The laser charge time for the ranged more",
 
-    "config.playroom.option.laser_gun.laserRapidFireCooldown": "Rapid fire mode cooldown",
-    "config.playroom.option.laser_gun.laserRapidFireCooldown.description": "The cooldown between rapidfire automatic shots",
+    "config.playroom.option.laser_gun.laserRapidFireCooldown": "Rapid fire rate",
+    "config.playroom.option.laser_gun.laserRapidFireCooldown.description": "The cooldown between rapidfire automatic shots (in ticks)",
 
     "config.playroom.option.laser_gun.laserSwapModeCooldown": "Laser Gun mode swap cooldown",
     "config.playroom.option.laser_gun.laserSwapModeCooldown.description": "The cooldown applied to when the player swaps the gun mode",
