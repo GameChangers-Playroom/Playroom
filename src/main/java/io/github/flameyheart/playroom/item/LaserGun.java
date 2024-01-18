@@ -184,8 +184,6 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
             } else {
                 handleRangedMode(stack, world, player, hand);
             }
-        } else {
-            swapMode(player, hand, stack, world);
         }
 
         player.setCurrentHand(hand);
@@ -197,12 +195,10 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     }
 
     private boolean canFire(ItemStack stack, Hand hand, PlayerEntity player) {
-        boolean aiming = ((AimingEntity) player).playroom$isAiming();
-        boolean sneaking = player.isSneaking();
-        return canUse(stack, hand) && (aiming || !sneaking);
+        return canUse(stack, hand);
     }
 
-    private void swapMode(PlayerEntity player, Hand hand, ItemStack stack, World world) {
+    public void swapMode(PlayerEntity player, Hand hand, ItemStack stack, World world) {
         if (!canUse(stack, hand)) return;
         boolean rapidFire = getPlayroomTag(stack).getBoolean("RapidFire");
 
@@ -235,14 +231,20 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
         boolean rapidFire = getPlayroomTag(stack).getBoolean("RapidFire");
         if (!rapidFire) return;
 
-        short amo = (short) (getPlayroomTag(stack).getShort("Amo") - 1);
-        getPlayroomTag(stack).putShort("Amo", amo);
+        boolean canFire;
+        if (ServerConfig.instance().laserRapidFireAmo > 0) {
+            short amo = (short) (getPlayroomTag(stack).getShort("Amo") - 1);
+            getPlayroomTag(stack).putShort("Amo", amo);
+            canFire = amo >= 0;
 
-        if (amo <= 0) {
-            setCooldown(stack, CooldownReason.RELOAD, ServerConfig.instance().laserFireReloadTime);
+            if (amo <= 0) {
+                setCooldown(stack, CooldownReason.RELOAD, ServerConfig.instance().laserFireReloadTime);
+            }
+        } else {
+            canFire = true;
         }
 
-        if (world instanceof ServerWorld serverWorld && amo >= 0) {
+        if (world instanceof ServerWorld serverWorld && canFire) {
             fireProjectile(player, true, serverWorld);
             playShootSound(world, player, true);
         }

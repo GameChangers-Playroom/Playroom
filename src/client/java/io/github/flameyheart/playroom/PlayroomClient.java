@@ -63,6 +63,7 @@ import java.util.concurrent.CompletableFuture;
 public class PlayroomClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("Playroom Client");
     private static final KeyBinding DONATIONS_SCREEN_KEYBIND = ClientUtils.addKeybind("donations_screen", GLFW.GLFW_KEY_H);
+    private static final KeyBinding SWAP_MODE_KEYBIND = ClientUtils.addKeybind("swap_mode", GLFW.GLFW_KEY_R);
 
     public static final Map<Long, Double> ANIMATION_START_TICK = new HashMap<>();
     public static final BipedEntityModel.ArmPose LASER_GUN_POSE = ClassTinkerers.getEnum(BipedEntityModel.ArmPose.class, "LASER_GUN");
@@ -120,6 +121,7 @@ public class PlayroomClient implements ClientModInitializer {
             if (client.getOverlay() != null) return;
             client.setScreen(new DonationListScreen());
         });
+        ClientUtils.listenKeybind(SWAP_MODE_KEYBIND, (client) -> sendPacket("swap_mode", PacketByteBufs.empty()));
 
         RenderEvents.WORLD.register(WorldRenderer::render);
         RenderEvents.HUD.register(HudRenderer::renderDebugInfo);
@@ -329,6 +331,10 @@ public class PlayroomClient implements ClientModInitializer {
         double zoomDivisor = AIM_ZOOM.getZoomDivisor(tickDelta);
         previousAimZoomDivisor = zoomDivisor;
         return zoomDivisor;
+    }
+
+    public static void sendPacket(String id, PacketByteBuf buf) {
+        ClientPlayNetworking.send(Playroom.id(id), buf);
     }
 
 }

@@ -17,6 +17,7 @@ import io.github.flameyheart.playroom.duck.ExpandedServerLoginNetworkHandler;
 import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.entity.LaserProjectileEntity;
 import io.github.flameyheart.playroom.event.LivingEntityEvents;
+import io.github.flameyheart.playroom.item.LaserGun;
 import io.github.flameyheart.playroom.mixin.GsonConfigSerializerAccessor;
 import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Items;
@@ -43,6 +44,8 @@ import net.fabricmc.fabric.api.networking.v1.*;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
@@ -51,6 +54,7 @@ import net.minecraft.server.network.ServerLoginNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
+import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
@@ -213,6 +217,18 @@ public class Playroom implements ModInitializer {
 			server.execute(() -> {
 				AimingEntity entity = (AimingEntity) player;
 				entity.playroom$setAiming(aiming);
+			});
+		});
+		ServerPlayNetworking.registerGlobalReceiver(id("swap_mode"), (server, player, handler, buf, responseSender) -> {
+			server.execute(() -> {
+				ItemStack stack = player.getMainHandStack();
+				if (stack.isEmpty() || !stack.isOf(Items.LASER_GUN)) return;
+				try {
+					LaserGun item = (LaserGun) stack.getItem();
+					item.swapMode(player, Hand.MAIN_HAND, stack, player.getWorld());
+				} catch (ClassCastException e) {
+					LOGGER.error("Item '{}' is not an instance of {}!", stack.getItem().getTranslationKey(), LaserGun.class.getCanonicalName());
+				}
 			});
 		});
 	}
