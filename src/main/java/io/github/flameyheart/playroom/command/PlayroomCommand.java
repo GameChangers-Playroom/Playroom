@@ -287,6 +287,18 @@ public class PlayroomCommand {
                       reward.updateStatus(status);
                       source.sendFeedback(() -> Text.translatable("commands.playroom.donation.reward.status", donationId.toString(), rewardId.toString(), status.name()), true);
 
+                      boolean error = false;
+                      for (Donation.Reward rewardInfo : donation.rewards()) {
+                          if (rewardInfo.status().error) {
+                              error = true;
+                              break;
+                          }
+                      }
+
+                      if (!error) {
+                          donation.updateStatus(Donation.Status.NORMAL);
+                      }
+
                       Playroom.updateDonation(donation);
                       return 1;
                   })

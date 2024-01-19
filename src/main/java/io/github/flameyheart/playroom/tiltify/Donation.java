@@ -167,12 +167,17 @@ public final class Donation {
         }
 
         public enum Status {
-            AUTO_APPROVED,
-            MANUAL_APPROVED,
-            PLAYER_NOT_FOUND,
-            TASK_NOT_FOUND;
+            AUTO_APPROVED(false),
+            MANUAL_APPROVED(false),
+            PLAYER_NOT_FOUND(true),
+            TASK_NOT_FOUND(true);
 
             public static final Codec<Status> CODEC = CodecUtils.enumCodec(Status.class);
+            public final boolean error;
+
+            Status(boolean error) {
+                this.error = error;
+            }
         }
     }
 
