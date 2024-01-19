@@ -231,12 +231,13 @@ public class TiltifyWebhookConnection extends Thread {
         }
 
         // Process the request
-        boolean error = false;
+        boolean error;
         try {
             // Process the request
-            processData(requestLine, headers, requestBody.toString());
+            error = !processData(requestLine, headers, requestBody.toString());
         } catch (JsonParseException | JsonProcessingException ignored) {
             LOGGER.error("Failed to parse Tiltify Webhook event", ignored);
+            error = true;
         } catch (Throwable e) {
             LOGGER.error("Error while processing Tiltify Webhook event", e);
             error = true;
@@ -244,7 +245,7 @@ public class TiltifyWebhookConnection extends Thread {
 
         // Send a basic HTTP response with the received message body
         String httpResponse = error ? """
-          HTTP/1.1 401 Unauthorized\r
+          HTTP/1.1 400 Bad Request\r
           \r
           """ : """
           HTTP/1.1 200 OK\r
@@ -275,13 +276,13 @@ public class TiltifyWebhookConnection extends Thread {
      *
      * @see #verifySignature(String, String, String, String)
      **/
-    private void processData(String request, Map<String, String> headers, String body) throws JsonProcessingException {
+    private boolean processData(String request, Map<String, String> headers, String body) throws JsonProcessingException {
         request = request.toLowerCase();
         // Only process POST requests to the root path
-        if (!request.startsWith("post / ")) return;
+        if (!request.startsWith("post / ")) return false;
         // Certificate required headers are present
-        if (!headers.containsKey("x-tiltify-signature")) return;
-        if (!headers.containsKey("x-tiltify-timestamp")) return;
+        if (!headers.containsKey("x-tiltify-signature")) return false;
+        if (!headers.containsKey("x-tiltify-timestamp")) return false;
 
         // Get required headers
         // The signature is the encoded hash of the timestamp and body using the secret as the key
@@ -292,17 +293,17 @@ public class TiltifyWebhookConnection extends Thread {
         String secret = ServerConfig.instance().tiltifySecret;
 
         //Validates the signature, making sure the request is from Tiltify
-        if (!verifySignature(secret, signature, timestamp, body)) return;
+        if (!verifySignature(secret, signature, timestamp, body)) return false;
 
         //Parse the body JSON using Jackson
         WebhookEvent<DonationUpdated> event = JSON_MAPPER.readValue(body, WebhookEvent.DonationUpdatedEvent.class);
         // Certify the required fields are present
-        if (event == null || event.data == null || event.meta == null) return;
+        if (event == null || event.data == null || event.meta == null) return false;
         // Certify the event type is donation_updated
-        if (!event.meta.eventType.type.equalsIgnoreCase("donation_updated")) return;
+        if (!event.meta.eventType.type.equalsIgnoreCase("donation_updated")) return false;
 
         // Certify that the donation hasn't been processed already
-        if (Playroom.hasDonation(event.meta.id)) return;
+        if (Playroom.hasDonation(event.meta.id)) return false;
 
         // Build the reward list to send to the player
         List<Donation.Reward> rewards = new ArrayList<>();
@@ -362,6 +363,7 @@ public class TiltifyWebhookConnection extends Thread {
 
         // Add the event to the list of donations, with its according status of automatically executed
         Playroom.addDonation(new Donation(event.meta.id, event.data.donorName, event.data.donorComment, rewards, event.data.amount.value, event.data.amount.currency, hasError ? Donation.Status.REWARD_ERROR : Donation.Status.NORMAL));
+        return true;
     }
 
     /**
