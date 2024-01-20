@@ -432,6 +432,20 @@ public class Playroom implements ModInitializer {
 		sendToPlayers(p -> ServerPlayNetworking.send(p, id, bufBuilder.apply(p)), predicate);
 	}
 
+	public static void sendPacketToPlayer(Identifier id, ServerPlayerEntity player, PacketByteBuf buf) {
+		sendPacketToPlayer(id, player, buf, p -> true);
+	}
+
+	public static void sendPacketToPlayer(Identifier id, ServerPlayerEntity player, PacketByteBuf buf, Predicate<Entity> predicate) {
+		sendPacketToPlayer(id, player, p -> buf, predicate);
+	}
+
+	public static void sendPacketToPlayer(Identifier id, ServerPlayerEntity player, Function<PlayerEntity, PacketByteBuf> bufBuilder, Predicate<Entity> predicate) {
+		if (predicate.test(player)) {
+			ServerPlayNetworking.send(player, id, bufBuilder.apply(player));
+		}
+	}
+
 	public static void sendToPlayers(Consumer<ServerPlayerEntity> task) {
 		sendToPlayers(task, p -> true);
 	}
@@ -472,7 +486,7 @@ public class Playroom implements ModInitializer {
 		return status;
 	}
 
-	public static boolean isExperimentEnabled(String experiment) {
+	public static boolean isExperimentDisabled(String experiment) {
 		return EXPERIMENTS.getOrDefault(experiment, false);
 	}
 

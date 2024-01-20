@@ -75,7 +75,7 @@ public class DonationListScreen extends BaseScreen<FlowLayout> {
 
         if (hasEditPermission) {
             tooltip.add(TooltipComponent.of(Text.literal("").asOrderedText()));
-            tooltip.add(TooltipComponent.of(Text.literal("Right-click to get the donation UUID").asOrderedText()));
+            tooltip.add(TooltipComponent.of(Text.literal("Right-click to copy the donation UUID").asOrderedText()));
         }
         template.tooltip(tooltip);
 

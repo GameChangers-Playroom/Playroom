@@ -59,7 +59,7 @@ public class DonationScreen extends BaseScreen<FlowLayout> {
                 text.appendLine("Claim id: ").append(reward.claimId());
                 text.appendLine("Target: ").append(reward.message());
                 text.appendLine("Task: ").append(reward.name());
-                text.appendLine().appendLine("Click to get the reward UUID on the format:").appendLine("{donation_id} {reward_id}");
+                text.appendLine().appendLine("Click to copy the reward UUID on the format:").appendLine("{donation_id} {reward_id}");
 
                 List<TooltipComponent> tooltip = client.textRenderer.wrapLines(Text.literal(text.toString()), client.getWindow().getScaledWidth() - 16)
                   .stream().map(TooltipComponent::of).toList();

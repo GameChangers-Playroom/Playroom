@@ -5,7 +5,6 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.flameyheart.playroom.util.CodecUtils;
 import net.minecraft.util.Uuids;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -110,11 +109,13 @@ public final class Donation {
     }
 
     public static final class Reward {
+        public static final UUID NULL_UUID = new UUID(0, 0);
         public static final Codec<Reward> CODEC = RecordCodecBuilder.create(instance -> instance.group(
           Uuids.CODEC.fieldOf("rewardId").forGetter(Reward::rewardId),
           Uuids.CODEC.fieldOf("claimId").forGetter(Reward::claimId),
           Codec.STRING.fieldOf("name").forGetter(Reward::name),
           Codec.STRING.fieldOf("message").forGetter(Reward::message),
+          Uuids.CODEC.fieldOf("targetId").forGetter(Reward::targetId),
           Status.CODEC.fieldOf("status").forGetter(Reward::status)
         ).apply(instance, Reward::new));
 
@@ -122,14 +123,20 @@ public final class Donation {
         private final UUID claimId;
         private final String name;
         private final String message;
+        private final UUID targetId;
         private Status status;
 
         public Reward(UUID rewardId, UUID claimId, String name, String message, Status status) {
+            this(rewardId, claimId, name, message, NULL_UUID, status);
+        }
+
+        public Reward(UUID rewardId, UUID claimId, String name, String message, UUID targetId, Status status) {
             this.rewardId = rewardId;
             this.claimId = claimId;
             this.name = name;
             this.message = message;
             this.status = status;
+            this.targetId = targetId;
         }
 
         public UUID rewardId() {
@@ -148,6 +155,10 @@ public final class Donation {
             return message;
         }
 
+        public UUID targetId() {
+            return targetId;
+        }
+
         public Status status() {
             return status;
         }
@@ -163,6 +174,7 @@ public final class Donation {
               "claimId=" + claimId + ", " +
               "name=" + name + ", " +
               "message=" + message + ", " +
+              "targetId=" + targetId + ", " +
               "status=" + status + ']';
         }
 
