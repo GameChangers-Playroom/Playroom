@@ -97,6 +97,7 @@
     "text.playroom.donation.status.reward_error": "\u00a7c⚑",
     "text.playroom.reward.status.auto_approved": "\u00a7a✔",
     "text.playroom.reward.status.manual_approved": "\u00a7e✔",
+    "text.playroom.reward.status.bypassed": "\u00a7a⏩",
     "text.playroom.reward.status.task_not_found": "\u00a7c❌",
     "text.playroom.reward.status.player_not_found": "\u00a7c⚠",
     "text.playroom.reward.status.unknown": "\u00a7e⚑",

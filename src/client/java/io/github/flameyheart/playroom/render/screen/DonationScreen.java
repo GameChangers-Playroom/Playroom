@@ -40,7 +40,7 @@ public class DonationScreen extends BaseScreen<FlowLayout> {
         boolean hasEditPermission = client.player != null && Permissions.check(client.player, "playroom.admin.server.update_donations", 4);
         for (Donation.Reward reward : donation.rewards()) {
             var template = model.expandTemplate(FlowLayout.class, hasEditPermission ? "staff-reward" : "reward", new MapBuilder<String, String>().build());
-            template.childById(LabelComponent.class, "text").text(Text.translatable("playroom.donation_screen.reward", reward.name(), reward.message()));
+            template.childById(LabelComponent.class, "text").text(Text.translatable("playroom.donation_screen.reward", reward.name(), reward.target()));
 
             template.mouseEnter().subscribe(() -> {
                 template.surface(HOVER);
@@ -57,7 +57,8 @@ public class DonationScreen extends BaseScreen<FlowLayout> {
 
                 text.append("Reward: ").append(reward.rewardId());
                 text.appendLine("Claim id: ").append(reward.claimId());
-                text.appendLine("Target: ").append(reward.message());
+                text.appendLine("Message: ").append(reward.message());
+                text.appendLine("Target: ").append(reward.target());
                 text.appendLine("Task: ").append(reward.name());
                 text.appendLine().appendLine("Click to copy the reward UUID on the format:").appendLine("{donation_id} {reward_id}");
 

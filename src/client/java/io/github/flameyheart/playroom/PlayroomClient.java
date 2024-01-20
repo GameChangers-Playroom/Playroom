@@ -192,7 +192,6 @@ public class PlayroomClient implements ClientModInitializer {
 
             client.execute(() -> {
                 DONATIONS.put(donation.id(), donation);
-                if (donation.status() != Donation.Status.NORMAL) return;
 
                 displayer.displayDonation(donation, ClientConfig.instance().donationExpiryTime);
             });

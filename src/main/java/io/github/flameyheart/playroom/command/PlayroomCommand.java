@@ -70,7 +70,7 @@ public class PlayroomCommand {
               )
             )
           ).then(
-            literal("check-permission").requires(Permissions.require("playroom.command.playroom.check-permission", 4)).then(
+            literal("check-permission").requires(Permissions.require("playroom.command.playroom.check-permission", Playroom.isDev())).then(
               argument("target", EntityArgumentType.entity()).then(
                 argument("permission", StringArgumentType.word()).executes(context -> {
                     ServerCommandSource source = context.getSource();

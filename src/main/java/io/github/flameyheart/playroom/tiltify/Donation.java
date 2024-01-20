@@ -7,6 +7,7 @@ import net.minecraft.util.Uuids;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 public final class Donation {
@@ -115,6 +116,7 @@ public final class Donation {
           Uuids.CODEC.fieldOf("claimId").forGetter(Reward::claimId),
           Codec.STRING.fieldOf("name").forGetter(Reward::name),
           Codec.STRING.fieldOf("message").forGetter(Reward::message),
+          Codec.STRING.optionalFieldOf("target").forGetter(Reward::target0),
           Uuids.CODEC.fieldOf("targetId").forGetter(Reward::targetId),
           Status.CODEC.fieldOf("status").forGetter(Reward::status)
         ).apply(instance, Reward::new));
@@ -123,18 +125,31 @@ public final class Donation {
         private final UUID claimId;
         private final String name;
         private final String message;
+        private final String target;
         private final UUID targetId;
         private Status status;
 
         public Reward(UUID rewardId, UUID claimId, String name, String message, Status status) {
-            this(rewardId, claimId, name, message, NULL_UUID, status);
+            this(rewardId, claimId, name, message, (String) null, NULL_UUID, status);
         }
 
-        public Reward(UUID rewardId, UUID claimId, String name, String message, UUID targetId, Status status) {
+        public Reward(UUID rewardId, UUID claimId, String name, String message, String target, UUID targetId, Status status) {
             this.rewardId = rewardId;
             this.claimId = claimId;
             this.name = name;
             this.message = message;
+            this.target = target;
+            this.status = status;
+            this.targetId = targetId;
+        }
+
+        @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+        private Reward(UUID rewardId, UUID claimId, String name, String message, Optional<String> target, UUID targetId, Status status) {
+            this.rewardId = rewardId;
+            this.claimId = claimId;
+            this.name = name;
+            this.message = message;
+            this.target = target.orElse(null);
             this.status = status;
             this.targetId = targetId;
         }
@@ -153,6 +168,14 @@ public final class Donation {
 
         public String message() {
             return message;
+        }
+
+        public String target() {
+            return target;
+        }
+
+        private Optional<String> target0() {
+            return Optional.ofNullable(target);
         }
 
         public UUID targetId() {

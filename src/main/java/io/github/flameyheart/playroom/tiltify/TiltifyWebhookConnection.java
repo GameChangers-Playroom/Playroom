@@ -15,6 +15,7 @@ import io.github.flameyheart.playroom.util.ClassUtils;
 import io.github.flameyheart.playroom.util.LinedStringBuilder;
 import io.github.flameyheart.playroom.util.PredicateUtils;
 import me.lucko.fabric.api.permissions.v0.Permissions;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
@@ -318,6 +319,8 @@ public class TiltifyWebhookConnection extends Thread {
             for (WebhookStructure.RewardClaim claim : event.data.rewardClaims) {
                 Automation.Task<?> task = Automation.get(claim.rewardId);
                 ServerPlayerEntity target = null;
+                String targetName = null;
+
                 if (task == null) {
                     LOGGER.warn("Failed to find task for reward \"{}\", {}'s donation could not be fully processed", claim.rewardId, event.data.donorName);
                     MutableText message = generateFailedMessageForTask(claim, event);
@@ -327,12 +330,15 @@ public class TiltifyWebhookConnection extends Thread {
                 }
 
                 if (task.requiresPlayer()) {
-                    String playerName = findPlayerName(claim.customQuestion);
-                    target = Playroom.getServer().getPlayerManager().getPlayer(playerName);
+                    targetName = findPlayerName(claim.customQuestion);
+                    target = Playroom.getServer().getPlayerManager().getPlayer(targetName);
+                    if (target != null) {
+                        targetName = target.getEntityName();
+                    }
 
                     if (target == null) {
                         LOGGER.warn("Failed to find player \"{}\", {}'s donation could not be fully processed", claim.customQuestion, event.data.donorName);
-                        MutableText message = generateFailedMessageForPlayer(claim, event, task, playerName);
+                        MutableText message = generateFailedMessageForPlayer(claim, event, task, targetName);
                         Playroom.sendToPlayers(p -> p.sendMessage(message), PredicateUtils.permission("playroom.webhook.fail", 4));
                         rewards.add(new Donation.Reward(claim.rewardId, claim.id, task.name(), claim.customQuestion, Donation.Reward.Status.PLAYER_NOT_FOUND));
                         continue;
@@ -344,11 +350,11 @@ public class TiltifyWebhookConnection extends Thread {
                 }
 
                 Donation.Reward.Status status = Donation.Reward.Status.AUTO_APPROVED;
-                if (target != null && Permissions.check(target, "playroom.bypass-rewards", 4)) {
+                if (target != null && PredicateUtils.checkUnlessDev(target, "playroom.bypass-rewards", 4, false)) {
                     status = Donation.Reward.Status.BYPASSED;
                 }
 
-                rewards.add(new Donation.Reward(claim.rewardId, claim.id, task.name(), claim.customQuestion, target == null ? Donation.Reward.NULL_UUID : target.getUuid(), status));
+                rewards.add(new Donation.Reward(claim.rewardId, claim.id, task.name(), claim.customQuestion, targetName, target == null ? Donation.Reward.NULL_UUID : target.getUuid(), status));
             }
         }
 
@@ -373,7 +379,11 @@ public class TiltifyWebhookConnection extends Thread {
         int minDistance = Integer.MAX_VALUE;
         String closestMatch = "";
 
-        for (String word : Constants.POSSIBLE_NAMES) {
+        List<String> players = Playroom.getServer().getPlayerManager().getPlayerList().stream().map(PlayerEntity::getEntityName).toList();
+        Set<String> words = new HashSet<>();
+        words.addAll(players);
+        words.addAll(Constants.POSSIBLE_NAMES);
+        for (String word : words) {
             int distance = levenshteinDistance.apply(name, word);
             if (distance < minDistance) {
                 minDistance = distance;

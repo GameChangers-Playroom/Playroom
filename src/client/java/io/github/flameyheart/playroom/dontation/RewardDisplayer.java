@@ -45,21 +45,23 @@ public class RewardDisplayer {
 
     public void displayDonation(Donation donation, int duration) {
         MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player == null) return;
         String name = donation.donorName();
         String amount = donation.amount() + " " + donation.currency();
         InGameHud hud = client.inGameHud;
         ChatHud chatHud = hud.getChatHud();
         List<Text> messages = new ArrayList<>();
-        if(donation.rewards().isEmpty()) {
+        List<Donation.Reward> rewards = donation.rewards().stream().filter(reward -> !reward.status().error).filter(reward -> reward.targetId().equals(client.player.getUuid())).toList();
+        if(rewards.isEmpty()) {
             messages.add(Text.translatable("playroom.donation.receive.none", name, amount));
-        } else if(donation.rewards().size() == 1) {
-            Donation.Reward reward = donation.rewards().get(0);
+        } else if (rewards.size() == 1) {
+            Donation.Reward reward = rewards.get(0);
             Automation.Task<?> task = Automation.get(reward.rewardId());
             messages.add(Text.translatable("playroom.donation.receive.single", name, amount, task.onDisplay()));
         } else {
             List<Text> multiple = new ArrayList<>();
             multiple.add(Text.translatable("playroom.donation.receive.multiple", name, amount));
-            donation.rewards().forEach(reward -> {
+            rewards.forEach(reward -> {
                 Automation.Task<?> task = Automation.get(reward.rewardId());
                 multiple.add(Text.of(" - " + capitalize(task.onDisplay())));
             });

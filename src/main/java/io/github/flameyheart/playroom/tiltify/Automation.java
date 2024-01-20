@@ -2,6 +2,7 @@ package io.github.flameyheart.playroom.tiltify;
 
 import io.github.flameyheart.playroom.tiltify.action.GivePotionAction;
 import io.github.flameyheart.playroom.util.ItemStackBuilder;
+import io.github.flameyheart.playroom.util.PredicateUtils;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentLevelEntry;
@@ -106,7 +107,7 @@ public class Automation {
             if (action.requiresPlayer() && player == null) {
                 throw new IllegalStateException(action.getClass().getSimpleName() + " requires a player!");
             }
-            if (Permissions.check(player, "playroom.bypass-rewards", 4)) {
+            if (PredicateUtils.checkUnlessDev(player, "playroom.bypass-rewards", 4, false)) {
                 player.sendMessage(Text.translatable("feedback.playroom.tiltify.bypassed_reward"), true);
                 return true;
             }
