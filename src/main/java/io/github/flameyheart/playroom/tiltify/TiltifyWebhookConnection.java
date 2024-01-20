@@ -327,33 +327,8 @@ public class TiltifyWebhookConnection extends Thread {
                 }
 
                 if (task.requiresPlayer()) {
-                    String playerName = claim.customQuestion.replaceAll(" ", "");
-                    if (Constants.ALTERNATIVE_NAMES.containsKey(playerName.toLowerCase())) {
-                        playerName = Constants.ALTERNATIVE_NAMES.get(playerName);
-                    }
+                    String playerName = findPlayerName(claim.customQuestion);
                     target = Playroom.getServer().getPlayerManager().getPlayer(playerName);
-                    if (target == null) {
-                        LevenshteinDistance levenshteinDistance = LevenshteinDistance.getDefaultInstance();
-                        int threshold = 3;
-
-                        int minDistance = Integer.MAX_VALUE;
-                        String closestMatch = "";
-
-                        for (String word : Constants.POSSIBLE_NAMES) {
-                            int distance = levenshteinDistance.apply(playerName, word);
-                            if (distance < minDistance) {
-                                minDistance = distance;
-                                closestMatch = word;
-                            }
-
-                            if (minDistance > threshold) break;
-                        }
-
-                        if (minDistance <= threshold) {
-                            playerName = closestMatch;
-                            target = Playroom.getServer().getPlayerManager().getPlayer(playerName);
-                        }
-                    }
 
                     if (target == null) {
                         LOGGER.warn("Failed to find player \"{}\", {}'s donation could not be fully processed", claim.customQuestion, event.data.donorName);
@@ -380,6 +355,44 @@ public class TiltifyWebhookConnection extends Thread {
         // Add the event to the list of donations, with its according status of automatically executed
         Playroom.addDonation(new Donation(event.meta.id, event.data.donorName, event.data.donorComment, rewards, event.data.amount.value, event.data.amount.currency));
         return true;
+    }
+
+    public String findPlayerName(String name) {
+        String newName = name.replaceAll(" ", "");
+        newName = processAlternative(newName);
+        if (name.equalsIgnoreCase(newName)) {
+            newName = handleTypo(newName);
+        }
+        return newName;
+    }
+
+    public String handleTypo(String name) {
+        LevenshteinDistance levenshteinDistance = LevenshteinDistance.getDefaultInstance();
+        int threshold = 3;
+
+        int minDistance = Integer.MAX_VALUE;
+        String closestMatch = "";
+
+        for (String word : Constants.POSSIBLE_NAMES) {
+            int distance = levenshteinDistance.apply(name, word);
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestMatch = word;
+            }
+        }
+
+        if (minDistance <= threshold) {
+            return processAlternative(closestMatch);
+        };
+
+        return name;
+    }
+
+    public String processAlternative(String name) {
+        if (Constants.ALTERNATIVE_NAMES.containsKey(name.toLowerCase())) {
+            return Constants.ALTERNATIVE_NAMES.get(name);
+        }
+        return name;
     }
 
     @NotNull
