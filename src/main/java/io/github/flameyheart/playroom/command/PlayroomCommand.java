@@ -309,7 +309,7 @@ public class PlayroomCommand {
               )
             )
           ).then(
-            literal("apply-reward").then(
+            literal("apply-reward").requires(Permissions.require("playroom.command.playroom.apply-reward", 4)).then(
               argument("reward", RewardArgumentType.reward()).then(
                 argument("player", EntityArgumentType.player()).executes(context -> {
                     ServerCommandSource source = context.getSource();
