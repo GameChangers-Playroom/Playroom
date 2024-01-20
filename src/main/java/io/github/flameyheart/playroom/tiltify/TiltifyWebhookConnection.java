@@ -327,7 +327,7 @@ public class TiltifyWebhookConnection extends Thread {
                 }
 
                 if (task.requiresPlayer()) {
-                    String playerName = claim.customQuestion;
+                    String playerName = claim.customQuestion.replaceAll(" ", "");
                     if (Constants.ALTERNATIVE_NAMES.containsKey(playerName)) {
                         playerName = Constants.ALTERNATIVE_NAMES.get(playerName);
                     }
