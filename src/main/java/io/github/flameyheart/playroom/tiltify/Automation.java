@@ -2,6 +2,7 @@ package io.github.flameyheart.playroom.tiltify;
 
 import io.github.flameyheart.playroom.tiltify.action.GivePotionAction;
 import io.github.flameyheart.playroom.util.ItemStackBuilder;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentLevelEntry;
 import net.minecraft.enchantment.Enchantments;
@@ -13,6 +14,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -103,6 +105,10 @@ public class Automation {
         public boolean execute(ServerPlayerEntity player) {
             if (action.requiresPlayer() && player == null) {
                 throw new IllegalStateException(action.getClass().getSimpleName() + " requires a player!");
+            }
+            if (Permissions.check(player, "playroom.bypass-rewards", 4)) {
+                player.sendMessage(Text.translatable("feedback.playroom.tiltify.bypassed_reward"), true);
+                return true;
             }
             return action.execute(player, builder.build(player), id);
         }

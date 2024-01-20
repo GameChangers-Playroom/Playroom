@@ -16,8 +16,7 @@ public final class Donation {
       Codec.STRING.fieldOf("message").forGetter(Donation::message),
       Codec.list(Reward.CODEC).fieldOf("rewards").forGetter(Donation::rewards),
       Codec.FLOAT.fieldOf("amount").forGetter(Donation::amount),
-      Codec.STRING.fieldOf("currency").forGetter(Donation::currency),
-      Status.CODEC.optionalFieldOf("status", Status.NORMAL).forGetter(Donation::status)
+      Codec.STRING.fieldOf("currency").forGetter(Donation::currency)
     ).apply(instance, Donation::new));
 
     private final UUID id;
@@ -28,14 +27,15 @@ public final class Donation {
     private final String currency;
     private Status status;
 
-    public Donation(UUID id, String donorName, String message, List<Reward> rewards, float amount, String currency, Status status) {
+    public Donation(UUID id, String donorName, String message, List<Reward> rewards, float amount, String currency) {
         this.id = id;
         this.donorName = donorName;
         this.message = message;
         this.rewards = rewards;
         this.amount = amount;
         this.currency = currency;
-        this.status = status;
+        boolean hasError = rewards.stream().anyMatch(reward -> reward.status().error);
+        this.status = hasError ? Status.REWARD_ERROR : Status.NORMAL;
     }
 
     public UUID id() {
@@ -181,6 +181,7 @@ public final class Donation {
         public enum Status {
             AUTO_APPROVED(false),
             MANUAL_APPROVED(false),
+            BYPASSED(false),
             PLAYER_NOT_FOUND(true),
             TASK_NOT_FOUND(true);
 
