@@ -5,9 +5,12 @@ import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import io.github.flameyheart.playroom.Playroom;
+import io.github.flameyheart.playroom.command.argument.RewardArgumentType;
 import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.registry.Damage;
+import io.github.flameyheart.playroom.tiltify.Automation;
 import io.github.flameyheart.playroom.tiltify.Donation;
+import io.github.flameyheart.playroom.tiltify.Reward;
 import io.github.flameyheart.playroom.util.LinedStringBuilder;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.block.BlockState;
@@ -304,6 +307,46 @@ public class PlayroomCommand {
                   })
                 )
               )
+            )
+          ).then(
+            literal("apply-reward").then(
+              argument("reward", RewardArgumentType.reward()).then(
+                argument("player", EntityArgumentType.player()).executes(context -> {
+                    ServerCommandSource source = context.getSource();
+                    ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
+                    Reward reward = RewardArgumentType.getReward(context, "reward");
+                    Automation.Task<?> task = Automation.get(reward.uuid());
+                    if (!task.requiresPlayer()) {
+                        source.sendError(Text.translatable("commands.playroom.error.reward.requires_no_player", reward.displayName()));
+                        return 0;
+                    }
+                    boolean success = task.execute(player);
+                    if (success) {
+                        source.sendFeedback(() -> Text.translatable("commands.playroom.reward.success", reward.displayName(), player.getDisplayName()), true);
+                    } else {
+                        source.sendError(Text.translatable("commands.playroom.reward.error", reward.displayName(), player.getDisplayName()));
+                        return 0;
+                    }
+                    return 1;
+                })
+              ).executes(context -> {
+                  ServerCommandSource source = context.getSource();
+                  ServerPlayerEntity player = source.getPlayer();
+                  Reward reward = RewardArgumentType.getReward(context, "reward");
+                  Automation.Task<?> task = Automation.get(reward.uuid());
+                  if (task.requiresPlayer()) {
+                      source.sendError(Text.translatable("commands.playroom.error.reward.requires_player", reward.displayName()));
+                      return 0;
+                  }
+                  boolean success = task.execute(null);
+                  if (success) {
+                      source.sendFeedback(() -> Text.translatable("commands.playroom.reward.success", reward.displayName(), "the server"), true);
+                  } else {
+                      source.sendError(Text.translatable("commands.playroom.reward.error", reward.displayName(), "the server"));
+                      return 0;
+                  }
+                  return 1;
+              })
             )
           )
         );

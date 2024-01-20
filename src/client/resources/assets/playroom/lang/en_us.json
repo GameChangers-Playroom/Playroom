@@ -5,9 +5,12 @@
     "key.playroom.donations_screen": "View donation history",
     "key.playroom.swap_mode": "Swap gun mode",
 
+    "commands.error.enum_not_found": "Invalid value \"%s\"",
     "commands.playroom.error.not_player": "This command must be run by a player",
     "commands.playroom.error.not_freezable": "%s can't be frozen",
     "commands.playroom.error.donation.not_found": "Donation %s not found",
+    "commands.playroom.error.reward.requires_player": "The reward \"%s\" requires a target player",
+    "commands.playroom.error.reward.requires_no_player": "The reward \"%s\" does not require a target player",
     "commands.playroom.reload": "Reloading Playroom config",
     "commands.playroom.reload.restart_webhook_server": "Restarting the Tiltify webhook server",
     "commands.playroom.experiment": "Experiment \"%s\" set to %s",
@@ -17,6 +20,8 @@
     "commands.playroom.permission": "%s's status for the permission %s is %s",
     "commands.playroom.donation.status": "Updated the status of %s to %s",
     "commands.playroom.donation.reward.status": "Updated the status of %s from %s to %s",
+    "commands.playroom.reward.success": "Reward \"%s\" applied to %s",
+    "commands.playroom.reward.error": "Failed to apply the reward \"%s\" to %s",
 
     "death.attack.laser_shot": "%s could not outrun a laser shot",
     "death.attack.laser_shot.player": "%1$s could not outrun a laser shot whilst fighting %2$s",

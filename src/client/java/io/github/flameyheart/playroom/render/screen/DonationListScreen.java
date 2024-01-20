@@ -67,7 +67,7 @@ public class DonationListScreen extends BaseScreen<FlowLayout> {
         }
         if (!donation.rewards().isEmpty()) {
             tooltip.add(TooltipComponent.of(Text.literal("").asOrderedText()));
-            tooltip.add(TooltipComponent.of(Text.literal("Rewards:").setStyle(Style.EMPTY.withUnderline(true)).asOrderedText()));
+            tooltip.add(TooltipComponent.of(Text.literal("Reward:").setStyle(Style.EMPTY.withUnderline(true)).asOrderedText()));
         }
         for (Donation.Reward reward : donation.rewards()) {
             tooltip.add(TooltipComponent.of(Text.literal(reward.name()).asOrderedText()));
