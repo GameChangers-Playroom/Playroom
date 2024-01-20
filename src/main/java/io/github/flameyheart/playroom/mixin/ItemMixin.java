@@ -23,7 +23,7 @@ public abstract class ItemMixin {
 
     @Inject(method = "isFood", at = @At(value = "HEAD"), cancellable = true)
     private void crunchyCrystals0(CallbackInfoReturnable<Boolean> cir) {
-        if (!Playroom.isExperimentEnabled("crunchy_crystals")) return;
+        if (Playroom.isExperimentDisabled("crunchy_crystals")) return;
         TagKey<Item> itemTag = Tags.CRUNCHY_CRYSTALS;
         if (registryEntry.isIn(itemTag)) {
             cir.setReturnValue(true);
@@ -32,7 +32,7 @@ public abstract class ItemMixin {
 
     @Inject(method = "getFoodComponent", at = @At(value = "HEAD"), cancellable = true)
     private void crunchyCrystals1(CallbackInfoReturnable<FoodComponent> cir) {
-        if (!Playroom.isExperimentEnabled("crunchy_crystals")) return;
+        if (Playroom.isExperimentDisabled("crunchy_crystals")) return;
         TagKey<Item> itemTag = Tags.CRUNCHY_CRYSTALS;
         if (registryEntry.isIn(itemTag)) {
             if (playroom$foodComponent == null) {

@@ -7,6 +7,7 @@ import fi.dy.masa.tweakeroo.config.FeatureToggle;
 import io.github.flameyheart.playroom.compat.ModOptional;
 import io.github.flameyheart.playroom.config.ClientConfig;
 import io.github.flameyheart.playroom.config.ServerConfig;
+import io.github.flameyheart.playroom.dontation.RewardDisplayer;
 import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.duck.PlayerDisplayName;
 import io.github.flameyheart.playroom.duck.client.ExpandedClientLoginNetworkHandler;
@@ -94,6 +95,8 @@ public class PlayroomClient implements ClientModInitializer {
     );
     private static double previousAimZoomDivisor;
     private static double previousUnfreezeZoomDivisor;
+
+    private static final RewardDisplayer displayer = new RewardDisplayer();
 
     @Override
     public void onInitializeClient() {
@@ -187,7 +190,12 @@ public class PlayroomClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(Playroom.id("donation"), (client, handler, buf, responseSender) -> {
             Donation donation = buf.decode(NbtOps.INSTANCE, Donation.CODEC);
 
-            client.execute(() -> DONATIONS.put(donation.id(), donation));
+            client.execute(() -> {
+                DONATIONS.put(donation.id(), donation);
+                if (donation.status() != Donation.Status.NORMAL) return;
+
+                displayer.displayDonation(donation, ClientConfig.instance().donationExpiryTime);
+            });
         });
         ClientPlayNetworking.registerGlobalReceiver(Playroom.id("player_name"), (client, handler, buf, responseSender) -> {
             List<PlayerDisplayName> displayNames = buf.readList(packetByteBuf -> {
