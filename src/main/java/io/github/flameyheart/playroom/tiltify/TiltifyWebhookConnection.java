@@ -353,7 +353,7 @@ public class TiltifyWebhookConnection extends Thread {
         message.styled(style -> {
             LinedStringBuilder text = formatFailedMessage(claim, event);
             text.appendLine("Task: ").append(task.name());
-            text.appendLine().appendLine("Click to get the task class");
+            text.appendLine().appendLine("Click to copy the task class");
             return style
               .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(text.toString())))
               .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, task.className()));

@@ -1,6 +1,7 @@
 package io.github.flameyheart.playroom.dontation;
 
 import io.github.flameyheart.playroom.config.ClientConfig;
+import io.github.flameyheart.playroom.mixin.client.accessors.ToastManagerAccessor;
 import io.github.flameyheart.playroom.tiltify.Automation;
 import io.github.flameyheart.playroom.tiltify.Donation;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -10,6 +11,8 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.toast.Toast;
+import net.minecraft.client.toast.ToastManager;
 import net.minecraft.text.Text;
 
 import java.util.ArrayList;
@@ -90,7 +93,15 @@ public class RewardDisplayer {
             int colour = 0xBBFFFFFF;
             switch(ClientConfig.instance().dontationLocation) {
                 case TOP_LEFT -> context.drawText(textRenderer, message, 4, 4 + offset, colour, true);
-                case TOP_RIGHT -> context.drawText(textRenderer, message, client.getWindow().getScaledWidth() - textRenderer.getWidth(message) - 4, 4 + offset, colour, true);
+                case TOP_RIGHT -> {
+                    offset += ((ToastManagerAccessor) client.getToastManager())
+                            .getVisibleEntries()
+                            .stream()
+                            .map(ToastManager.Entry::getInstance)
+                            .mapToInt(Toast::getHeight)
+                            .sum();
+                    context.drawText(textRenderer, message, client.getWindow().getScaledWidth() - textRenderer.getWidth(message) - 4, 4 + offset, colour, true);
+                }
                 case BOTTOM_RIGHT -> context.drawText(textRenderer, message, client.getWindow().getScaledWidth() - textRenderer.getWidth(message) - 4, client.getWindow().getScaledHeight() - 40 - offset, colour, true);
                 default -> {}
             }
