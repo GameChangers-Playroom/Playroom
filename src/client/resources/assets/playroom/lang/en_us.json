@@ -90,6 +90,7 @@
     "feedback.playroom.webhook.execution.failed": "Failed to execute the donation command %s targeting %s",
     "feedback.playroom.trulyrandom.apply.local": "Randomizing %s",
     "feedback.playroom.trulyrandom.apply.server": "Randomizing %s for the entire server",
+    "feedback.playroom.tiltify.bypassed_reward": "\u00a77Bypassing reward",
 
     "text.playroom.screen.notifications.tip": "Click on a donation to see more about it",
     "text.playroom.donation.status.normal": "§a✔",

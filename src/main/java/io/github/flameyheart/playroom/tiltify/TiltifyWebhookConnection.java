@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.google.gson.JsonParseException;
+import io.github.flameyheart.playroom.Constants;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.tiltify.webhook.DonationUpdated;
@@ -13,11 +14,13 @@ import io.github.flameyheart.playroom.tiltify.webhook.WebhookStructure;
 import io.github.flameyheart.playroom.util.ClassUtils;
 import io.github.flameyheart.playroom.util.LinedStringBuilder;
 import io.github.flameyheart.playroom.util.PredicateUtils;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
 import org.jetbrains.annotations.NotNull;
@@ -237,8 +240,8 @@ public class TiltifyWebhookConnection extends Thread {
         try {
             // Process the request
             error = !processData(requestLine, headers, requestBody.toString());
-        } catch (JsonParseException | JsonProcessingException ignored) {
-            LOGGER.error("Failed to parse Tiltify Webhook event", ignored);
+        } catch (JsonParseException | JsonProcessingException e) {
+            LOGGER.error("Failed to parse Tiltify Webhook event", e);
             error = true;
         } catch (Throwable e) {
             LOGGER.error("Error while processing Tiltify Webhook event", e);
@@ -309,7 +312,6 @@ public class TiltifyWebhookConnection extends Thread {
 
         // Build the reward list to send to the player
         List<Donation.Reward> rewards = new ArrayList<>();
-        boolean hasError = false;
 
         // if the donation has a reward claim, execute the corresponding action for the target player
         if (event.data.rewardClaims != null) {
@@ -321,37 +323,70 @@ public class TiltifyWebhookConnection extends Thread {
                     MutableText message = generateFailedMessageForTask(claim, event);
                     Playroom.sendToPlayers(p -> p.sendMessage(message), PredicateUtils.permission("playroom.webhook.fail", 4));
                     rewards.add(new Donation.Reward(claim.rewardId, claim.id, "Not found", claim.customQuestion, Donation.Reward.Status.TASK_NOT_FOUND));
-                    hasError = true;
                     continue;
                 }
+
                 if (task.requiresPlayer()) {
-                    target = Playroom.getServer().getPlayerManager().getPlayer(claim.customQuestion);
+                    String playerName = claim.customQuestion;
+                    if (Constants.ALTERNATIVE_NAMES.containsKey(playerName)) {
+                        playerName = Constants.ALTERNATIVE_NAMES.get(playerName);
+                    }
+                    target = Playroom.getServer().getPlayerManager().getPlayer(playerName);
+                    if (target == null) {
+                        LevenshteinDistance levenshteinDistance = LevenshteinDistance.getDefaultInstance();
+                        int threshold = 3;
+
+                        int minDistance = Integer.MAX_VALUE;
+                        String closestMatch = "";
+
+                        for (String word : Constants.POSSIBLE_NAMES) {
+                            int distance = levenshteinDistance.apply(playerName, word);
+                            if (distance < minDistance) {
+                                minDistance = distance;
+                                closestMatch = word;
+                            }
+
+                            if (minDistance > threshold) break;
+                        }
+
+                        if (minDistance <= threshold) {
+                            playerName = closestMatch;
+                            target = Playroom.getServer().getPlayerManager().getPlayer(playerName);
+                        }
+                    }
+
                     if (target == null) {
                         LOGGER.warn("Failed to find player \"{}\", {}'s donation could not be fully processed", claim.customQuestion, event.data.donorName);
-                        MutableText message = generateFailedMessageForPlayer(claim, event, task);
+                        MutableText message = generateFailedMessageForPlayer(claim, event, task, playerName);
                         Playroom.sendToPlayers(p -> p.sendMessage(message), PredicateUtils.permission("playroom.webhook.fail", 4));
                         rewards.add(new Donation.Reward(claim.rewardId, claim.id, task.name(), claim.customQuestion, Donation.Reward.Status.PLAYER_NOT_FOUND));
-                        hasError = true;
                         continue;
                     }
+
                     Playroom.queueTask(new ExecuteAction(task, target, event.data.donorName));
                 } else {
                     Playroom.queueTask(new ExecuteAction(task, null, event.data.donorName));
                 }
-                rewards.add(new Donation.Reward(claim.rewardId, claim.id, task.name(), claim.customQuestion, target == null ? Donation.Reward.NULL_UUID : target.getUuid(), Donation.Reward.Status.AUTO_APPROVED));
+
+                Donation.Reward.Status status = Donation.Reward.Status.AUTO_APPROVED;
+                if (target != null && Permissions.check(target, "playroom.bypass-rewards", 4)) {
+                    status = Donation.Reward.Status.BYPASSED;
+                }
+
+                rewards.add(new Donation.Reward(claim.rewardId, claim.id, task.name(), claim.customQuestion, target == null ? Donation.Reward.NULL_UUID : target.getUuid(), status));
             }
         }
 
         // Add the event to the list of donations, with its according status of automatically executed
-        Playroom.addDonation(new Donation(event.meta.id, event.data.donorName, event.data.donorComment, rewards, event.data.amount.value, event.data.amount.currency, hasError ? Donation.Status.REWARD_ERROR : Donation.Status.NORMAL));
+        Playroom.addDonation(new Donation(event.meta.id, event.data.donorName, event.data.donorComment, rewards, event.data.amount.value, event.data.amount.currency));
         return true;
     }
 
     @NotNull
-    private static MutableText generateFailedMessageForPlayer(WebhookStructure.RewardClaim claim, WebhookEvent<DonationUpdated> event, Automation.Task<?> task) {
+    private static MutableText generateFailedMessageForPlayer(WebhookStructure.RewardClaim claim, WebhookEvent<DonationUpdated> event, Automation.Task<?> task, String closeMatch) {
         MutableText message = Text.translatable("feedback.playroom.webhook.donation.failed.player");
         message.styled(style -> {
-            LinedStringBuilder text = formatFailedMessage(claim, event);
+            LinedStringBuilder text = formatFailedMessage(claim, event, closeMatch);
             text.appendLine("Task: ").append(task.name());
             text.appendLine().appendLine("Click to copy the task class");
             return style
@@ -365,7 +400,7 @@ public class TiltifyWebhookConnection extends Thread {
     private static MutableText generateFailedMessageForTask(WebhookStructure.RewardClaim claim, WebhookEvent<DonationUpdated> event) {
         MutableText message = Text.translatable("feedback.playroom.webhook.donation.failed.task");
         message.styled(style -> {
-            LinedStringBuilder text = formatFailedMessage(claim, event);
+            LinedStringBuilder text = formatFailedMessage(claim, event, null);
             return style
               .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(text.toString())))
               .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, claim.rewardId.toString()));
@@ -373,11 +408,12 @@ public class TiltifyWebhookConnection extends Thread {
         return message;
     }
 
-    private static LinedStringBuilder formatFailedMessage(WebhookStructure.RewardClaim claim, WebhookEvent<DonationUpdated> event) {
+    private static LinedStringBuilder formatFailedMessage(WebhookStructure.RewardClaim claim, WebhookEvent<DonationUpdated> event, @Nullable String closeMatch) {
         LinedStringBuilder text = new LinedStringBuilder();
         text.append("Donation: ").append(event.meta.id);
         text.appendLine("Donor: ").append(event.data.donorName);
         text.appendLine("Message: ").append(claim.customQuestion);
+        text.appendLine("Close match: ").append(closeMatch);
         text.appendLine("Reward: ").append(claim.rewardId.toString());
         return text;
     }
