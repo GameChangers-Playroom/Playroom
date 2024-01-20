@@ -24,6 +24,8 @@ public class Constants {
       .put("penguinkid", "penguinkidLIVE")
       .put("floorb", "floorb_")
       .put("fluffle", "iamfluffle")
+      .put("matias", "OhMatias")
+      .put("thespryte", "the_spryte")
       .immutable();
     public static final List<String> POSSIBLE_NAMES;
 
