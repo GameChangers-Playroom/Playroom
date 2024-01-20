@@ -383,7 +383,7 @@ public class TiltifyWebhookConnection extends Thread {
 
         if (minDistance <= threshold) {
             return processAlternative(closestMatch);
-        };
+        }
 
         return name;
     }
