@@ -46,7 +46,7 @@ public class YACLScreen {
           Option.<DonationLocation>createBuilder()
             .name(Text.translatable("config.playroom.option.general.donationLocation"))
             .description(OptionDescription.of(Text.translatable("config.playroom.option.general.donationLocation.description")))
-            .binding(clientDefaults.dontationLocation, () -> clientConfig.dontationLocation, newVal -> clientConfig.dontationLocation = newVal)
+            .binding(clientDefaults.donationLocation, () -> clientConfig.donationLocation, newVal -> clientConfig.donationLocation = newVal)
             .controller(option -> EnumControllerBuilder.create(option).enumClass(DonationLocation.class).formatValue(value -> Text.translatable(value.translationKey())))
             .build()
         );
@@ -57,6 +57,15 @@ public class YACLScreen {
             .description(OptionDescription.of(Text.translatable("config.playroom.option.general.donationExpiryTime.description")))
             .binding(clientDefaults.donationExpiryTime, () -> clientConfig.donationExpiryTime, newVal -> clientConfig.donationExpiryTime = newVal.shortValue())
             .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 3600).step(20))
+            .build()
+        );
+
+        general.option(
+          Option.<Integer>createBuilder()
+            .name(Text.translatable("config.playroom.option.general.donationDisplayLimit"))
+            .description(OptionDescription.of(Text.translatable("config.playroom.option.general.donationDisplayLimit.description")))
+            .binding(clientDefaults.donationDisplayLimit, () -> clientConfig.donationDisplayLimit, newVal -> clientConfig.donationDisplayLimit = newVal.shortValue())
+            .controller(option -> IntegerSliderControllerBuilder.create(option).range(1, 20).step(1))
             .build()
         );
 

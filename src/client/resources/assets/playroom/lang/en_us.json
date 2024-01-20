@@ -223,6 +223,9 @@
     "config.playroom.option.general.donationExpiryTime": "Donation expiry time",
     "config.playroom.option.general.donationExpiryTime.description": "The time it takes for a donation to expire in ticks",
 
+    "config.playroom.option.general.donationDisplayLimit": "Donation display limit",
+    "config.playroom.option.general.donationDisplayLimit.description": "The maximum amount of donations to display",
+
     "config.playroom.option.general.debugInfo": "Debug info",
     "config.playroom.option.general.debugInfo.description": "Shows debug info in the top left corner",
 

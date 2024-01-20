@@ -25,12 +25,14 @@ public class ClientConfig {
         return INSTANCE.defaults();
     }
 
-
     @SerialEntry(comment = "Where donations appear on screen\n[Default: CHAT]")
-    public DonationLocation dontationLocation = DonationLocation.CHAT;
+    public DonationLocation donationLocation = DonationLocation.CHAT;
 
-    @SerialEntry(comment = "The duration of the donation display in ticks\n[Min: 0, Default: 100]")
+    @SerialEntry(comment = "The duration of the donation display in ticks\n[Min: 0, Max: 3600, Default: 100]")
     public int donationExpiryTime = 100;
+
+    @SerialEntry(comment = "The maximum number of donations to display at once\n[Min: 1, Max: 20, Default: 5]")
+    public int donationDisplayLimit = 5;
 
     @SerialEntry(comment = "Disables some animations to reduce motion sickness\n[Default: false]")
     public boolean reducedMotion = false;
