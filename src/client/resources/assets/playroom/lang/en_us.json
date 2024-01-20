@@ -112,12 +112,103 @@
     "playroom.subtitles.laser_gun.mode": "Laser gun changes mode",
     "playroom.subtitles.generic.freeze": "Player freezes",
 
+    "playroom.donation.receive.none": [
+        {
+            "text": "[",
+            "color": "green"
+        },
+        {
+            "index": 0,
+            "color": "green"
+        },
+        {
+            "text": "] ",
+            "color": "green"
+        },
+        {
+            "text": "donated ",
+            "color": "white"
+        },
+        {
+            "index": 1,
+            "color": "white"
+        },
+        {
+            "text": "!",
+            "color": "white"
+        }
+    ],
+    "playroom.donation.receive.single": [
+        {
+            "text": "[",
+            "color": "green"
+        },
+        {
+            "index": 0,
+            "color": "green"
+        },
+        {
+            "text": "] ",
+            "color": "green"
+        },
+        {
+            "text": "donated ",
+            "color": "white"
+        },
+        {
+            "index": 1,
+            "color": "white"
+        },
+        {
+            "text": " to ",
+            "color": "white"
+        },
+        {
+            "index": 2,
+            "color": "white"
+        },
+        {
+            "text": "!",
+            "color": "white"
+        }
+    ],
+    "playroom.donation.receive.multiple": [
+        {
+            "text": "[",
+            "color": "green"
+        },
+        {
+            "index": 0,
+            "color": "green"
+        },
+        {
+            "text": "] ",
+            "color": "green"
+        },
+        {
+            "text": "donated ",
+            "color": "white"
+        },
+        {
+            "index": 1,
+            "color": "white"
+        },
+        {
+            "text": " to:",
+            "color": "white"
+        }
+    ],
+
+    "playroom.donation_location.chat": "Chat",
+    "playroom.donation_location.top_left": "Top Left",
+    "playroom.donation_location.top_right": "Top Right",
+    "playroom.donation_location.bottom_right": "Bottom Right",
+
     "config.playroom.category.general": "General",
     "config.playroom.category.server": "Server",
     "config.playroom.option_group.networking": "Networking",
     "config.playroom.option_group.laser_gun": "Laser Gun",
     "config.playroom.option_group.player_freeze": "Player freeze",
-
 
     "config.playroom.option.general.reducedMotion": "Reduced motion",
     "config.playroom.option.general.reducedMotion.description": [
@@ -125,6 +216,12 @@
         "Disabled effetcs:\n",
         " - Freeze zoom"
     ],
+
+    "config.playroom.option.general.donationLocation": "Donation location",
+    "config.playroom.option.general.donationLocation.description": "The location of where the donations should appear",
+
+    "config.playroom.option.general.donationExpiryTime": "Donation expiry time",
+    "config.playroom.option.general.donationExpiryTime.description": "The time it takes for a donation to expire in ticks",
 
     "config.playroom.option.general.debugInfo": "Debug info",
     "config.playroom.option.general.debugInfo.description": "Shows debug info in the top left corner",

@@ -5,6 +5,7 @@ import dev.isxander.yacl3.api.controller.*;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ClientConfig;
 import io.github.flameyheart.playroom.config.ServerConfig;
+import io.github.flameyheart.playroom.dontation.DonationLocation;
 import io.github.flameyheart.playroom.zoom.TransitionType;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -38,6 +39,24 @@ public class YACLScreen {
             .description(OptionDescription.of(Text.translatable("config.playroom.option.general.reducedMotion.description")))
             .binding(clientDefaults.reducedMotion, () -> clientConfig.reducedMotion, newVal -> clientConfig.reducedMotion = newVal)
             .controller(TickBoxControllerBuilder::create)
+            .build()
+        );
+
+        general.option(
+          Option.<DonationLocation>createBuilder()
+            .name(Text.translatable("config.playroom.option.general.donationLocation"))
+            .description(OptionDescription.of(Text.translatable("config.playroom.option.general.donationLocation.description")))
+            .binding(clientDefaults.dontationLocation, () -> clientConfig.dontationLocation, newVal -> clientConfig.dontationLocation = newVal)
+            .controller(option -> EnumControllerBuilder.create(option).enumClass(DonationLocation.class).formatValue(value -> Text.translatable(value.translationKey())))
+            .build()
+        );
+
+        general.option(
+          Option.<Integer>createBuilder()
+            .name(Text.translatable("config.playroom.option.general.donationExpiryTime"))
+            .description(OptionDescription.of(Text.translatable("config.playroom.option.general.donationExpiryTime.description")))
+            .binding(clientDefaults.donationExpiryTime, () -> clientConfig.donationExpiryTime, newVal -> clientConfig.donationExpiryTime = newVal.shortValue())
+            .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 3600).step(20))
             .build()
         );
 

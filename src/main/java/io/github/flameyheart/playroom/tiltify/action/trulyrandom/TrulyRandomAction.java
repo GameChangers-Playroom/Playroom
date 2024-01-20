@@ -30,11 +30,6 @@ public interface TrulyRandomAction extends Action<@Nullable Object> {
     }
 
     default boolean execute(ServerPlayerEntity target, @Nullable Object data, UUID id) {
-        if (target != null) {
-            target.sendMessage(Text.translatable("feedback.playroom.trulyrandom.apply.local", getModule().name()));
-        } else {
-            Playroom.sendToPlayers(p -> p.sendMessage(Text.translatable("feedback.playroom.trulyrandom.apply.server", getModule().name())));
-        }
         MinecraftServer server = Playroom.getServer();
         if (server == null) return false;
 

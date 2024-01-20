@@ -20,6 +20,7 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.nio.file.Path;
 import java.security.*;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
@@ -313,57 +315,71 @@ public class TiltifyWebhookConnection extends Thread {
         if (event.data.rewardClaims != null) {
             for (WebhookStructure.RewardClaim claim : event.data.rewardClaims) {
                 Automation.Task<?> task = Automation.get(claim.rewardId);
+                ServerPlayerEntity target = null;
                 if (task == null) {
                     LOGGER.warn("Failed to find task for reward \"{}\", {}'s donation could not be fully processed", claim.rewardId, event.data.donorName);
-                    MutableText message = Text.translatable("feedback.playroom.webhook.donation.failed.task");
-                    message.styled(style -> {
-                        LinedStringBuilder text = new LinedStringBuilder();
-                        text.append("Donation: ").append(event.meta.id);
-                        text.appendLine("Donor: ").append(event.data.donorName);
-                        text.appendLine("Message: ").append(claim.customQuestion);
-                        text.appendLine("Reward: ").append(claim.rewardId.toString());
-                        return style
-                          .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(text.toString())))
-                          .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, claim.rewardId.toString()));
-                    });
+                    MutableText message = generateFailedMessageForTask(claim, event);
                     Playroom.sendToPlayers(p -> p.sendMessage(message), PredicateUtils.permission("playroom.webhook.fail", 4));
                     rewards.add(new Donation.Reward(claim.rewardId, claim.id, "Not found", claim.customQuestion, Donation.Reward.Status.TASK_NOT_FOUND));
                     hasError = true;
                     continue;
                 }
                 if (task.requiresPlayer()) {
-                    ServerPlayerEntity player = Playroom.getServer().getPlayerManager().getPlayer(claim.customQuestion);
-                    if (player == null) {
+                    target = Playroom.getServer().getPlayerManager().getPlayer(claim.customQuestion);
+                    if (target == null) {
                         LOGGER.warn("Failed to find player \"{}\", {}'s donation could not be fully processed", claim.customQuestion, event.data.donorName);
-                        MutableText message = Text.translatable("feedback.playroom.webhook.donation.failed.player");
-                        message.styled(style -> {
-                            LinedStringBuilder text = new LinedStringBuilder();
-                            text.append("Donation: ").append(event.meta.id);
-                            text.appendLine("Donor: ").append(event.data.donorName);
-                            text.appendLine("Message: ").append(claim.customQuestion);
-                            text.appendLine("Reward: ").append(claim.rewardId.toString());
-                            text.appendLine("Task: ").append(task.name());
-                            text.appendLine().appendLine("Click to get the task class");
-                            return style
-                              .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(text.toString())))
-                              .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, task.className()));
-                        });
+                        MutableText message = generateFailedMessageForPlayer(claim, event, task);
                         Playroom.sendToPlayers(p -> p.sendMessage(message), PredicateUtils.permission("playroom.webhook.fail", 4));
                         rewards.add(new Donation.Reward(claim.rewardId, claim.id, task.name(), claim.customQuestion, Donation.Reward.Status.PLAYER_NOT_FOUND));
                         hasError = true;
                         continue;
                     }
-                    Playroom.queueTask(new ExecuteAction(task, player));
+                    Playroom.queueTask(new ExecuteAction(task, target, event.data.donorName));
                 } else {
-                    Playroom.queueTask(new ExecuteAction(task, null));
+                    Playroom.queueTask(new ExecuteAction(task, null, event.data.donorName));
                 }
-                rewards.add(new Donation.Reward(claim.rewardId, claim.id, task.name(), claim.customQuestion, Donation.Reward.Status.AUTO_APPROVED));
+                rewards.add(new Donation.Reward(claim.rewardId, claim.id, task.name(), claim.customQuestion, target == null ? Donation.Reward.NULL_UUID : target.getUuid(), Donation.Reward.Status.AUTO_APPROVED));
             }
         }
 
         // Add the event to the list of donations, with its according status of automatically executed
         Playroom.addDonation(new Donation(event.meta.id, event.data.donorName, event.data.donorComment, rewards, event.data.amount.value, event.data.amount.currency, hasError ? Donation.Status.REWARD_ERROR : Donation.Status.NORMAL));
         return true;
+    }
+
+    @NotNull
+    private static MutableText generateFailedMessageForPlayer(WebhookStructure.RewardClaim claim, WebhookEvent<DonationUpdated> event, Automation.Task<?> task) {
+        MutableText message = Text.translatable("feedback.playroom.webhook.donation.failed.player");
+        message.styled(style -> {
+            LinedStringBuilder text = formatFailedMessage(claim, event);
+            text.appendLine("Task: ").append(task.name());
+            text.appendLine().appendLine("Click to get the task class");
+            return style
+              .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(text.toString())))
+              .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, task.className()));
+        });
+        return message;
+    }
+
+    @NotNull
+    private static MutableText generateFailedMessageForTask(WebhookStructure.RewardClaim claim, WebhookEvent<DonationUpdated> event) {
+        MutableText message = Text.translatable("feedback.playroom.webhook.donation.failed.task");
+        message.styled(style -> {
+            LinedStringBuilder text = formatFailedMessage(claim, event);
+            return style
+              .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(text.toString())))
+              .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, claim.rewardId.toString()));
+        });
+        return message;
+    }
+
+    private static LinedStringBuilder formatFailedMessage(WebhookStructure.RewardClaim claim, WebhookEvent<DonationUpdated> event) {
+        LinedStringBuilder text = new LinedStringBuilder();
+        text.append("Donation: ").append(event.meta.id);
+        text.appendLine("Donor: ").append(event.data.donorName);
+        text.appendLine("Message: ").append(claim.customQuestion);
+        text.appendLine("Reward: ").append(claim.rewardId.toString());
+        return text;
     }
 
     /**
@@ -456,9 +472,9 @@ public class TiltifyWebhookConnection extends Thread {
 
     static class X509KeyManagerImpl implements X509KeyManager {
         private final PrivateKey privateKey;
-        private final java.security.cert.Certificate certificate;
+        private final Certificate certificate;
 
-        public X509KeyManagerImpl(PrivateKey privateKey, java.security.cert.Certificate certificate) {
+        public X509KeyManagerImpl(PrivateKey privateKey, Certificate certificate) {
             this.privateKey = privateKey;
             this.certificate = certificate;
         }
