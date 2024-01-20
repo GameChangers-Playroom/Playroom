@@ -20,7 +20,8 @@ public class Constants {
       .put("OGQndres", "Qndres")
       .put("JustDashYT", "JustDash")
       .put("lucy", "lucytgirl_")
-      .put("penguinkidLIVE", "penguinkid")
+      .put("lucytgirl", "lucytgirl_")
+      .put("penguinkid", "penguinkidLIVE")
       .put("floorb", "floorb_")
       .immutable();
     public static final List<String> POSSIBLE_NAMES;
