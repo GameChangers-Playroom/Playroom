@@ -14,15 +14,16 @@ public class Constants {
     public static final Map<String, String> ALTERNATIVE_NAMES = new MapBuilder.StringMap()
       // Key: Alternative name, Value: MC username
       .put("sparklez", "CaptainSparklez")
-      .put("FloraKiiro", "Yazmin_")
-      .put("UrsenTV", "Ursen")
-      .put("Nukeri", "Nukerii")
-      .put("OGQndres", "Qndres")
-      .put("JustDashYT", "JustDash")
+      .put("florakiiro", "Yazmin_")
+      .put("ursentv", "Ursen")
+      .put("nukeri", "Nukerii")
+      .put("ogqndres", "Qndres")
+      .put("justdashyt", "JustDash")
       .put("lucy", "lucytgirl_")
       .put("lucytgirl", "lucytgirl_")
       .put("penguinkid", "penguinkidLIVE")
       .put("floorb", "floorb_")
+      .put("fluffle", "iamfluffle")
       .immutable();
     public static final List<String> POSSIBLE_NAMES;
 
