@@ -258,7 +258,7 @@ public class Playroom implements ModInitializer {
 
 				if (understood) {
 					if (protocolVersion == -1 && !ServerConfig.instance().allowVanillaPlayers) {
-						handler.disconnect(Text.translatable("playroom.multiplayer.disconnect.unsupported_client"));
+						handler.disconnect(Text.literal("Unsupported client \nPlayroom is required to join the servert"));
 					}
 					if (protocolVersion != Constants.PROTOCOL_VERSION) {
 						if (ServerConfig.instance().requireMatchingProtocol) {
@@ -279,7 +279,7 @@ public class Playroom implements ModInitializer {
 					future.complete(null);
 				} else {
 					if (!ServerConfig.instance().allowVanillaPlayers) {
-						handler.disconnect(Text.translatable("playroom.multiplayer.disconnect.unsupported_client"));
+						handler.disconnect(Text.literal("Unsupported client \nPlayroom is required to join the server"));
 					}
 				}
 			});

@@ -54,6 +54,8 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
     @Override
     protected void onEntityHit(@NotNull EntityHitResult entityHitResult) {
         Entity entity = entityHitResult.getEntity();
+        if (entity == null) return;
+        if (entity.getWorld().isClient()) return;
         this.discard();
         if (getOwner() == null || entity.getUuid().equals(getOwner().getUuid()) || !(entity instanceof FreezableEntity freezableEntity) || !(entity instanceof LivingEntity living)) {
             return;

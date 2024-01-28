@@ -316,10 +316,6 @@ public class PlayroomCommand {
                     ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
                     Reward reward = RewardArgumentType.getReward(context, "reward");
                     Automation.Task<?> task = Automation.get(reward.uuid());
-                    if (!task.requiresPlayer()) {
-                        source.sendError(Text.translatable("commands.playroom.error.reward.requires_no_player", reward.displayName()));
-                        return 0;
-                    }
                     boolean success = task.execute(player);
                     if (success) {
                         source.sendFeedback(() -> Text.translatable("commands.playroom.reward.success", reward.displayName(), player.getDisplayName()), true);

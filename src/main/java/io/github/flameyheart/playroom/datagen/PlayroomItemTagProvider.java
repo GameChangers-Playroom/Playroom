@@ -17,6 +17,7 @@ public class PlayroomItemTagProvider extends FabricTagProvider.ItemTagProvider {
     protected void configure(RegistryWrapper.WrapperLookup arg) {
         getOrCreateTagBuilder(Tags.CRUNCHY_CRYSTALS)
           .add(
+            io.github.flameyheart.playroom.registry.Items.ICE_BLOCKS,
             Items.DIAMOND,
             Items.EMERALD,
             Items.QUARTZ,
