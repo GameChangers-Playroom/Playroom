@@ -221,9 +221,21 @@
     "config.playroom.option.general.reducedMotion": "Reduced motion",
     "config.playroom.option.general.reducedMotion.description": [
         "Disables some animation effectsn\n",
+        "The options are:\n",
+        " - Full motion\n",
+        " - Reduced motion\n",
+        " - Simple motion\n",
+        " - No motion\n",
+        "The option name after the effect means at what point it isn't enabled anymore\n",
         "Disabled effetcs:\n",
-        " - Freeze zoom"
+        " - Freeze zoom (Reduced)\n",
+        " - Laser Charge (Simple)\n",
+        " - Laser Power Strip (None)\n"
     ],
+    "config.playroom.option.general.reducedMotion.full_motion": "Full motion",
+    "config.playroom.option.general.reducedMotion.reduced_motion": "Reduced motion",
+    "config.playroom.option.general.reducedMotion.simple_motion": "Simple motion",
+    "config.playroom.option.general.reducedMotion.no_motion": "No motion",
 
     "config.playroom.option.general.donationLocation": "Donation location",
     "config.playroom.option.general.donationLocation.description": "The location of where the donations should appear",
@@ -251,6 +263,11 @@
 
     "config.playroom.option.laser_client.laserAimZoomOutTransition": "Laser gun aim zoom out transition",
     "config.playroom.option.laser_client.laserAimZoomOutTransition.description": "The transition function for zooming out",
+
+    "config.playroom.option.laser_client.laserGunHandRender": "Laser gun hand render",
+    "config.playroom.option.laser_client.laserGunHandRender.description": "The laser gun hand renderer",
+    "config.playroom.option.laser_client.laserGunHandRender.faia": "Blaze Faia's style",
+    "config.playroom.option.laser_client.laserGunHandRender.mac": "Mac's style",
 
     "config.playroom.option.freeze_client.freezeZoomDuration": "Freeze zoom duration",
     "config.playroom.option.freeze_client.freezeZoomDuration.description": "The duration of the zoom effect",

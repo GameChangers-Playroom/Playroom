@@ -31,7 +31,7 @@ public class GameRendererMixin {
 
     @ModifyReturnValue(method = "getFov", at = @At(value = "RETURN", ordinal = 1))
     private double applyZoom(double fov, Camera camera, float tickDelta, boolean changingFov) {
-        if (client.player == null || ClientConfig.instance().reducedMotion) return fov;
+        if (client.player == null || !ClientConfig.instance().reducedMotion.isEnabled("freeze_zoom")) return fov;
 
         FreezableEntity entity = (FreezableEntity) client.player;
         boolean zoom = entity.playroom$getFreezeTime() + tickDelta <= ClientConfig.instance().freezeZoomDuration * 20 && entity.playroom$isFrozen();

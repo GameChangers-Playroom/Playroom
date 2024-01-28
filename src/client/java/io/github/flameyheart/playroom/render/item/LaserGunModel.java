@@ -12,14 +12,13 @@ public class LaserGunModel extends LayeredGeoModel<LaserGun> {
 
 	@Override
 	public Identifier getLayerTextureResource(LaserGun animatable, String name) {
-		
 		return switch(name) {
 			case ENABLED_RANGEMODE -> Playroom.id("textures/item/range_mode/strips_enabled.png");
 			case ENABLED_RAPIDFIREMODE -> Playroom.id("textures/item/rapidfire_mode/strips_enabled.png");
 			case MAXSTRIPS -> Playroom.id("textures/item/strips_max.png");
 			default -> super.getLayerTextureResource(animatable, name);
 		};
-	
+
 	}
 
 	@Override

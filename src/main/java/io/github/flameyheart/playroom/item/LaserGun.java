@@ -355,6 +355,10 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
         }
     }
 
+    public int getCooldownTime(ItemStack stack) {
+        return getCooldownTag(stack).getInt("Duration");
+    }
+
     public boolean isCooldownExpired(ItemStack stack) {
         return getCooldownTag(stack).getLong("ExpireTick") < Playroom.serverTime;
     }

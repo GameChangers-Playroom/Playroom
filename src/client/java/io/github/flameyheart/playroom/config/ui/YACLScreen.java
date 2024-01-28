@@ -34,11 +34,11 @@ public class YACLScreen {
           .name(Text.translatable("config.playroom.category.general"));
 
         general.option(
-          Option.<Boolean>createBuilder()
+          Option.<ClientConfig.ReducedMotion>createBuilder()
             .name(Text.translatable("config.playroom.option.general.reducedMotion"))
             .description(OptionDescription.of(Text.translatable("config.playroom.option.general.reducedMotion.description")))
             .binding(clientDefaults.reducedMotion, () -> clientConfig.reducedMotion, newVal -> clientConfig.reducedMotion = newVal)
-            .controller(TickBoxControllerBuilder::create)
+            .controller(option -> EnumControllerBuilder.create(option).enumClass(ClientConfig.ReducedMotion.class).formatValue(value -> Text.translatable(value.translationKey())))
             .build()
         );
 
@@ -123,6 +123,15 @@ public class YACLScreen {
             .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_client.laserAimZoomOutTransition.description")))
             .binding(clientDefaults.laserAimZoomOutTransition, () -> clientConfig.laserAimZoomOutTransition, newVal -> clientConfig.laserAimZoomOutTransition = newVal)
             .controller(option -> EnumControllerBuilder.create(option).enumClass(TransitionType.class).formatValue(value -> Text.translatable(value.getDisplayName())))
+            .build()
+        );
+
+        laserGunClient.option(
+          Option.<ClientConfig.LaserGunHandRender>createBuilder()
+            .name(Text.translatable("config.playroom.option.laser_client.laserGunHandRender"))
+            .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_client.laserGunHandRender.description")))
+            .binding(clientDefaults.laserGunHandRender, () -> clientConfig.laserGunHandRender, newVal -> clientConfig.laserGunHandRender = newVal)
+            .controller(option -> EnumControllerBuilder.create(option).enumClass(ClientConfig.LaserGunHandRender.class).formatValue(value -> Text.translatable(value.translationKey())))
             .build()
         );
 

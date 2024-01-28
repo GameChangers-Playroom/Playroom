@@ -6,7 +6,7 @@ import io.github.flameyheart.playroom.compat.ModOptional;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.item.OldLaserGun;
 import io.github.flameyheart.playroom.mixin.client.geo.AutoGlowingTextureAccessor;
-import io.github.flameyheart.playroom.mixin.geo.AnimationControllerAccessor;
+import io.github.flameyheart.playroom.mixin.compat.geo.AnimationControllerAccessor;
 import io.github.flameyheart.playroom.render.hud.HudRenderer;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.MinecraftClient;
@@ -52,7 +52,7 @@ public class OldLaserGunRenderer extends AlternativeGeoItemRenderer<OldLaserGun>
         super(new OldLaserGunModel());
 //        addRenderLayer(new EnergyLayer(this));
 //        addRenderLayer(new ChargeLayer(this));
-        
+
         addRenderLayer(new OldStripLayer(this));
         addRenderLayer(new OldEnergyFlowLayer(this));
         addRenderLayer(new OldChargeLayer(this));
@@ -70,7 +70,7 @@ public class OldLaserGunRenderer extends AlternativeGeoItemRenderer<OldLaserGun>
         return getGeoModel().getTextureResource(animatable);
     }
 
-    /** 
+    /**
      * Resets glow anim after change mode
      */
     @Override
@@ -102,19 +102,19 @@ public class OldLaserGunRenderer extends AlternativeGeoItemRenderer<OldLaserGun>
     @Override
     public void renderRecursively(MatrixStack matrixStack, OldLaserGun animatable, GeoBone bone, RenderLayer renderType, VertexConsumerProvider bufferSource, VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
         super.renderRecursively(matrixStack, animatable, bone, renderType, bufferSource, this.bufferSource.getBuffer(renderType), isReRender, partialTick, packedLight, packedOverlay, red, green, blue, alpha);
-        
+
         if(isReRender)
             return;
-        
+
         chargeLevel = animatable.getPlayroomTag(getCurrentItemStack()).getInt("Charge");
-        
+
         if(bone.getName().lastIndexOf("Arm") != -1) {
             bone.setHidden(true);
             bone.setChildrenHidden(false);
         }
         else
             return;
-        
+
         ModelTransformationMode hand;
         boolean leftHanded;
         if (Objects.requireNonNull(client.options.getMainArm().getValue()) == Arm.LEFT) {
@@ -189,91 +189,91 @@ public class OldLaserGunRenderer extends AlternativeGeoItemRenderer<OldLaserGun>
             matrixStack.pop();
         }
     }
-    
+
     /**
-     * 
+     *
      */
     private class EnergyLayer extends AutoGlowingGeoLayer<OldLaserGun> {
-    
+
         private EnergyLayer(GeoRenderer<OldLaserGun> renderer) {
             super(renderer);
         }
-    
+
         @Override
         protected RenderLayer getRenderType(OldLaserGun animatable) {
             return AnimatedAutoGlowingTexture.getRenderType(Playroom.id("textures/item/old/laser_gun_strips.png"));
         }
-    
+
         @Override
         public void render(MatrixStack poseStack, OldLaserGun item, BakedGeoModel bakedModel, RenderLayer renderType, VertexConsumerProvider bufferSource, VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay) {
-            
+
             if(chargeLevel == 100
             || !item.isCooldownExpired(currentItemStack)
             && item.getCooldownReason(currentItemStack) == OldLaserGun.CooldownReason.RELOAD)
                 return;
-            
+
             RenderLayer emissiveRenderType = getRenderType(item);
             getRenderer().reRender(bakedModel, poseStack, bufferSource, item, emissiveRenderType,
                     bufferSource.getBuffer(emissiveRenderType), partialTick, 0xF0_00_00, OverlayTexture.DEFAULT_UV,
                     1, 1, 1, .75f * alphaMulti);
-        
+
         }
-    
+
     }
-    
+
     private class ChargeLayer extends AutoGlowingGeoLayer<OldLaserGun> {
-    
+
         private float alpha;
-    
+
         private ChargeLayer(GeoRenderer<OldLaserGun> renderer) {
             super(renderer);
         }
-    
+
         @Override
         protected RenderLayer getRenderType(OldLaserGun animatable) {
             return AnimatedAutoGlowingTexture.getRenderType(Playroom.id("textures/item/old/laser_gun_strips_glow.png"));
         }
-    
+
         @Override
         public void render(MatrixStack poseStack, OldLaserGun item, BakedGeoModel bakedModel, RenderLayer renderType, VertexConsumerProvider bufferSource, VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay) {
-            
+
             int cooldown = item.getCooldownLeft(currentItemStack);
             double transitionAnimTick = PlayroomClient.ANIMATION_START_TICK.getOrDefault(getInstanceId(animatable), 0);
-            
+
             if(chargeLevel > 0)
                 alpha = chargeLevel / 100f;
             else if(cooldown > 0) {
-                
+
                 int midPoint = ServerConfig.instance().laserFireReloadTime / 2;
-                
+
                 if(cooldown < midPoint);
-                
+
 //                PlayroomClient.LOGGER.info("cooldown: {}", cooldown);
 //                PlayroomClient.LOGGER.info("cooldown / (midPoint * .7f): {}", cooldown / (midPoint * .7f));
-                
+
 //                alpha = MathHelper.clamp(cooldown / (midPoint * .7f), 0, .7f);
-                
+
                 if(cooldown == 1)
                     PlayroomClient.ANIMATION_START_TICK.put(getInstanceId(item), (int) RenderUtils.getCurrentTick());
-            
+
             }
             else
                 return;
-            
+
             RenderLayer emissiveRenderType = getRenderType(item);
             getRenderer().reRender(bakedModel, poseStack, bufferSource, item, emissiveRenderType,
                     bufferSource.getBuffer(emissiveRenderType), partialTick, 0xF0_00_00, OverlayTexture.DEFAULT_UV,
                     1, 1, 1, alpha * alphaMulti);
-        
+
         }
-    
+
     }
 
-    /* 
+    /*
      * ======================================
-     * 
+     *
      *               OLD CODE
-     * 
+     *
      * ======================================
      */
 
@@ -304,7 +304,7 @@ public class OldLaserGunRenderer extends AlternativeGeoItemRenderer<OldLaserGun>
               1, 1, 1, alpha);
         }
     }
-    
+
     /**
      * Handles default charged state animation
      */
@@ -397,7 +397,7 @@ public class OldLaserGunRenderer extends AlternativeGeoItemRenderer<OldLaserGun>
             float alpha;
             long length = 8;
             double animationStart = PlayroomClient.ANIMATION_START_TICK.getOrDefault(getInstanceId(animatable), 0);
-            
+
             double fadeinStart = animationStart + length;
             double currentTick = RenderUtils.getCurrentTick();
             double fadeoutEnd = animationStart + length * 2;
@@ -467,7 +467,7 @@ public class OldLaserGunRenderer extends AlternativeGeoItemRenderer<OldLaserGun>
             } else {
                 alpha = 1;
             }
-            
+
             getRenderer().reRender(bakedModel, poseStack, bufferSource, animatable, renderLayer,
               bufferSource.getBuffer(renderLayer), partialTick, 0xF0_00_00, OverlayTexture.DEFAULT_UV,
               1, 1, 1, HudRenderer.chargeLayerAlpha = alpha);

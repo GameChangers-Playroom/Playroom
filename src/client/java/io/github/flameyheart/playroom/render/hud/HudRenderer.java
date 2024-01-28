@@ -11,21 +11,25 @@ import net.minecraft.item.ItemStack;
 import software.bernie.geckolib.util.RenderUtils;
 
 public class HudRenderer {
-    
+
     public static float animFrameTick;
     public static float chargeLayerAlpha;
+    public static String chargeLayerInfo;
+    private static int y = 5;
 
     public static void renderDebugInfo(DrawContext drawContext) {
+        y = 5;
         MinecraftClient client = MinecraftClient.getInstance();
         if (!ClientConfig.instance().debugInfo || client.options.debugEnabled) return;
-        drawContext.drawText(client.textRenderer, "Server time: " + Playroom.serverTime, 5, 5, 0xFFFFFF, true);
-        drawContext.drawText(client.textRenderer, "Aim zoom: " + PlayroomClient.hasAimZoom(), 5, 16, 0xFFFFFF, true);
-        drawContext.drawText(client.textRenderer, "Unfreeze zoom: " + PlayroomClient.hasUnfreezeZoom(), 5, 27, 0xFFFFFF, true);
-        drawContext.drawText(client.textRenderer, "Aim zoom divisor: " + PlayroomClient.getPreviousAimZoomDivisor(), 5, 38, 0xFFFFFF, true);
-        drawContext.drawText(client.textRenderer, "Unfreeze zoom divisor: " + PlayroomClient.getPreviousUnfreezeZoomDivisor(), 5, 49, 0xFFFFFF, true);
-        drawContext.drawText(client.textRenderer, "Render Frame Tick (RFT): " + (int) RenderUtils.getCurrentTick(), 5, 60, 0xFFFFFF, true);
-        drawContext.drawText(client.textRenderer, "Animation Frame Tick (AFT): " + animFrameTick, 5, 71, 0xFFFFFF, true);
-        drawContext.drawText(client.textRenderer, "Alpha (Layer: EnergyLayer): " + chargeLayerAlpha, 5, 82, 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Server time: " + Playroom.serverTime, 5, getY(), 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Aim zoom: " + PlayroomClient.hasAimZoom(), 5, getY(), 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Unfreeze zoom: " + PlayroomClient.hasUnfreezeZoom(), 5, getY(), 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Aim zoom divisor: " + PlayroomClient.getPreviousAimZoomDivisor(), 5, getY(), 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Unfreeze zoom divisor: " + PlayroomClient.getPreviousUnfreezeZoomDivisor(), 5, getY(), 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Render Frame Tick (RFT): " + (int) RenderUtils.getCurrentTick(), 5, getY(), 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Animation Frame Tick (AFT): " + animFrameTick, 5, getY(), 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Alpha (Layer: EnergyLayer): " + chargeLayerAlpha, 5, getY(), 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Animation Frame Info: " + chargeLayerInfo, 5, getY(), 0xFFFFFF, true);
         Entity target = client.targetedEntity;
         String content;
         if (target instanceof PlayerEntity targetPlayer) {
@@ -44,6 +48,12 @@ public class HudRenderer {
         } else {
             content = "No targeted entity";
         }
-        drawContext.drawText(client.textRenderer, "Target: " + content, 5, 93, 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Target: " + content, 5, getY(), 0xFFFFFF, true);
+    }
+
+    private static int getY() {
+        int v = y;
+        y += 11;
+        return v;
     }
 }
