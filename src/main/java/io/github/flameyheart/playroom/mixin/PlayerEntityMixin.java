@@ -6,6 +6,7 @@ import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.duck.AimingEntity;
 import io.github.flameyheart.playroom.duck.InventoryDuck;
 import io.github.flameyheart.playroom.item.LaserGun;
+import io.github.flameyheart.playroom.item.OldLaserGun;
 import io.github.flameyheart.playroom.registry.Items;
 import io.github.flameyheart.playroom.util.InventorySlot;
 import net.minecraft.entity.data.DataTracker;
@@ -78,7 +79,7 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Aim
 
     @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/GameRules;getBoolean(Lnet/minecraft/world/GameRules$Key;)Z"))
     private boolean disableRegen(boolean original) {
-        if (this.playroom$isFrozen() || this.selectedItem.getItem() instanceof LaserGun) {
+        if (this.playroom$isFrozen() || (this.selectedItem.getItem() instanceof LaserGun || this.selectedItem.getItem() instanceof OldLaserGun)) {
             return false;
         }
         return original;

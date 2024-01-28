@@ -22,6 +22,7 @@ import io.github.flameyheart.playroom.render.entity.LaserProjectileRenderer;
 import io.github.flameyheart.playroom.render.entity.ModelPosition;
 import io.github.flameyheart.playroom.render.hud.HudRenderer;
 import io.github.flameyheart.playroom.render.item.LaserGunRenderer;
+import io.github.flameyheart.playroom.render.item.old.OldLaserGunRenderer;
 import io.github.flameyheart.playroom.render.particle.TestParticle;
 import io.github.flameyheart.playroom.render.screen.DonationListScreen;
 import io.github.flameyheart.playroom.render.world.WorldRenderer;
@@ -51,6 +52,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
+import net.minecraft.util.Arm;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,8 +64,9 @@ import java.util.concurrent.CompletableFuture;
 public class PlayroomClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("Playroom Client");
     private static final KeyBinding DONATIONS_SCREEN_KEYBIND = ClientUtils.addKeybind("donations_screen", GLFW.GLFW_KEY_H);
+    private static final KeyBinding SWITCH_HANDEDNESS_KEYBIND = ClientUtils.addKeybind("switch_handedness", GLFW.GLFW_KEY_KP_MULTIPLY);
 
-    public static final Map<Long, Double> ANIMATION_START_TICK = new HashMap<>();
+    public static final Map<Long, Integer> ANIMATION_START_TICK = new HashMap<>();
     public static final BipedEntityModel.ArmPose LASER_GUN_POSE = ClassTinkerers.getEnum(BipedEntityModel.ArmPose.class, "LASER_GUN");
     public static final Map<UUID, Donation> DONATIONS = new LinkedHashMap<>();
     public static final Map<FreezableEntity, Map<String, ModelPosition>> FROZEN_MODEL = new HashMap<>();
@@ -116,6 +119,12 @@ public class PlayroomClient implements ClientModInitializer {
 
     private void registerEventListeners() {
         ClientUtils.listenKeybind(DONATIONS_SCREEN_KEYBIND, (client) -> client.setScreen(new DonationListScreen()));
+        ClientUtils.listenKeybind(SWITCH_HANDEDNESS_KEYBIND, (client) -> {
+            
+            Arm arm = client.options.getMainArm().getValue();
+            client.options.getMainArm().setValue(arm == Arm.RIGHT ? Arm.LEFT : Arm.RIGHT);
+        
+        });
 
         RenderEvents.WORLD.register(WorldRenderer::render);
         RenderEvents.HUD.register(HudRenderer::renderDebugInfo);
@@ -164,6 +173,15 @@ public class PlayroomClient implements ClientModInitializer {
             Items.LASER_GUN.setRenderer(new RenderProvider() {
                 private final LaserGunRenderer renderer = new LaserGunRenderer();
 
+                @Override
+                public BuiltinModelItemRenderer getCustomRenderer() {
+                    return renderer;
+                }
+            });
+            Items.LASER_GUN_OLD.setShowAdvancedTooltip(Screen::hasShiftDown);
+            Items.LASER_GUN_OLD.setRenderer(new RenderProvider() {
+                private final OldLaserGunRenderer renderer = new OldLaserGunRenderer();
+                
                 @Override
                 public BuiltinModelItemRenderer getCustomRenderer() {
                     return renderer;

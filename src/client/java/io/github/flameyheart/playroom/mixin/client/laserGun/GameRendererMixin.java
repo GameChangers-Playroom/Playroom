@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import io.github.flameyheart.playroom.PlayroomClient;
 import io.github.flameyheart.playroom.item.LaserGun;
+import io.github.flameyheart.playroom.item.OldLaserGun;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
@@ -33,7 +34,7 @@ public class GameRendererMixin {
     @SuppressWarnings("unused")
     @WrapWithCondition(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;bobView(Lnet/minecraft/client/util/math/MatrixStack;F)V"))
     private boolean vanillaBobView(GameRenderer instance, MatrixStack matrices, float tickDelta) {
-        return !(this.client.player.getMainHandStack().getItem() instanceof LaserGun);
+        return !(this.client.player.getMainHandStack().getItem() instanceof LaserGun || this.client.player.getMainHandStack().getItem() instanceof OldLaserGun);
     }
 
     private @Unique void playroom$gunBobView(MatrixStack matrices, float tickDelta) {

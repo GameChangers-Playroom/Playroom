@@ -24,6 +24,7 @@
 
     "item.playroom.ice_blocks": "Ice Blocks",
     "item.playroom.laser_gun": "ꜰʀᴇᴇᴢᴇ ɢᴜɴ",
+    "item.playroom.laser_gun_old": "ᴏʟᴅ ꜰʀᴇᴇᴢᴇ ɢᴜɴ",
     "item.playroom.laser_gun.tooltip.more": [
         {
             "text": "ʜᴏʟᴅ ꜱʜɪꜰᴛ ꜰᴏʀ ᴍᴏʀᴇ...",
@@ -146,7 +147,7 @@
     "config.playroom.option.laser_gun.laserFireReloadTime.description": "The laser reload time for the gun cooldown",
 
     "config.playroom.option.laser_gun.laserRangeChargeTime": "Ranged mode charge time",
-    "config.playroom.option.laser_gun.laserRangeChargeTime.description": "The laser charge time for the ranged more",
+    "config.playroom.option.laser_gun.laserRangeChargeTime.description": "The laser charge time for the ranged mode",
 
     "config.playroom.option.laser_gun.laserRapidFireCooldown": "Rapid fire mode cooldown",
     "config.playroom.option.laser_gun.laserRapidFireCooldown.description": "The cooldown between rapidfire automatic shots",

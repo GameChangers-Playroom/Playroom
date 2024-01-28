@@ -44,17 +44,17 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, PlayroomItem, Aimable {
+public class OldLaserGun extends Item implements Vanishable, FabricItem, GeoItem, PlayroomItem, Aimable {
     public static final RawAnimation RAPIDFIRE_MODE_ANIMATION = RawAnimation.begin().thenPlayAndHold("animation.model.rapidfire");
     public static final RawAnimation RANGE_MODE_ANIMATION = RawAnimation.begin().thenPlayAndHold("animation.model.range");
-//    public static final RawAnimation RAPIDFIRE_CHARGE_ANIMATION = RawAnimation.begin().thenPlay("animation.model.rapidfire.fire");
+    public static final RawAnimation RAPIDFIRE_CHARGE_ANIMATION = RawAnimation.begin().thenPlay("animation.model.rapidfire.fire");
     private final AnimatableInstanceCache animationCache = GeckoLibUtil.createInstanceCache(this);
     private final Supplier<Object> renderProvider = GeoItem.makeRenderer(this);
     private final List<TooltipProvider> tooltipProvider = new ArrayList<>();
     private Supplier<Boolean> showAdvancedTooltip = () -> false;
     private Object renderer = null;
 
-    public LaserGun(Settings settings) {
+    public OldLaserGun(Settings settings) {
         super(settings);
         SingletonGeoAnimatable.registerSyncedAnimatable(this);
         tooltipProvider.add((stack, world, tooltip, context) -> {
@@ -122,9 +122,9 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     @Override
     public void onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
         short chargeTime = ServerConfig.instance().laserRangeChargeTime;
-        if (world instanceof ServerWorld serverWorld) {
-            if (remainingUseTicks < 72000 - chargeTime && !isRapidFire(stack) && chargeTime > 0) {
-                handleRangedMode(stack, world, (PlayerEntity) user, Hand.MAIN_HAND);
+        if (remainingUseTicks < 72000 - chargeTime && !isRapidFire(stack) && chargeTime > 0) {
+            handleRangedMode(stack, world, (PlayerEntity) user, Hand.MAIN_HAND);
+            if (world instanceof ServerWorld serverWorld) {
                 StopSoundS2CPacket stopSoundS2CPacket = new StopSoundS2CPacket(Sounds.LASER_GUN_CHARGE.getId(), Constants.PLAYROOM_SOUND_CATEGORY);
                 serverWorld.getPlayers(player -> player instanceof ServerPlayerEntity && player.distanceTo(user) < 64).forEach(player -> player.networkHandler.sendPacket(stopSoundS2CPacket));
             }
@@ -233,7 +233,7 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
 
         boolean rapidFire = getPlayroomTag(stack).getBoolean("RapidFire");
         if (!rapidFire) return;
-
+        
         short amo = (short) (getPlayroomTag(stack).getShort("Amo") - 1);
         getPlayroomTag(stack).putShort("Amo", amo);
 
@@ -328,11 +328,16 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
 
     @Override
     public void registerControllers(@NotNull AnimatableManager.ControllerRegistrar controllerRegistrar) {
-        AnimationController<GeoAnimatable> controller = new AnimationController<>(this, "controller", 0, animationState -> PlayState.STOP);
-//        controller.triggerableAnim("rapidfire", RAPIDFIRE_CHARGE_ANIMATION);
+        AnimationController<GeoAnimatable> controller = new AnimationController<>(this, "controller", 0, this::predicate);
+        controller.triggerableAnim("rapidfire", RAPIDFIRE_CHARGE_ANIMATION);
         controller.triggerableAnim("rapidfire_mode", RAPIDFIRE_MODE_ANIMATION);
         controller.triggerableAnim("range_mode", RANGE_MODE_ANIMATION);
         controllerRegistrar.add(controller);
+    }
+
+    private PlayState predicate(@NotNull AnimationState<GeoAnimatable> animationState) {
+        //animationState.getController().setAnimation(RawAnimation.begin().then("idle", Animation.LoopType.LOOP));
+        return PlayState.STOP;
     }
 
     @Override

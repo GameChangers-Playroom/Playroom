@@ -2,6 +2,7 @@ package io.github.flameyheart.playroom.mixin.client.laserGun;
 
 import io.github.flameyheart.playroom.PlayroomClient;
 import io.github.flameyheart.playroom.item.LaserGun;
+import io.github.flameyheart.playroom.item.OldLaserGun;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -21,7 +22,7 @@ public class PlayerEntityRendererMixin {
     private static void gunPose(AbstractClientPlayerEntity player, Hand hand, CallbackInfoReturnable<BipedEntityModel.ArmPose> ci) {
         if (hand == Hand.OFF_HAND) return;
         ItemStack itemStack = player.getStackInHand(hand);
-        if (itemStack.getItem() instanceof LaserGun) {
+        if (itemStack.getItem() instanceof LaserGun | itemStack.getItem() instanceof OldLaserGun) {
             ci.setReturnValue(PlayroomClient.LASER_GUN_POSE);
         }
     }

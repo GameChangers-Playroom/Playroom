@@ -34,4 +34,19 @@ public class InventoryScreenMixin {
             ci.cancel();
         }
     }
+
+    // TODO: Make entity model freeze to the angle too, else default to facing center
+    @Inject(method = "drawEntity(Lnet/minecraft/client/gui/DrawContext;IIIFFLnet/minecraft/entity/LivingEntity;)V", at = @At(value = "INVOKE", target = "Lorg/joml/Quaternionf;mul(Lorg/joml/Quaternionfc;)Lorg/joml/Quaternionf;", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILEXCEPTION, cancellable = true)
+    private static void freezeEntity(DrawContext context, int x, int y, int size, float mouseX, float mouseY, LivingEntity entity, CallbackInfo ci, float f, float g, Quaternionf quaternionf, Quaternionf quaternionf2) {
+        if (entity instanceof FreezableEntity playroomEntity && playroomEntity.playroom$isFrozen()) {
+//            entity.bodyYaw = h;
+//            entity.setYaw(i);
+//            entity.setPitch(j);
+//            entity.headYaw = k;
+//            entity.prevHeadYaw = l;
+            InventoryScreen.drawEntity(context, x, y, size, quaternionf, new Quaternionf(), entity);
+            
+            ci.cancel();
+        }
+    }
 }
