@@ -5,17 +5,26 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.google.gson.JsonParseException;
+import io.github.flameyheart.playroom.Constants;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.tiltify.webhook.DonationUpdated;
 import io.github.flameyheart.playroom.tiltify.webhook.WebhookEvent;
 import io.github.flameyheart.playroom.tiltify.webhook.WebhookStructure;
 import io.github.flameyheart.playroom.util.ClassUtils;
-import io.github.flameyheart.playroom.util.DynamicPlaceholders;
+import io.github.flameyheart.playroom.util.LinedStringBuilder;
+import io.github.flameyheart.playroom.util.PredicateUtils;
+import me.lucko.fabric.api.permissions.v0.Permissions;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,14 +37,12 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.nio.file.Path;
 import java.security.*;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -44,6 +51,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public class TiltifyWebhookConnection extends Thread {
     private static final Logger LOGGER = LoggerFactory.getLogger("Playroom Tiltify Webhook Connection");
     private static final AtomicReference<Boolean> CAN_RUN = new AtomicReference<>();
+    public transient int requestsLastMinute = 0;
+    private transient long lastWarning = 0;
 
     /**
      * Jackson JSON mapper for the parsing of the JSON data into Java objects
@@ -139,6 +148,14 @@ public class TiltifyWebhookConnection extends Thread {
                 try {
                     if (serverSocket.isClosed()) break;
                     SSLSocket clientSocket = (SSLSocket) serverSocket.accept();
+                    // Warn if more than 50 requests are received within a minute,
+                    // letting us know if there is a request spam or DoS/DDoS attack,
+                    // the warning is only printed once every 5 seconds
+                    // to prevent spamming the console
+                    if (++requestsLastMinute > 50 && lastWarning < System.currentTimeMillis() - 5000) {
+                        lastWarning = System.currentTimeMillis();
+                        LOGGER.warn("Received {} requests within a minute!", requestsLastMinute);
+                    }
                     handleClientConnection(clientSocket);
                 } catch (Throwable e) {
                     // Handle exceptions accordingly
@@ -156,6 +173,10 @@ public class TiltifyWebhookConnection extends Thread {
                         // Ignore "Socket closed" exception if the thread is not running
                         if (message.equals("Socket closed") && !running) {
                             return;
+                        }
+                        if (message.equals("Connection reset")) {
+                            LOGGER.warn("Connection reset");
+                            continue;
                         }
                     } else if (e instanceof SSLException) {
                         String message = e.getMessage();
@@ -216,12 +237,13 @@ public class TiltifyWebhookConnection extends Thread {
         }
 
         // Process the request
-        boolean error = false;
+        boolean error;
         try {
             // Process the request
-            processData(requestLine, headers, requestBody.toString());
-        } catch (JsonParseException | JsonProcessingException ignored) {
-            LOGGER.error("Failed to parse Tiltify Webhook event", ignored);
+            error = !processData(requestLine, headers, requestBody.toString());
+        } catch (JsonParseException | JsonProcessingException e) {
+            LOGGER.error("Failed to parse Tiltify Webhook event", e);
+            error = true;
         } catch (Throwable e) {
             LOGGER.error("Error while processing Tiltify Webhook event", e);
             error = true;
@@ -229,7 +251,7 @@ public class TiltifyWebhookConnection extends Thread {
 
         // Send a basic HTTP response with the received message body
         String httpResponse = error ? """
-          HTTP/1.1 401 Unauthorized\r
+          HTTP/1.1 400 Bad Request\r
           \r
           """ : """
           HTTP/1.1 200 OK\r
@@ -260,13 +282,13 @@ public class TiltifyWebhookConnection extends Thread {
      *
      * @see #verifySignature(String, String, String, String)
      **/
-    private void processData(String request, Map<String, String> headers, String body) throws JsonProcessingException {
+    private boolean processData(String request, Map<String, String> headers, String body) throws JsonProcessingException {
         request = request.toLowerCase();
         // Only process POST requests to the root path
-        if (!request.startsWith("post / ")) return;
+        if (!request.startsWith("post / ")) return false;
         // Certificate required headers are present
-        if (!headers.containsKey("x-tiltify-signature")) return;
-        if (!headers.containsKey("x-tiltify-timestamp")) return;
+        if (!headers.containsKey("x-tiltify-signature")) return false;
+        if (!headers.containsKey("x-tiltify-timestamp")) return false;
 
         // Get required headers
         // The signature is the encoded hash of the timestamp and body using the secret as the key
@@ -277,37 +299,146 @@ public class TiltifyWebhookConnection extends Thread {
         String secret = ServerConfig.instance().tiltifySecret;
 
         //Validates the signature, making sure the request is from Tiltify
-        if (!verifySignature(secret, signature, timestamp, body)) return;
+        if (!verifySignature(secret, signature, timestamp, body)) return false;
 
         //Parse the body JSON using Jackson
         WebhookEvent<DonationUpdated> event = JSON_MAPPER.readValue(body, WebhookEvent.DonationUpdatedEvent.class);
         // Certify the required fields are present
-        if (event == null || event.data == null || event.meta == null) return;
+        if (event == null || event.data == null || event.meta == null) return false;
         // Certify the event type is donation_updated
-        if (!event.meta.eventType.type.equalsIgnoreCase("donation_updated")) return;
+        if (!event.meta.eventType.type.equalsIgnoreCase("donation_updated")) return false;
 
         // Certify that the donation hasn't been processed already
-        if (Playroom.hasDonation(event.meta.id)) return;
+        if (Playroom.hasDonation(event.meta.id)) return false;
+
+        // Build the reward list to send to the player
+        List<Donation.Reward> rewards = new ArrayList<>();
 
         // if the donation has a reward claim, execute the corresponding action for the target player
         if (event.data.rewardClaims != null) {
             for (WebhookStructure.RewardClaim claim : event.data.rewardClaims) {
-                // TODO: Redo to use the action system
-                ServerPlayerEntity player = Playroom.getServer().getPlayerManager().getPlayer(claim.customQuestion);
-                if (player == null) {
-                    LOGGER.warn("Failed to find player \"{}\", {}'s donation could not be fully processed", claim.customQuestion, event.data.donorName);
-                    continue; //TODO inform the team it failed to find the player
+                Automation.Task<?> task = Automation.get(claim.rewardId);
+                ServerPlayerEntity target = null;
+                String targetName = null;
+
+                if (task == null) {
+                    LOGGER.warn("Failed to find task for reward \"{}\", {}'s donation could not be fully processed", claim.rewardId, event.data.donorName);
+                    MutableText message = generateFailedMessageForTask(claim, event);
+                    Playroom.sendToPlayers(p -> p.sendMessage(message), PredicateUtils.permission("playroom.webhook.fail", 4));
+                    rewards.add(new Donation.Reward(claim.rewardId, claim.id, "Not found", claim.customQuestion, Donation.Reward.Status.TASK_NOT_FOUND));
+                    continue;
                 }
 
-                ServerConfig.instance().commands.get(claim.rewardId.toString()).forEach(command -> {
-                    Playroom.getServer().getCommandManager().executeWithPrefix(Playroom.getCommandSource(), DynamicPlaceholders.parseText(command, player).getString());
-                });
+                if (task.requiresPlayer()) {
+                    targetName = findPlayerName(claim.customQuestion);
+                    target = Playroom.getServer().getPlayerManager().getPlayer(targetName);
+                    if (target != null) {
+                        targetName = target.getEntityName();
+                    }
+
+                    if (target == null) {
+                        LOGGER.warn("Failed to find player \"{}\", {}'s donation could not be fully processed", claim.customQuestion, event.data.donorName);
+                        MutableText message = generateFailedMessageForPlayer(claim, event, task, targetName);
+                        Playroom.sendToPlayers(p -> p.sendMessage(message), PredicateUtils.permission("playroom.webhook.fail", 4));
+                        rewards.add(new Donation.Reward(claim.rewardId, claim.id, task.name(), claim.customQuestion, Donation.Reward.Status.PLAYER_NOT_FOUND));
+                        continue;
+                    }
+
+                    Playroom.queueTask(new ExecuteAction(task, target, event.data.donorName));
+                } else {
+                    Playroom.queueTask(new ExecuteAction(task, null, event.data.donorName));
+                }
+
+                Donation.Reward.Status status = Donation.Reward.Status.AUTO_APPROVED;
+                if (target != null && PredicateUtils.checkUnlessDev(target, "playroom.bypass-rewards", 4, false)) {
+                    status = Donation.Reward.Status.BYPASSED;
+                }
+
+                rewards.add(new Donation.Reward(claim.rewardId, claim.id, task.name(), claim.customQuestion, targetName, target == null ? Donation.Reward.NULL_UUID : target.getUuid(), status));
             }
         }
 
         // Add the event to the list of donations, with its according status of automatically executed
-        // TODO
-        //Playroom.addDonation(new Donation());
+        Playroom.addDonation(new Donation(event.meta.id, event.data.donorName, event.data.donorComment, rewards, event.data.amount.value, event.data.amount.currency));
+        return true;
+    }
+
+    public String findPlayerName(String name) {
+        String newName = name.replaceAll(" ", "");
+        newName = processAlternative(newName);
+        if (name.equalsIgnoreCase(newName)) {
+            newName = handleTypo(newName);
+        }
+        return newName;
+    }
+
+    public String handleTypo(String name) {
+        LevenshteinDistance levenshteinDistance = LevenshteinDistance.getDefaultInstance();
+        int threshold = 3;
+
+        int minDistance = Integer.MAX_VALUE;
+        String closestMatch = "";
+
+        List<String> players = Playroom.getServer().getPlayerManager().getPlayerList().stream().map(PlayerEntity::getEntityName).toList();
+        Set<String> words = new HashSet<>();
+        words.addAll(players);
+        words.addAll(Constants.POSSIBLE_NAMES);
+        for (String word : words) {
+            int distance = levenshteinDistance.apply(name, word);
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestMatch = word;
+            }
+        }
+
+        if (minDistance <= threshold) {
+            return processAlternative(closestMatch);
+        }
+
+        return name;
+    }
+
+    public String processAlternative(String name) {
+        if (Constants.ALTERNATIVE_NAMES.containsKey(name.toLowerCase())) {
+            return Constants.ALTERNATIVE_NAMES.get(name);
+        }
+        return name;
+    }
+
+    @NotNull
+    private static MutableText generateFailedMessageForPlayer(WebhookStructure.RewardClaim claim, WebhookEvent<DonationUpdated> event, Automation.Task<?> task, String closeMatch) {
+        MutableText message = Text.translatable("feedback.playroom.webhook.donation.failed.player");
+        message.styled(style -> {
+            LinedStringBuilder text = formatFailedMessage(claim, event, closeMatch);
+            text.appendLine("Task: ").append(task.name());
+            text.appendLine().appendLine("Click to copy the task class");
+            return style
+              .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(text.toString())))
+              .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, task.className()));
+        });
+        return message;
+    }
+
+    @NotNull
+    private static MutableText generateFailedMessageForTask(WebhookStructure.RewardClaim claim, WebhookEvent<DonationUpdated> event) {
+        MutableText message = Text.translatable("feedback.playroom.webhook.donation.failed.task");
+        message.styled(style -> {
+            LinedStringBuilder text = formatFailedMessage(claim, event, null);
+            return style
+              .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(text.toString())))
+              .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, claim.rewardId.toString()));
+        });
+        return message;
+    }
+
+    private static LinedStringBuilder formatFailedMessage(WebhookStructure.RewardClaim claim, WebhookEvent<DonationUpdated> event, @Nullable String closeMatch) {
+        LinedStringBuilder text = new LinedStringBuilder();
+        text.append("Donation: ").append(event.meta.id);
+        text.appendLine("Donor: ").append(event.data.donorName);
+        text.appendLine("Message: ").append(claim.customQuestion);
+        text.appendLine("Close match: ").append(closeMatch);
+        text.appendLine("Reward: ").append(claim.rewardId.toString());
+        return text;
     }
 
     /**
@@ -400,9 +531,9 @@ public class TiltifyWebhookConnection extends Thread {
 
     static class X509KeyManagerImpl implements X509KeyManager {
         private final PrivateKey privateKey;
-        private final java.security.cert.Certificate certificate;
+        private final Certificate certificate;
 
-        public X509KeyManagerImpl(PrivateKey privateKey, java.security.cert.Certificate certificate) {
+        public X509KeyManagerImpl(PrivateKey privateKey, Certificate certificate) {
             this.privateKey = privateKey;
             this.certificate = certificate;
         }

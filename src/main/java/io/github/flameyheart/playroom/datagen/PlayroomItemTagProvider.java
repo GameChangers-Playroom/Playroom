@@ -20,6 +20,7 @@ public class PlayroomItemTagProvider extends FabricTagProvider.ItemTagProvider {
             Items.DIAMOND,
             Items.EMERALD,
             Items.QUARTZ,
+            Items.AMETHYST_SHARD,
             Items.SMALL_AMETHYST_BUD,
             Items.MEDIUM_AMETHYST_BUD,
             Items.LARGE_AMETHYST_BUD,

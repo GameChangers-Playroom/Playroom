@@ -56,7 +56,7 @@ public class Damage {
             if (livingEntity2 != null) {
                 return Text.translatable(string2, killed.getDisplayName(), livingEntity2.getDisplayName());
             }
-            return Text.translatable(string, killed.getDisplayName());
+            return Text.translatable(string + ".self", killed.getDisplayName());
         }
 
         private String getRandomDeathMessage(Random random) {

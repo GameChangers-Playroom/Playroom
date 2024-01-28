@@ -23,7 +23,7 @@ public abstract class ItemMixin {
 
     @Inject(method = "isFood", at = @At(value = "HEAD"), cancellable = true)
     private void crunchyCrystals0(CallbackInfoReturnable<Boolean> cir) {
-        if (!Playroom.isExperimentEnabled("crunchy_crystals")) return;
+        if (Playroom.isExperimentDisabled("crunchy_crystals")) return;
         TagKey<Item> itemTag = Tags.CRUNCHY_CRYSTALS;
         if (registryEntry.isIn(itemTag)) {
             cir.setReturnValue(true);
@@ -32,14 +32,15 @@ public abstract class ItemMixin {
 
     @Inject(method = "getFoodComponent", at = @At(value = "HEAD"), cancellable = true)
     private void crunchyCrystals1(CallbackInfoReturnable<FoodComponent> cir) {
-        if (!Playroom.isExperimentEnabled("crunchy_crystals")) return;
+        if (Playroom.isExperimentDisabled("crunchy_crystals")) return;
         TagKey<Item> itemTag = Tags.CRUNCHY_CRYSTALS;
         if (registryEntry.isIn(itemTag)) {
             if (playroom$foodComponent == null) {
-                playroom$foodComponent = new FoodComponent.Builder().hunger(1).saturationModifier(0.1f)
+                playroom$foodComponent = new FoodComponent.Builder().hunger(8).saturationModifier(2.4f)
                   .statusEffect(new StatusEffectInstance(StatusEffects.INSTANT_DAMAGE, 1, 0), 1.0f)
-                  .statusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 300, 1), 1.0f)
-                  .statusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 300, 1), 1.0f)
+                  .statusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 300, 0), 1.0f)
+                  .statusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 300, 0), 1.0f)
+                  .alwaysEdible()
                   .build();
             }
             cir.setReturnValue(playroom$foodComponent);

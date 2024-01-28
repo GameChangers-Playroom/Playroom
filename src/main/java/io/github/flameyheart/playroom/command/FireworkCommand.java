@@ -2,6 +2,7 @@ package io.github.flameyheart.playroom.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.command.argument.Vec3ArgumentType;
 import net.minecraft.entity.projectile.FireworkRocketEntity;
 import net.minecraft.item.ItemStack;
@@ -22,7 +23,7 @@ import static net.minecraft.server.command.CommandManager.literal;
 public class FireworkCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
-          literal("firework").then(
+          literal("firework").requires(Permissions.require("playroom.command.firework", 2)).then(
             argument("duration", IntegerArgumentType.integer(0, 127)).then(
               argument("pos", Vec3ArgumentType.vec3()).executes(context -> {
                   return execute(context.getSource(), (byte) IntegerArgumentType.getInteger(context, "duration"), Vec3ArgumentType.getVec3(context, "pos"));

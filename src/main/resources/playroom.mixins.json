@@ -17,7 +17,9 @@
         "ServerLoginNetworkHandlerAccessor",
         "ServerLoginNetworkHandlerMixin",
         "ServerPlayerEntityMixin",
-        "geo.AnimationControllerAccessor",
+        "SnowballEntityMixin",
+        "compat.geo.AnimationControllerAccessor",
+        "compat.owo.EnumArgumentTypeMixin",
         "network.PlayerListS2CPacketMixin"
     ],
     "injectors": {

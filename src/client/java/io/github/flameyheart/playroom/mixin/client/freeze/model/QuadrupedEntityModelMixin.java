@@ -18,11 +18,11 @@ public abstract class QuadrupedEntityModelMixin implements FreezableModel {
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void storeRoot(ModelPart root, boolean headScaled, float childHeadYOffset, float childHeadZOffset, float invertedChildHeadScale, float invertedChildBodyScale, int childBodyYOffset, CallbackInfo ci) {
-        playroom$captureRoot(root);
+        captureRoot(root);
     }
 
     @Unique
-    private void playroom$captureRoot(ModelPart root) {
+    private void captureRoot(ModelPart root) {
         if (root == null) throw new NullPointerException("Root is null for " + this.getClass().getSimpleName());
         this.playroom$root = root;
     }

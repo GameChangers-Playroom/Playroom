@@ -5,6 +5,7 @@ import dev.isxander.yacl3.config.v2.api.SerialEntry;
 import dev.isxander.yacl3.config.v2.api.serializer.GsonConfigSerializerBuilder;
 import dev.isxander.yacl3.platform.YACLPlatform;
 import io.github.flameyheart.playroom.Playroom;
+import io.github.flameyheart.playroom.dontation.DonationLocation;
 import io.github.flameyheart.playroom.zoom.TransitionType;
 
 public class ClientConfig {
@@ -23,6 +24,15 @@ public class ClientConfig {
     public static ClientConfig defaults() {
         return INSTANCE.defaults();
     }
+
+    @SerialEntry(comment = "Where donations appear on screen\n[Default: CHAT]")
+    public DonationLocation donationLocation = DonationLocation.CHAT;
+
+    @SerialEntry(comment = "The duration of the donation display in ticks\n[Min: 0, Max: 3600, Default: 100]")
+    public int donationExpiryTime = 100;
+
+    @SerialEntry(comment = "The maximum number of donations to display at once\n[Min: 1, Max: 20, Default: 5]")
+    public int donationDisplayLimit = 5;
 
     @SerialEntry(comment = "Disables some animations to reduce motion sickness\n[Default: false]")
     public boolean reducedMotion = false;

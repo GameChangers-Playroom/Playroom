@@ -1,4 +1,4 @@
-package io.github.flameyheart.playroom.mixin.geo;
+package io.github.flameyheart.playroom.mixin.compat.geo;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;

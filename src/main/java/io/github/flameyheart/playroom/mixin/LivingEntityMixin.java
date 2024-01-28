@@ -8,6 +8,7 @@ import io.github.flameyheart.playroom.duck.FreezeOverlay;
 import io.github.flameyheart.playroom.entity.attribute.DynamicEntityAttributeModifier;
 import io.github.flameyheart.playroom.event.LivingEntityEvents;
 import io.github.flameyheart.playroom.registry.Tags;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
@@ -19,7 +20,11 @@ import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.DamageTypeTags;
+import net.minecraft.server.world.ServerChunkManager;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -147,9 +152,16 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
             if (this.hasPassengers()) this.removeAllPassengers();
             if (this.isOnFire()) {
                 int fireTicks = this.getFireTicks();
-                int timeLeft = Math.max(this.playroom$getFreezeTime() - fireTicks, 0);
+                int timeLeft = Math.max(fireTicks - this.playroom$getFreezeTime(), 0);
                 this.playroom$addTime(-fireTicks);
                 this.setFireTicks(timeLeft);
+                if (timeLeft == 0) {
+                    this.playExtinguishSound();
+                    playroom$setOverlayTime(0);
+
+                    Entity self = (Entity) (Object) this;
+                    ((ServerChunkManager) this.getWorld().getChunkManager()).sendToNearbyPlayers(self, new EntityStatusS2CPacket(self, (byte) -70));
+                }
             }
         }
         if (!playroom$isAffected() && playroom$getOverlayTime() > 0) {
@@ -177,9 +189,22 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
         return playroom$isSlowed() ? playroom$maxSlowdownTime() : 15;
     }
 
+    @Inject(method = "handleStatus", at = @At("HEAD"), cancellable = true)
+    private void addStatusHandler(byte status, CallbackInfo ci) {
+        if (status == -70) {
+            for (int i = 0; i < 20; ++i) {
+                double d = this.random.nextGaussian() * 0.02;
+                double e = this.random.nextGaussian() * 0.02;
+                double f = this.random.nextGaussian() * 0.02;
+                this.getWorld().addParticle(ParticleTypes.POOF, this.getParticleX(1.0), this.getRandomBodyY(), this.getParticleZ(1.0), d, e, f);
+            }
+            ci.cancel();
+        }
+    }
+
     @WrapWithCondition(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;takeKnockback(DDD)V"))
     private boolean preventDelayedKnockback(LivingEntity instance, double strength, double x, double z, DamageSource source) {
-        return !source.isIn(DamageTypeTags.NO_IMPACT);
+        return !source.isIn(DamageTypeTags.NO_IMPACT) && !playroom$isFrozen();
     }
 
     @WrapWithCondition(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;tiltScreen(DD)V"))
@@ -188,7 +213,12 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
     }
 
     @WrapWithCondition(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;playHurtSound(Lnet/minecraft/entity/damage/DamageSource;)V"))
-    private boolean skipHurtSound(LivingEntity instance, DamageSource source) {
+    private boolean skipHurtSound0(LivingEntity instance, DamageSource source) {
+        return !source.isIn(Tags.NO_HURT_SOUND);
+    }
+
+    @WrapWithCondition(method = "onDamaged", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;playSound(Lnet/minecraft/sound/SoundEvent;FF)V"))
+    private boolean skipHurtSound1(LivingEntity instance, SoundEvent soundEvent, float volume, float pitch, DamageSource source) {
         return !source.isIn(Tags.NO_HURT_SOUND);
     }
 

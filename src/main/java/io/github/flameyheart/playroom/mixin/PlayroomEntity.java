@@ -1,10 +1,10 @@
 package io.github.flameyheart.playroom.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import io.github.flameyheart.playroom.duck.FreezableEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,18 +22,25 @@ public abstract class PlayroomEntity {
     @Shadow public abstract boolean isLogicalSideForUpdatingMovement();
     @Shadow public abstract boolean isOnGround();
     @Shadow public abstract World getWorld();
-
     @Shadow public abstract void removeAllPassengers();
-
     @Shadow public abstract boolean hasPassengers();
-
     @Shadow public abstract boolean isOnFire();
-
     @Shadow public abstract int getFireTicks();
-
     @Shadow public abstract void setFireTicks(int fireTicks);
+    @Shadow protected abstract void playExtinguishSound();
+    @Shadow public abstract double getX();
+    @Shadow public abstract double getY();
+    @Shadow public abstract double getZ();
 
-    @Shadow public abstract boolean isFrozen();
+    @Shadow @Final protected Random random;
+
+    @Shadow public abstract double offsetX(double widthScale);
+
+    @Shadow public abstract double getRandomBodyY();
+
+    @Shadow public abstract double getParticleZ(double widthScale);
+
+    @Shadow public abstract double getParticleX(double widthScale);
 
     @ModifyReturnValue(method = "isCollidable", at = @At("RETURN"))
     protected boolean isCollidable(boolean original) {

@@ -7,6 +7,7 @@ import fi.dy.masa.tweakeroo.config.FeatureToggle;
 import io.github.flameyheart.playroom.compat.ModOptional;
 import io.github.flameyheart.playroom.config.ClientConfig;
 import io.github.flameyheart.playroom.config.ServerConfig;
+import io.github.flameyheart.playroom.dontation.RewardDisplayer;
 import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.duck.PlayerDisplayName;
 import io.github.flameyheart.playroom.duck.client.ExpandedClientLoginNetworkHandler;
@@ -50,6 +51,7 @@ import net.minecraft.client.render.item.BuiltinModelItemRenderer;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
 import net.minecraft.util.Arm;
@@ -65,6 +67,7 @@ public class PlayroomClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("Playroom Client");
     private static final KeyBinding DONATIONS_SCREEN_KEYBIND = ClientUtils.addKeybind("donations_screen", GLFW.GLFW_KEY_H);
     private static final KeyBinding SWITCH_HANDEDNESS_KEYBIND = ClientUtils.addKeybind("switch_handedness", GLFW.GLFW_KEY_KP_MULTIPLY);
+    private static final KeyBinding SWAP_MODE_KEYBIND = ClientUtils.addKeybind("swap_mode", GLFW.GLFW_KEY_R);
 
     public static final Map<Long, Integer> ANIMATION_START_TICK = new HashMap<>();
     public static final BipedEntityModel.ArmPose LASER_GUN_POSE = ClassTinkerers.getEnum(BipedEntityModel.ArmPose.class, "LASER_GUN");
@@ -96,6 +99,8 @@ public class PlayroomClient implements ClientModInitializer {
     private static double previousAimZoomDivisor;
     private static double previousUnfreezeZoomDivisor;
 
+    private static final RewardDisplayer displayer = new RewardDisplayer();
+
     @Override
     public void onInitializeClient() {
         ClientConfig.INSTANCE.load();
@@ -118,12 +123,16 @@ public class PlayroomClient implements ClientModInitializer {
     }
 
     private void registerEventListeners() {
-        ClientUtils.listenKeybind(DONATIONS_SCREEN_KEYBIND, (client) -> client.setScreen(new DonationListScreen()));
+        ClientUtils.listenKeybind(DONATIONS_SCREEN_KEYBIND, (client) -> {
+            if (client.getOverlay() != null) return;
+            client.setScreen(new DonationListScreen());
+        });
+        ClientUtils.listenKeybind(SWAP_MODE_KEYBIND, (client) -> sendPacket("swap_mode", PacketByteBufs.empty()));
         ClientUtils.listenKeybind(SWITCH_HANDEDNESS_KEYBIND, (client) -> {
-            
+
             Arm arm = client.options.getMainArm().getValue();
             client.options.getMainArm().setValue(arm == Arm.RIGHT ? Arm.LEFT : Arm.RIGHT);
-        
+
         });
 
         RenderEvents.WORLD.register(WorldRenderer::render);
@@ -181,7 +190,7 @@ public class PlayroomClient implements ClientModInitializer {
             Items.LASER_GUN_OLD.setShowAdvancedTooltip(Screen::hasShiftDown);
             Items.LASER_GUN_OLD.setRenderer(new RenderProvider() {
                 private final OldLaserGunRenderer renderer = new OldLaserGunRenderer();
-                
+
                 @Override
                 public BuiltinModelItemRenderer getCustomRenderer() {
                     return renderer;
@@ -196,29 +205,13 @@ public class PlayroomClient implements ClientModInitializer {
 
             client.execute(() -> deserializeConfig(serverConfig));
         });
-        ClientPlayNetworking.registerGlobalReceiver(Playroom.id("donation/add"), (client, handler, buf, responseSender) -> {
-            UUID id = buf.readUuid();
-            String donorName = buf.readString();
-            String message = buf.readString();
-            float amount = buf.readFloat();
-            String currency = buf.readString();
-            boolean autoApproved = buf.readBoolean();
+        ClientPlayNetworking.registerGlobalReceiver(Playroom.id("donation"), (client, handler, buf, responseSender) -> {
+            Donation donation = buf.decode(NbtOps.INSTANCE, Donation.CODEC);
 
             client.execute(() -> {
-                DONATIONS.put(id, new Donation(id, donorName, message, amount, currency, autoApproved));
-            });
-        });
-        ClientPlayNetworking.registerGlobalReceiver(Playroom.id("donation/update"), (client, handler, buf, responseSender) -> {
-            UUID id = buf.readUuid();
-            Donation.Status status = buf.readEnumConstant(Donation.Status.class);
+                DONATIONS.put(donation.id(), donation);
 
-            client.execute(() -> {
-                Donation donation = DONATIONS.get(id);
-                if (donation != null) {
-                    donation.updateStatus(status);
-                } else {
-                    Playroom.LOGGER.warn("Received donation update for unknown donation with id {}", id);
-                }
+                displayer.displayDonation(donation, ClientConfig.instance().donationExpiryTime);
             });
         });
         ClientPlayNetworking.registerGlobalReceiver(Playroom.id("player_name"), (client, handler, buf, responseSender) -> {
@@ -253,14 +246,25 @@ public class PlayroomClient implements ClientModInitializer {
                 Playroom.serverTime = serverTime;
             });
         });
+        ClientPlayNetworking.registerGlobalReceiver(Playroom.id("experiment"), (client, handler, buf, responseSender) -> {
+            String experiment = buf.readString();
+            boolean status = buf.readBoolean();
+
+            client.execute(() -> {
+                if (Playroom.getServer() != null) return;
+                Playroom.setExperimentStatus(experiment, status);
+            });
+        });
     }
 
     private void handleLoginPackets() {
         ClientLoginNetworking.registerGlobalReceiver(Playroom.id("handshake"), (client, handler, buf, listenerAdder) -> {
             CompletableFuture<PacketByteBuf> future = new CompletableFuture<>();
             String serverConfig = buf.readString();
+            long serverTime = buf.readLong();
 
             client.execute(() -> {
+                Playroom.serverTime = serverTime;
                 if (!deserializeConfig(serverConfig)) {
                     ((ExpandedClientLoginNetworkHandler) handler).playroom$disconnect(Text.translatable("playroom.multiplayer.disconnect.invalid_config"));
                     return;
@@ -352,6 +356,10 @@ public class PlayroomClient implements ClientModInitializer {
         double zoomDivisor = AIM_ZOOM.getZoomDivisor(tickDelta);
         previousAimZoomDivisor = zoomDivisor;
         return zoomDivisor;
+    }
+
+    public static void sendPacket(String id, PacketByteBuf buf) {
+        ClientPlayNetworking.send(Playroom.id(id), buf);
     }
 
 }
