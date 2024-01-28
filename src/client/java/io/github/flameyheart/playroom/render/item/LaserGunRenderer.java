@@ -37,10 +37,10 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
 
 	private final LaserGunModel model;
 	private final MinecraftClient client = MinecraftClient.getInstance();
-	private final float alphaMulti = (IS_IRIS_PRESENT && IrisApi.getInstance().isShaderPackInUse()) ? .1f : 1f;
 
 	private int animFrameTick;
 	private int chargeLevel;
+	private float alphaMulti;
 
 	public LaserGunRenderer() {
 		
@@ -53,7 +53,7 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
 	
 	}
 
-	public String getLayerNameByState(LaserGun animatable) {
+	public String getLayerNameByState() {
 		return animatable == null ? LaserGunModel.ENABLED_RANGEMODE : animatable.isRapidFire(currentItemStack) ? LaserGunModel.ENABLED_RAPIDFIREMODE : LaserGunModel.ENABLED_RANGEMODE;
 	}
 
@@ -61,8 +61,11 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
 	@Override
 	public void render(ItemStack stack, ModelTransformationMode transformType, MatrixStack poseStack, VertexConsumerProvider bufferSource, int packedLight, int packedOverlay) {
 		
+		boolean isFirstPerson = transformType.isFirstPerson();
+		
 		currentItemStack = stack;
 		animatable = (LaserGun) stack.getItem();
+		alphaMulti = isFirstPerson ? (IS_IRIS_PRESENT && IrisApi.getInstance().isShaderPackInUse() ? .3f : 1f) : 1;
 		
 		if(animatable.isRapidFire(stack)) {
 			
@@ -72,13 +75,13 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
 		
 		}
 		
-		chargeLevel = stack.getDamage();
+		chargeLevel = animatable.getPlayroomTag(stack).getInt("Charge");
 		animFrameTick = ((int) RenderUtils.getCurrentTick()) - PlayroomClient.ANIMATION_START_TICK.getOrDefault(GeoItem.getId(stack), 0);
 //		AnimatableTexture.setAndUpdate(model.getLayerTextureResource(animatable, getLayerNameByState(animatable)), animFrameTick);
 		
 		super.render(stack, transformType, poseStack, bufferSource, transformType == ModelTransformationMode.GUI ? LightmapTextureManager.MAX_LIGHT_COORDINATE : packedLight, 0);
 		
-		if(!transformType.isFirstPerson()) return;
+		if(!isFirstPerson) return;
 		
 		AbstractClientPlayerEntity player = client.player;
 		Identifier playerSkin = player.getSkinTexture();
@@ -145,16 +148,17 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
 	
 		public EnergyLayer(GeoRenderer<LaserGun> renderer) {
 			super(renderer);
-			layerAlphaMultiplier = alphaMulti;
 		}
 	
 		@Override
 		protected Identifier getTextureResource(LaserGun animatable) {
-			return model.getLayerTextureResource(animatable, getLayerNameByState(animatable));
+			return model.getLayerTextureResource(animatable, getLayerNameByState());
 		}
 	
 		@Override
 		public void render(MatrixStack poseStack, LaserGun item, BakedGeoModel bakedModel, RenderLayer renderType, VertexConsumerProvider bufferSource, VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay) {
+			
+			layerAlphaMultiplier = alphaMulti;
 			
 			if(chargeLevel == 100
 			|| (!item.isCooldownExpired(currentItemStack)
@@ -173,11 +177,10 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
 
 	private class ChargeLayer extends GlowingGeoLayer<LaserGun> {
 	
-		private final int length = 6;
+		private final int length = 7;
 	
 		private ChargeLayer(GeoRenderer<LaserGun> renderer) {
 			super(renderer);
-			layerAlphaMultiplier = alphaMulti;
 		}
 	
 		@Override
@@ -188,26 +191,25 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
 		@Override
 		public void render(MatrixStack poseStack, LaserGun item, BakedGeoModel bakedModel, RenderLayer renderType, VertexConsumerProvider bufferSource, VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay) {
 			
-//			int cooldown = item.getCooldownLeft(currentItemStack);
+			layerAlphaMultiplier = alphaMulti;
+			int cooldown = currentItemStack.getItemBarStep();
 			
 			HudRenderer.animFrameTick = animFrameTick;
 			
 			if(chargeLevel > 0)
 				layerAlpha = chargeLevel / 100f;
 			else if(animFrameTick < length)
-				layerAlpha = MathHelper.clamp(MathHelper.sin(animFrameTick * (MathHelper.PI / length)), 0, 1);
-//			else if(cooldown > 0) {
-//				
-//				float midPoint = ServerConfig.instance().laserFireReloadTime / 2f * .7f;
-//				
-//				if(cooldown < midPoint)
-//					layerAlpha = 0;
-//				else return;
-//			
-//			}
+				layerAlpha = MathHelper.sin(animFrameTick * (MathHelper.PI / length)) * 1.1f;
+			else if(cooldown < 14) {
+				
+//				float midPoint = reloadTime / 2f * .7f;
+				
+				layerAlpha = cooldown / 13f;
+			
+			}
 			else return;
 			
-			HudRenderer.chargeLayerAlpha = layerAlpha;
+			HudRenderer.chargeLayerAlpha = chargeLevel;
 			
 			render(poseStack, animatable, bakedModel, bufferSource, partialTick);
 		

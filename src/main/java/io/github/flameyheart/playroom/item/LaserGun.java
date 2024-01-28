@@ -265,7 +265,7 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
         long time = Playroom.serverTime;
         long timeLeft = cooldownExpires - time;
 
-        if (timeLeft <= 0 && getPlayroomTag(stack).getBoolean("RapidFire")) {
+        if (timeLeft <= 0 && isRapidFire(stack)) {
             return Math.round(getPlayroomTag(stack).getByte("Amo") * 13.0F / (float) ServerConfig.instance().laserRapidFireAmo);
         }
 
@@ -279,7 +279,7 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
         long time = Playroom.serverTime;
         long timeLeft = cooldownExpires - time;
 
-        if (timeLeft <= 0 && getPlayroomTag(stack).getBoolean("RapidFire")) return 0x0000FF;
+        if (timeLeft <= 0 && isRapidFire(stack)) return 0x0000FF;
 
         float f = Math.max(0f, ((float) cooldown - timeLeft) / (float) cooldown);
 

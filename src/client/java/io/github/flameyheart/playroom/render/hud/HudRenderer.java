@@ -25,7 +25,7 @@ public class HudRenderer {
         drawContext.drawText(client.textRenderer, "Unfreeze zoom divisor: " + PlayroomClient.getPreviousUnfreezeZoomDivisor(), 5, 49, 0xFFFFFF, true);
         drawContext.drawText(client.textRenderer, "Render Frame Tick (RFT): " + (int) RenderUtils.getCurrentTick(), 5, 60, 0xFFFFFF, true);
         drawContext.drawText(client.textRenderer, "Animation Frame Tick (AFT): " + animFrameTick, 5, 71, 0xFFFFFF, true);
-        drawContext.drawText(client.textRenderer, "Alpha (Layer: ChargeLayer): " + chargeLayerAlpha, 5, 82, 0xFFFFFF, true);
+        drawContext.drawText(client.textRenderer, "Alpha (Layer: EnergyLayer): " + chargeLayerAlpha, 5, 82, 0xFFFFFF, true);
         Entity target = client.targetedEntity;
         String content;
         if (target instanceof PlayerEntity targetPlayer) {
