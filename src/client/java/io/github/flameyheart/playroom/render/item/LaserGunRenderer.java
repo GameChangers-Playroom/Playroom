@@ -4,11 +4,11 @@ import io.github.flameyheart.playroom.PlayroomClient;
 import io.github.flameyheart.playroom.compat.ModOptional;
 import io.github.flameyheart.playroom.config.ClientConfig;
 import io.github.flameyheart.playroom.item.LaserGun;
-import io.github.flameyheart.playroom.item.OldLaserGun;
 import io.github.flameyheart.playroom.mixin.compat.geo.AnimationControllerAccessor;
 import io.github.flameyheart.playroom.render.hud.HudRenderer;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.model.ModelTransform;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.LightmapTextureManager;
@@ -104,10 +104,10 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
         float scale = .6666f;
 
         if (ClientConfig.instance().laserGunHandRender == ClientConfig.LaserGunHandRender.MAC) {
-            
+
             ModelTransform leftSleeveTransform = playerEntityModel.leftSleeve.getTransform();
             ModelTransform rightSleeveTransform = playerEntityModel.rightSleeve.getTransform();
-            
+
             poseStack.push();
             poseStack.scale(scale, scale, scale);
 
@@ -146,7 +146,7 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
             playerEntityModel.leftSleeve.render(poseStack, sleeveTexture, packedLight, playerOverlay);
             playerEntityModel.rightArm.render(poseStack, armTexture, packedLight, playerOverlay);
             playerEntityModel.rightSleeve.render(poseStack, sleeveTexture, packedLight, playerOverlay);
-            
+
             playerEntityModel.leftSleeve.setTransform(leftSleeveTransform);
             playerEntityModel.rightSleeve.setTransform(rightSleeveTransform);
         }
@@ -155,11 +155,12 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
     @Override
     public void renderRecursively(MatrixStack matrixStack, LaserGun animatable, GeoBone bone, RenderLayer renderType, VertexConsumerProvider bufferSource, VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
         MinecraftClient client = MinecraftClient.getInstance();
-        
+
         super.renderRecursively(matrixStack, animatable, bone, renderType, bufferSource, this.bufferSource.getBuffer(renderType), isReRender, partialTick, packedLight, packedOverlay, red, green, blue, alpha);
 
-        if(isReRender)
+        if (isReRender) {
             return;
+        }
 
         boolean renderArms;
 
@@ -204,32 +205,42 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
 
                 float scale = 1 / 2f;
                 matrixStack.multiplyPositionMatrix(bone.getModelRotationMatrix());
+                ModelPart armPart;
+                ModelPart sleevePart;
                 if (bone.getName().equals("leftArm")) {
                     matrixStack.scale(scale, scale, scale);
                     if (leftHanded) {
-                        matrixStack.translate(-0.23f, -0.03, 0.765);
+                        matrixStack.translate(-0.14f, -0.03, 0.765);
+                        armPart = playerEntityModel.rightArm;
+                        sleevePart = playerEntityModel.rightSleeve;
                     } else {
                         matrixStack.translate(0.015, -0.03, 0.765);
+                        armPart = playerEntityModel.leftArm;
+                        sleevePart = playerEntityModel.leftSleeve;
                     }
 
                     matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-90));
 
-                    playerEntityModel.leftArm.setPivot(0, 0, 0);
-                    playerEntityModel.leftArm.setAngles(0, 0, 0);
-                    playerEntityModel.leftArm.render(matrixStack, arm, packedLight, packedOverlay, 1, 1, 1, 1);
+                    armPart.setPivot(0, 0, 0);
+                    armPart.setAngles(0, 0, 0);
+                    armPart.render(matrixStack, arm, packedLight, packedOverlay, 1, 1, 1, 1);
 
-                    playerEntityModel.leftSleeve.setPivot(bone.getPivotX(), bone.getPivotY(), bone.getPivotZ());
-                    playerEntityModel.leftSleeve.setAngles(bone.getRotX(), bone.getRotY(), bone.getRotZ());
-                    playerEntityModel.leftSleeve.render(matrixStack, sleeve, packedLight, packedOverlay, 1, 1, 1, 1);
+                    sleevePart.setPivot(bone.getPivotX(), bone.getPivotY(), bone.getPivotZ());
+                    sleevePart.setAngles(bone.getRotX(), bone.getRotY(), bone.getRotZ());
+                    sleevePart.render(matrixStack, sleeve, packedLight, packedOverlay, 1, 1, 1, 1);
                 } else if (bone.getName().equals("rightArm")) {
                     matrixStack.scale(scale, scale, scale);
                     if (leftHanded) {
-                        matrixStack.translate(0.41f, -0.03, 0.56);
+                        armPart = playerEntityModel.leftArm;
+                        sleevePart = playerEntityModel.leftSleeve;
+                        matrixStack.translate(0.285f, -0.03, 0.56);
 
                         matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-94.3f));
                         matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-7f));
                         matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(31f));
                     } else {
+                        armPart = playerEntityModel.rightArm;
+                        sleevePart = playerEntityModel.rightSleeve;
                         matrixStack.translate(-0.41f, -0.03, 0.56);
 
                         matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-94.3f));
@@ -237,14 +248,15 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
                         matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(-31f));
                     }
 
-                    playerEntityModel.rightArm.setPivot(0, 0, 0);
-                    playerEntityModel.rightArm.setAngles(0, 0, 0);
-                    playerEntityModel.rightArm.render(matrixStack, arm, packedLight, packedOverlay, 1, 1, 1, 1);
+                    armPart.setPivot(0, 0, 0);
+                    armPart.setAngles(0, 0, 0);
+                    armPart.render(matrixStack, arm, packedLight, packedOverlay, 1, 1, 1, 1);
 
-                    playerEntityModel.rightSleeve.setPivot(bone.getPivotX(), bone.getPivotY(), bone.getPivotZ());
-                    playerEntityModel.rightSleeve.setAngles(bone.getRotX(), bone.getRotY(), bone.getRotZ());
-                    playerEntityModel.rightSleeve.render(matrixStack, sleeve, packedLight, packedOverlay, 1, 1, 1, 1);
+                    sleevePart.setPivot(bone.getPivotX(), bone.getPivotY(), bone.getPivotZ());
+                    sleevePart.setAngles(bone.getRotX(), bone.getRotY(), bone.getRotZ());
+                    sleevePart.render(matrixStack, sleeve, packedLight, packedOverlay, 1, 1, 1, 1);
                 }
+
                 matrixStack.pop();
             }
         }
@@ -273,6 +285,12 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
 
         @Override
         public void render(MatrixStack poseStack, LaserGun item, BakedGeoModel bakedModel, RenderLayer renderType, VertexConsumerProvider bufferSource, VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay) {
+            if (!ClientConfig.instance().reducedMotion.isEnabled("laser_charge")) {
+                layerAlpha = 1;
+                render(poseStack, animatable, bakedModel, bufferSource, partialTick);
+                return;
+            }
+
             layerAlphaMultiplier = alphaMulti;
 
             if (chargeLevel == 100
@@ -286,7 +304,6 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
             }
 
             render(poseStack, animatable, bakedModel, bufferSource, partialTick);
-
         }
 
     }

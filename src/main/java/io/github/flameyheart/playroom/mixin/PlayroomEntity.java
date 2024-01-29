@@ -42,10 +42,10 @@ public abstract class PlayroomEntity {
 
     @Shadow public abstract double getParticleX(double widthScale);
 
-    @ModifyReturnValue(method = "isCollidable", at = @At("RETURN"))
+    /*@ModifyReturnValue(method = "isCollidable", at = @At("RETURN"))
     protected boolean isCollidable(boolean original) {
         return original;
-    }
+    }*/
 
     @ModifyReturnValue(method = "canMoveVoluntarily", at = @At("RETURN"))
     protected boolean canMoveVoluntarily(boolean original) {

@@ -67,7 +67,7 @@ public class PlayroomClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("Playroom Client");
     private static final KeyBinding DONATIONS_SCREEN_KEYBIND = ClientUtils.addKeybind("donations_screen", GLFW.GLFW_KEY_H);
     private static final KeyBinding SWITCH_HANDEDNESS_KEYBIND = ClientUtils.addKeybind("switch_handedness", GLFW.GLFW_KEY_KP_MULTIPLY);
-    private static final KeyBinding SWAP_MODE_KEYBIND = ClientUtils.addKeybind("swap_mode", GLFW.GLFW_KEY_R);
+//    private static final KeyBinding SWAP_MODE_KEYBIND = ClientUtils.addKeybind("swap_mode", GLFW.GLFW_KEY_R);
 
     public static final Map<Long, Integer> ANIMATION_START_TICK = new HashMap<>();
     public static final BipedEntityModel.ArmPose LASER_GUN_POSE = ClassTinkerers.getEnum(BipedEntityModel.ArmPose.class, "LASER_GUN");
@@ -127,7 +127,7 @@ public class PlayroomClient implements ClientModInitializer {
             if (client.getOverlay() != null) return;
             client.setScreen(new DonationListScreen());
         });
-        ClientUtils.listenKeybind(SWAP_MODE_KEYBIND, (client) -> sendPacket("swap_mode", PacketByteBufs.empty()));
+//        ClientUtils.listenKeybind(SWAP_MODE_KEYBIND, (client) -> sendPacket("swap_mode", PacketByteBufs.empty()));
         ClientUtils.listenKeybind(SWITCH_HANDEDNESS_KEYBIND, (client) -> {
 
             Arm arm = client.options.getMainArm().getValue();

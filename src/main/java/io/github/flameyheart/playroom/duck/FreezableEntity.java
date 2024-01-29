@@ -5,6 +5,7 @@ import io.github.flameyheart.playroom.config.ServerConfig;
 public interface FreezableEntity {
     void playroom$setSlowdownTime(int ticks);
     default void playroom$addSlowdownTime(int ticks) {
+        if (playroom$isFrozen()) return;
         int finalTime = playroom$getSlowdownTime() + ticks;
         if (finalTime > playroom$maxSlowdownTime()) {
             playroom$freeze();

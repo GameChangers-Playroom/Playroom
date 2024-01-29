@@ -3,10 +3,13 @@ package io.github.flameyheart.playroom.entity;
 import io.github.flameyheart.playroom.Constants;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.duck.FreezableEntity;
+import io.github.flameyheart.playroom.mixin.FluidBlockAccessor;
 import io.github.flameyheart.playroom.registry.Damage;
 import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Sounds;
 import io.github.flameyheart.playroom.registry.Tags;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.FluidBlock;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -14,8 +17,11 @@ import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.fluid.Fluids;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
@@ -68,7 +74,11 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
                 this.onHit(living);
                 playSound(entity.getWorld(), entity, getHitSound());
                 if (isRapidFire()) {
-                    freezableEntity.playroom$addSlowdownTime(ServerConfig.instance().laserRapidFreezeAmount);
+                    if (freezableEntity.playroom$isFrozen()) {
+                        freezableEntity.playroom$addFreezeTime(ServerConfig.instance().laserRapidFreezeAmount / 2);
+                    } else {
+                        freezableEntity.playroom$addSlowdownTime(ServerConfig.instance().laserRapidFreezeAmount);
+                    }
                 } else {
                     freezableEntity.playroom$freeze();
                 }
@@ -79,6 +89,19 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
     @Override
     protected void onBlockHit(BlockHitResult blockHitResult) {
         this.discard();
+    }
+
+    @Override
+    public boolean updateMovementInFluid(TagKey<Fluid> tag, double speed) {
+        if (ServerConfig.instance().laserFreezeWater) {
+            if (getWorld().getBlockState(getBlockPos()).getBlock() instanceof FluidBlock fluid) {
+                if (((FluidBlockAccessor) fluid).getFluid() == Fluids.WATER) {
+                    getWorld().setBlockState(getBlockPos(), Blocks.FROSTED_ICE.getDefaultState());
+                    this.discard();
+                }
+            }
+        }
+        return super.updateMovementInFluid(tag, speed);
     }
 
     public void setRapidFire(boolean rapidFire) {

@@ -15,7 +15,7 @@ public class PredicateUtils {
     }
 
     public static boolean checkUnlessDev(@Nullable Entity entity, @NotNull String permission, int defaultRequiredLevel, boolean devValue) {
-        if (entity == null) return true;
+        if (entity == null) return false;
         if (Playroom.isDev()) return devValue;
         return Permissions.check(entity.getCommandSource(), permission, defaultRequiredLevel);
     }

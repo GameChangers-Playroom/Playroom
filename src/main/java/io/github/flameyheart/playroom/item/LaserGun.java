@@ -135,7 +135,7 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     }
 
     public int getMaxUseTime(ItemStack stack) {
-        return isRapidFire(stack) ? 0 : 72000;
+        return !isCooldownExpired(stack) || isRapidFire(stack) ? 0 : 72000;
     }
 
     @Override
@@ -199,12 +199,14 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
 
     public void swapMode(PlayerEntity player, Hand hand, ItemStack stack, World world) {
         if (!canUse(stack, hand)) return;
-        boolean rapidFire = getPlayroomTag(stack).getBoolean("RapidFire");
-
-        getPlayroomTag(stack).putBoolean("RapidFire", !rapidFire);
-        setCooldown(stack, CooldownReason.SWAP_MODE, ServerConfig.instance().laserSwapModeCooldown);
-
         if (world instanceof ServerWorld serverWorld) {
+            boolean rapidFire = getPlayroomTag(stack).getBoolean("RapidFire");
+
+            getPlayroomTag(stack).putBoolean("RapidFire", !rapidFire);
+            setCooldown(stack, CooldownReason.SWAP_MODE, ServerConfig.instance().laserSwapModeCooldown);
+
+            getPlayroomTag(stack).putLong("Charge", 0);
+
             SoundEvent soundEvent = rapidFire ? Sounds.LASER_GUN_MODE_RAPID : Sounds.LASER_GUN_MODE_RANGE;
             world.playSound(null, player.getX(), player.getY(), player.getZ(), soundEvent, Constants.PLAYROOM_SOUND_CATEGORY, 0.5F, 2.0F);
             long geoId = GeoItem.getOrAssignId(stack, serverWorld);
@@ -215,10 +217,10 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     private void handleRangedMode(ItemStack stack, World world, PlayerEntity player, Hand hand) {
         if (!canFire(stack, hand, player)) return;
 
-        setCooldown(stack, CooldownReason.RELOAD, ServerConfig.instance().laserFireReloadTime);
-        getPlayroomTag(stack).putByte("Amo", (byte) (-1));
-
         if (world instanceof ServerWorld serverWorld) {
+            setCooldown(stack, CooldownReason.RELOAD, ServerConfig.instance().laserFireReloadTime);
+            getPlayroomTag(stack).putByte("Amo", (byte) (-1));
+
             fireProjectile(player, false, serverWorld);
             playShootSound(world, player, false);
         }
@@ -227,25 +229,27 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     private void handleRapidFire(World world, @NotNull PlayerEntity player, Hand hand, ItemStack stack) {
         if (!canFire(stack, hand, player)) return;
 
-        boolean rapidFire = getPlayroomTag(stack).getBoolean("RapidFire");
-        if (!rapidFire) return;
+        if (world instanceof ServerWorld serverWorld) {
+            boolean rapidFire = getPlayroomTag(stack).getBoolean("RapidFire");
+            if (!rapidFire) return;
 
-        boolean canFire;
-        if (ServerConfig.instance().laserRapidFireAmo > 0) {
-            short amo = (short) (getPlayroomTag(stack).getShort("Amo") - 1);
-            getPlayroomTag(stack).putShort("Amo", amo);
-            canFire = amo >= 0;
+            boolean canFire;
+            if (ServerConfig.instance().laserRapidFireAmo > 0) {
+                short amo = (short) (getPlayroomTag(stack).getShort("Amo") - 1);
+                getPlayroomTag(stack).putShort("Amo", amo);
+                canFire = amo >= 0;
 
-            if (amo <= 0) {
-                setCooldown(stack, CooldownReason.RELOAD, ServerConfig.instance().laserFireReloadTime);
+                if (amo <= 0) {
+                    setCooldown(stack, CooldownReason.RELOAD, ServerConfig.instance().laserFireReloadTime);
+                }
+            } else {
+                canFire = true;
             }
-        } else {
-            canFire = true;
-        }
 
-        if (world instanceof ServerWorld serverWorld && canFire) {
-            fireProjectile(player, true, serverWorld);
-            playShootSound(world, player, true);
+            if (canFire) {
+                fireProjectile(player, true, serverWorld);
+                playShootSound(world, player, true);
+            }
         }
     }
 
