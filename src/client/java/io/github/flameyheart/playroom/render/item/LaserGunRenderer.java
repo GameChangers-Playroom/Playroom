@@ -103,10 +103,11 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
         PlayerEntityModel<AbstractClientPlayerEntity> playerEntityModel = playerEntityRenderer.getModel();
         float scale = .6666f;
 
-        ModelTransform leftSleeveTransform = playerEntityModel.leftSleeve.getTransform();
-        ModelTransform rightSleeveTransform = playerEntityModel.rightSleeve.getTransform();
-
         if (ClientConfig.instance().laserGunHandRender == ClientConfig.LaserGunHandRender.MAC) {
+            
+            ModelTransform leftSleeveTransform = playerEntityModel.leftSleeve.getTransform();
+            ModelTransform rightSleeveTransform = playerEntityModel.rightSleeve.getTransform();
+            
             poseStack.push();
             poseStack.scale(scale, scale, scale);
 
@@ -145,12 +146,20 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
             playerEntityModel.leftSleeve.render(poseStack, sleeveTexture, packedLight, playerOverlay);
             playerEntityModel.rightArm.render(poseStack, armTexture, packedLight, playerOverlay);
             playerEntityModel.rightSleeve.render(poseStack, sleeveTexture, packedLight, playerOverlay);
+            
+            playerEntityModel.leftSleeve.setTransform(leftSleeveTransform);
+            playerEntityModel.rightSleeve.setTransform(rightSleeveTransform);
         }
     }
 
     @Override
     public void renderRecursively(MatrixStack matrixStack, LaserGun animatable, GeoBone bone, RenderLayer renderType, VertexConsumerProvider bufferSource, VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
         MinecraftClient client = MinecraftClient.getInstance();
+        
+        super.renderRecursively(matrixStack, animatable, bone, renderType, bufferSource, this.bufferSource.getBuffer(renderType), isReRender, partialTick, packedLight, packedOverlay, red, green, blue, alpha);
+
+        if(isReRender)
+            return;
 
         boolean renderArms;
 
@@ -163,8 +172,6 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
             }
             default -> renderArms = false;
         }
-
-        super.renderRecursively(matrixStack, animatable, bone, renderType, bufferSource, this.bufferSource.getBuffer(renderType), isReRender, partialTick, packedLight, packedOverlay, red, green, blue, alpha);
 
         if (ClientConfig.instance().laserGunHandRender == ClientConfig.LaserGunHandRender.FAIA) {
             ModelTransformationMode hand;
@@ -322,7 +329,6 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
                 // This must start at full alpha since it is used to hide the animation resetting, if we fade it in the fame reset will be visible
                 layerAlpha = MathHelper.clamp(1 - (animFrameTick / (float) length), 0, 1);
             } else if (cooldown > 0) {
-//				float midPoint = reloadTime / 2f * .7f;
                 layerAlpha = 1 - (cooldown / (float) item.getCooldownTime(currentItemStack));
             } else {
                 return;
