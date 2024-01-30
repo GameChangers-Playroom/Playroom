@@ -1,5 +1,6 @@
 package io.github.flameyheart.playroom;
 
+import com.bawnorton.trulyrandom.client.event.ClientRandomiseEvents;
 import com.chocohead.mm.api.ClassTinkerers;
 import fi.dy.masa.malilib.hotkeys.IHotkeyCallback;
 import fi.dy.masa.malilib.hotkeys.KeybindMulti;
@@ -43,6 +44,8 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.KeyBinding;
@@ -59,8 +62,12 @@ import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.bernie.geckolib.animatable.client.RenderProvider;
-
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class PlayroomClient implements ClientModInitializer {
@@ -197,6 +204,17 @@ public class PlayroomClient implements ClientModInitializer {
                 }
             });
         });
+        List<Block> iceBlocks = List.of(Blocks.ICE, Blocks.PACKED_ICE, Blocks.BLUE_ICE, Blocks.SNOW_BLOCK, Blocks.POWDER_SNOW);
+        List<Item> iceItems = List.of(Blocks.ICE.asItem(), Blocks.PACKED_ICE.asItem(), Blocks.BLUE_ICE.asItem(), Blocks.SNOW_BLOCK.asItem());
+        Random rnd = new Random();
+        ClientRandomiseEvents.BLOCK_MODELS.register(map -> {
+            if(!Playroom.isExperimentEnabled("freeze_everything")) return;
+            map.replaceAll((s, v) -> iceBlocks.get(rnd.nextInt(iceBlocks.size())).getDefaultState());
+        });
+        ClientRandomiseEvents.ITEM_MODELS.register(map -> {
+            if(!Playroom.isExperimentEnabled("freeze_everything")) return;
+            map.replaceAll((s, v) -> iceItems.get(rnd.nextInt(iceItems.size())));
+        });
     }
 
     private void handlePlayPackets() {
@@ -251,8 +269,11 @@ public class PlayroomClient implements ClientModInitializer {
             boolean status = buf.readBoolean();
 
             client.execute(() -> {
-                if (Playroom.getServer() != null) return;
                 Playroom.setExperimentStatus(experiment, status);
+                PacketByteBuf responseBuf = PacketByteBufs.create();
+                responseBuf.writeString(experiment);
+                responseBuf.writeBoolean(status);
+                responseSender.sendPacket(Playroom.id("experiment_received"), responseBuf);
             });
         });
     }
