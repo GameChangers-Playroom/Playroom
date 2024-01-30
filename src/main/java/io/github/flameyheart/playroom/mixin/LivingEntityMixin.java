@@ -5,14 +5,12 @@ import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.duck.FreezeOverlay;
-import io.github.flameyheart.playroom.entity.attribute.DynamicEntityAttributeModifier;
 import io.github.flameyheart.playroom.event.LivingEntityEvents;
 import io.github.flameyheart.playroom.registry.Tags;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
@@ -37,8 +35,6 @@ import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.UUID;
-
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends PlayroomEntity implements FreezableEntity, FreezeOverlay {
     @Shadow
@@ -53,10 +49,11 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
     @Shadow
     public abstract @Nullable EntityAttributeInstance getAttributeInstance(EntityAttribute attribute);
 
+    @Shadow public abstract double getAttributeBaseValue(EntityAttribute attribute);
+
     private static final @Unique TrackedData<Integer> playroom$FREEZE = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private static final @Unique TrackedData<Integer> playroom$SLOWDOWN = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private static final @Unique TrackedData<Integer> playroom$SNOW_OVERLAY = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.INTEGER);
-    private static final @Unique UUID playroom$SLOWDOWN_ID = UUID.fromString("3bceceb5-bdd6-43b5-a8f6-64e0eb1893b1");
 
 
     @Inject(method = "initDataTracker", at = @At("HEAD"))
@@ -82,10 +79,10 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
         playroom$setSlowdownTime(compound.getInt("Slowdown"));
     }
 
-    @Override
+    /*@Override
     protected boolean isCollidable(boolean original) {
         return super.isCollidable(original) || this.playroom$isFrozen();
-    }
+    }*/
 
     @Override
     protected boolean canMoveVoluntarily(boolean original) {
@@ -99,21 +96,6 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
     public void playroom$setSlowdownTime(int ticks) {
         int time = MathHelper.clamp(ticks, 0, playroom$maxSlowdownTime());
         this.dataTracker.set(playroom$SLOWDOWN, time);
-
-        EntityAttributeInstance entityAttributeInstance = this.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-        if (entityAttributeInstance == null || playroom$maxSlowdownTime() <= 0) return;
-        if (entityAttributeInstance.getModifier(playroom$SLOWDOWN_ID) != null && time == 0) {
-            entityAttributeInstance.removeModifier(playroom$SLOWDOWN_ID);
-        } else if (entityAttributeInstance.getModifier(playroom$SLOWDOWN_ID) == null && time > 0) {
-            entityAttributeInstance.addTemporaryModifier(
-              new DynamicEntityAttributeModifier(
-                playroom$SLOWDOWN_ID,
-                "Aim slowdown",
-                () -> -ServerConfig.instance().freezeSlowdown * ((double) playroom$getSlowdownTime() / playroom$maxSlowdownTime()),
-                EntityAttributeModifier.Operation.MULTIPLY_BASE
-              )
-            );
-        }
     }
 
     @Override
@@ -200,6 +182,22 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
             }
             ci.cancel();
         }
+    }
+
+    @ModifyReturnValue(method = "getAttributeValue(Lnet/minecraft/entity/attribute/EntityAttribute;)D", at = @At("RETURN"))
+    private double slowdownAttribute0(double original, EntityAttribute attribute) {
+        if (attribute.equals(EntityAttributes.GENERIC_MOVEMENT_SPEED) && playroom$isSlowed()) {
+            original += getAttributeBaseValue(attribute) * (-ServerConfig.instance().freezeSlowdown * ((double) playroom$getSlowdownTime() / playroom$maxSlowdownTime()));
+        }
+        return original;
+    }
+
+    @ModifyReturnValue(method = "getJumpVelocity", at = @At("RETURN"))
+    private float slowdownAttribute1(float original) {
+        if (playroom$isSlowed()) {
+            original *= 1 - (ServerConfig.instance().freezeSlowdown * ((float) playroom$getSlowdownTime() / playroom$maxSlowdownTime()));
+        }
+        return original;
     }
 
     @WrapWithCondition(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;takeKnockback(DDD)V"))

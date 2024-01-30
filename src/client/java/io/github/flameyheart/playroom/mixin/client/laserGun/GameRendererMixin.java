@@ -1,8 +1,10 @@
 package io.github.flameyheart.playroom.mixin.client.laserGun;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import io.github.flameyheart.playroom.PlayroomClient;
+import io.github.flameyheart.playroom.config.ClientConfig;
 import io.github.flameyheart.playroom.item.LaserGun;
 import io.github.flameyheart.playroom.item.OldLaserGun;
 import net.minecraft.client.MinecraftClient;
@@ -54,5 +56,18 @@ public class GameRendererMixin {
     @ModifyReturnValue(method = "getFov", at = @At("RETURN"))
     private double modifyFovWithZoom(double fov, Camera camera, float tickDelta, boolean changingFov) {
         return fov / PlayroomClient.getAimZoomDivisor(tickDelta);
+    }
+
+    @ModifyExpressionValue(
+      method = "renderHand",
+      at = @At(
+        value = "INVOKE",
+        target = "Lnet/minecraft/client/render/GameRenderer;getFov(Lnet/minecraft/client/render/Camera;FZ)D"
+      )
+    )
+    private double keepHandFov(double fov, MatrixStack pose, Camera camera, float tickDelta) {
+        if (!ClientConfig.instance().laserAimHandFov)
+            return fov * PlayroomClient.getAimZoomDivisor(tickDelta);
+        return fov;
     }
 }

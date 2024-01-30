@@ -94,6 +94,10 @@ public class ServerConfig {
 
     @SerialEntry(comment = "The amount of damage a rapid fire shot does\n[Min: 0, Default: 0.3] [DECIMAL SUPPORTED]")
     public float laserRapidDamage = 0.3f;
+
+    @SendToClient
+    @SerialEntry(comment = "Laser shots can freeze water\n[Default: false]")
+    public boolean laserFreezeWater = false;
     //endregion
 
     //region FREEZE TIMES
@@ -114,8 +118,4 @@ public class ServerConfig {
     @SendToClient
     @SerialEntry(comment = "The duration of the ice\n[Min: 0, Default: ??]")
     public int freezeIceTime = 100;
-
-    @Deprecated(forRemoval = true)
-    @SerialEntry(comment = "The rewards interaction commands\n[Default: {}]")
-    public Map<String, List<String>> commands = new HashMap<>();
 }

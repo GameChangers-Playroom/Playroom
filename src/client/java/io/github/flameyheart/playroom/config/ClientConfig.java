@@ -43,6 +43,9 @@ public class ClientConfig {
     @SerialEntry(comment = "Enables debug info\n[Default: false]")
     public boolean debugInfo = false;
 
+    @SerialEntry(comment = "Changes the hand FOV when aiming\n[Default: true]")
+    public boolean laserAimHandFov = true;
+
     @SerialEntry(comment = "The relative sensitivity of the camera while aiming\n[Min: 0, Default: 100]")
     public short laserAimCameraSmoothness = 100;
 

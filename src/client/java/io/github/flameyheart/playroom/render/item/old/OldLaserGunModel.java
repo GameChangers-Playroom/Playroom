@@ -8,7 +8,7 @@ import net.minecraft.util.Identifier;
 public class OldLaserGunModel extends AlternativeGeoModel<OldLaserGun> {
     @Override
     public Identifier getModelResource(OldLaserGun animatable) {
-        return Playroom.id("geo/laser_gun.geo.old.json");
+        return Playroom.id("geo/laser_gun.geo.json");
     }
 
     @Override

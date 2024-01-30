@@ -249,6 +249,9 @@
     "config.playroom.option.general.debugInfo": "Debug info",
     "config.playroom.option.general.debugInfo.description": "Shows debug info in the top left corner",
 
+    "config.playroom.option.laser_client.laserAimHandFov": "Laser gun aim affect hand FOV",
+    "config.playroom.option.laser_client.laserAimHandFov.description": "Changes the hand FOV when aiming",
+
     "config.playroom.option.laser_client.laserAimCameraSmoothness": "Laser gun aim camera smoothness",
     "config.playroom.option.laser_client.laserAimCameraSmoothness.description": "The relative sensitivity of the camera while aiming",
 
@@ -333,6 +336,9 @@
 
     "config.playroom.option.laser_gun.laserRapidDamage": "Rapid fire shot damage",
     "config.playroom.option.laser_gun.laserRapidDamage.description": "The amount of damage a rapid fire shot does",
+
+    "config.playroom.option.laser_gun.laserFreezeWater": "Laser shots freeze water",
+    "config.playroom.option.laser_gun.laserFreezeWater.description": "Laser shots can freeze water",
 
 
     "config.playroom.option.player_freeze.freezeZoomDuration": "Freeze zoom duration",

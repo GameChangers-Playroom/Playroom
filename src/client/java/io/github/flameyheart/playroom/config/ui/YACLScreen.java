@@ -6,6 +6,7 @@ import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ClientConfig;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.dontation.DonationLocation;
+import io.github.flameyheart.playroom.util.PredicateUtils;
 import io.github.flameyheart.playroom.zoom.TransitionType;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -69,17 +70,30 @@ public class YACLScreen {
             .build()
         );
 
-        general.option(
-          Option.<Boolean>createBuilder()
-            .name(Text.translatable("config.playroom.option.general.debugInfo"))
-            .description(OptionDescription.of(Text.translatable("config.playroom.option.general.debugInfo.description")))
-            .binding(clientDefaults.debugInfo, () -> clientConfig.debugInfo, newVal -> clientConfig.debugInfo = newVal)
-            .controller(TickBoxControllerBuilder::create)
-            .build()
-        );
+        var debug = Option.<Boolean>createBuilder()
+          .name(Text.translatable("config.playroom.option.general.debugInfo"))
+          .description(OptionDescription.of(Text.translatable("config.playroom.option.general.debugInfo.description")))
+          .binding(clientDefaults.debugInfo, () -> clientConfig.debugInfo, newVal -> clientConfig.debugInfo = newVal)
+          .controller(TickBoxControllerBuilder::create)
+          .build();
+
+        general.option(debug);
+
+        if (!PredicateUtils.checkUnlessDev(MinecraftClient.getInstance().player, "playroom.debug", 4, true)) {
+            debug.setAvailable(false);
+        }
 
         OptionGroup.Builder laserGunClient = OptionGroup.createBuilder().name(Text.translatable("config.playroom.option_group.laser_gun"));
         laserGunClient.collapsed(true);
+
+        laserGunClient.option(
+          Option.<Boolean>createBuilder()
+            .name(Text.translatable("config.playroom.option.laser_client.laserAimHandFov"))
+            .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_client.laserAimHandFov.description")))
+            .binding(clientDefaults.laserAimHandFov, () -> clientConfig.laserAimHandFov, newVal -> clientConfig.laserAimHandFov = newVal)
+            .controller(TickBoxControllerBuilder::create)
+            .build()
+        );
 
         laserGunClient.option(
           Option.<Integer>createBuilder()
@@ -305,7 +319,7 @@ public class YACLScreen {
                 .name(Text.translatable("config.playroom.option.laser_gun.laserRapidFreezeAmount"))
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRapidFreezeAmount.description")))
                 .binding((int) serverDefaults.laserRapidFreezeAmount, () -> (int) serverConfig.laserRapidFreezeAmount, newVal -> serverConfig.laserRapidFreezeAmount = newVal.shortValue())
-                .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 500).step(20))
+                .controller(option -> IntegerSliderControllerBuilder.create(option).range(1, 500).step(1))
                 .build()
             );
 
@@ -342,6 +356,15 @@ public class YACLScreen {
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRapidDamage.description")))
                 .binding(serverDefaults.laserRapidDamage, () -> serverConfig.laserRapidDamage, newVal -> serverConfig.laserRapidDamage = newVal)
                 .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 5f).formatValue(HEALTH_FORMATTER).step(0.01f))
+                .build()
+            );
+
+            laserGun.option(
+              Option.<Boolean>createBuilder()
+                .name(Text.translatable("config.playroom.option.laser_gun.laserFreezeWater"))
+                .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserFreezeWater.description")))
+                .binding(serverDefaults.laserFreezeWater, () -> serverConfig.laserFreezeWater, newVal -> serverConfig.laserFreezeWater = newVal)
+                .controller(TickBoxControllerBuilder::create)
                 .build()
             );
 
@@ -398,7 +421,6 @@ public class YACLScreen {
 
             server.group(playerFreeze.build());
             //endregion
-            server.option(LabelOption.create(Text.translatable("config.playroom.option.server.commands")));
 
             builder.category(server.build());
         }

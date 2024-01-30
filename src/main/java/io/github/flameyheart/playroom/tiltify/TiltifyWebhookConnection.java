@@ -350,7 +350,7 @@ public class TiltifyWebhookConnection extends Thread {
                 }
 
                 Donation.Reward.Status status = Donation.Reward.Status.AUTO_APPROVED;
-                if (target != null && PredicateUtils.checkUnlessDev(target, "playroom.bypass-rewards", 4, false)) {
+                if (PredicateUtils.checkUnlessDev(target, "playroom.bypass-rewards", 4, false)) {
                     status = Donation.Reward.Status.BYPASSED;
                 }
 

@@ -3,6 +3,8 @@ package io.github.flameyheart.playroom.render.hud;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.PlayroomClient;
 import io.github.flameyheart.playroom.config.ClientConfig;
+import io.github.flameyheart.playroom.util.PredicateUtils;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.entity.Entity;
@@ -20,7 +22,8 @@ public class HudRenderer {
     public static void renderDebugInfo(DrawContext drawContext) {
         y = 5;
         MinecraftClient client = MinecraftClient.getInstance();
-        if (!ClientConfig.instance().debugInfo || client.options.debugEnabled) return;
+        if (!ClientConfig.instance().debugInfo || client.options.debugEnabled || client.player == null) return;
+        if (!PredicateUtils.checkUnlessDev(client.player, "playroom.debug", 4, true)) return;
         drawContext.drawText(client.textRenderer, "Server time: " + Playroom.serverTime, 5, getY(), 0xFFFFFF, true);
         drawContext.drawText(client.textRenderer, "Aim zoom: " + PlayroomClient.hasAimZoom(), 5, getY(), 0xFFFFFF, true);
         drawContext.drawText(client.textRenderer, "Unfreeze zoom: " + PlayroomClient.hasUnfreezeZoom(), 5, getY(), 0xFFFFFF, true);
