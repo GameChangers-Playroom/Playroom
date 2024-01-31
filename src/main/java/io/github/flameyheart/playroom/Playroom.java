@@ -1,5 +1,6 @@
 package io.github.flameyheart.playroom;
 
+import com.bawnorton.trulyrandom.api.TrulyRandomApi;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
@@ -24,7 +25,10 @@ import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Items;
 import io.github.flameyheart.playroom.registry.Particles;
 import io.github.flameyheart.playroom.registry.Sounds;
-import io.github.flameyheart.playroom.tiltify.*;
+import io.github.flameyheart.playroom.tiltify.Automation;
+import io.github.flameyheart.playroom.tiltify.Donation;
+import io.github.flameyheart.playroom.tiltify.ExecuteAction;
+import io.github.flameyheart.playroom.tiltify.TiltifyWebhookConnection;
 import io.github.flameyheart.playroom.util.InventorySlot;
 import io.github.flameyheart.playroom.util.PredicateUtils;
 import io.github.flameyheart.playroom.util.ScheduleUtils;
@@ -39,7 +43,11 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.networking.v1.*;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerLoginConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerLoginNetworking;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
 import net.minecraft.entity.Entity;
@@ -62,11 +70,16 @@ import org.quiltmc.parsers.json.JsonReader;
 import org.quiltmc.parsers.json.gson.GsonReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -231,6 +244,19 @@ public class Playroom implements ModInitializer {
 					LOGGER.error("Item '{}' is not an instance of {}!", stack.getItem().getTranslationKey(), LaserGun.class.getCanonicalName());
 				}
 			});
+		});
+		ServerPlayNetworking.registerGlobalReceiver(id("experiment_received"), (server, player, handler, buf, responseSender) -> {
+			String experiment = buf.readString();
+			boolean status = buf.readBoolean();
+			if(experiment.equals("freeze_everything")) {
+				server.execute(() -> {
+					if(status) {
+						TrulyRandomApi.randomiseAllModels(player, true);
+					} else {
+						TrulyRandomApi.resetAllModels(player);
+					}
+				});
+			}
 		});
 	}
 
@@ -486,7 +512,8 @@ public class Playroom implements ModInitializer {
 		return status;
 	}
 
-	public static boolean isExperimentDisabled(String experiment) {
+	@SuppressWarnings("BooleanMethodIsAlwaysInverted") // keep it simple stupid
+	public static boolean isExperimentEnabled(String experiment) {
 		return EXPERIMENTS.getOrDefault(experiment, false);
 	}
 
