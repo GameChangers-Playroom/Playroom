@@ -84,12 +84,12 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
         }
 
         chargeLevel = animatable.getPlayroomTag(stack).getInt("Charge");
-        
+
         if (ClientConfig.instance().reducedMotion.isEnabled("laser_power_strip")) {
             animFrameTick = (int) RenderUtils.getCurrentTick() - PlayroomClient.ANIMATION_START_TICK.getOrDefault(GeoItem.getId(getCurrentItemStack()), 0);
             AnimatableTexture.setAndUpdate(model.getLayerTextureResource(animatable, getLayerNameByState()), animFrameTick);
         }
-        
+
         super.render(stack, transformType, poseStack, bufferSource, transformType == ModelTransformationMode.GUI ? LightmapTextureManager.MAX_LIGHT_COORDINATE : packedLight, 0);
 
         if (!isFirstPerson) return;
@@ -105,10 +105,10 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
         ModelPart playerLeftSleeve = playerEntityModel.leftSleeve;
         ModelPart playerRightArm = playerEntityModel.rightArm;
         ModelPart playerRightSleeve = playerEntityModel.rightSleeve;
-        
+
         // TODO: Fix freeze model grabbing the wrong positions when holding gun
         if(ClientConfig.instance().laserGunHandRender == ClientConfig.LaserGunHandRender.MAC) {
-            
+
             float scale = .6666f;
 
             poseStack.push();
@@ -139,19 +139,19 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
                     playerRightArm.setAngles(1.5707f, 3.739f, 0);
                 }
             }
-            
+
             playerLeftSleeve.copyTransform(playerLeftArm);
             playerRightSleeve.copyTransform(playerRightArm);
-            
+
             int playerOverlay = LivingEntityRenderer.getOverlay(player, 0);
-            
+
             playerLeftArm.render(poseStack, armTexture, packedLight, playerOverlay);
             playerLeftSleeve.render(poseStack, sleeveTexture, packedLight, playerOverlay);
             playerRightArm.render(poseStack, armTexture, packedLight, playerOverlay);
             playerRightSleeve.render(poseStack, sleeveTexture, packedLight, playerOverlay);
-            
+
             poseStack.pop();
-        
+
         }
     }
 
@@ -213,16 +213,17 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
                 if (bone.getName().equals("leftArm")) {
                     matrixStack.scale(scale, scale, scale);
                     if (leftHanded) {
-                        matrixStack.translate(-0.23f, -0.03, 0.765);
+                        matrixStack.translate(-0.17, -0.03, 0.765);
                         armPart = playerEntityModel.leftArm;
                         sleevePart = playerEntityModel.leftSleeve;
                     } else {
-                        matrixStack.translate(0.110, -0.03, 0.765);
+                        matrixStack.translate(0.050, -0.03, 0.765);
                         armPart = playerEntityModel.rightArm;
                         sleevePart = playerEntityModel.rightSleeve;
                     }
 
                     matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-90));
+                    matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180));
 
                     armPart.setPivot(0, 0, 0);
                     armPart.setAngles(0, 0, 0);
@@ -236,7 +237,7 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
                     if (leftHanded) {
                         armPart = playerEntityModel.rightArm;
                         sleevePart = playerEntityModel.rightSleeve;
-                        matrixStack.translate(0.41f, -0.03, 0.56);
+                        matrixStack.translate(0.36f, -0.03, 0.6);
 
                         matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-94.3f));
                         matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-7f));
@@ -244,12 +245,14 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
                     } else {
                         armPart = playerEntityModel.leftArm;
                         sleevePart = playerEntityModel.leftSleeve;
-                        matrixStack.translate(-0.5f, -0.03, 0.56);
+                        matrixStack.translate(-0.45f, -0.03, 0.6);
 
                         matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-94.3f));
                         matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(7f));
                         matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(-31f));
                     }
+
+                    matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180));
 
                     armPart.setPivot(0, 0, 0);
                     armPart.setAngles(0, 0, 0);
