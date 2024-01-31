@@ -1,6 +1,7 @@
 package io.github.flameyheart.playroom.render.entity;
 
 import io.github.flameyheart.playroom.Playroom;
+import io.github.flameyheart.playroom.PlayroomClient;
 import io.github.flameyheart.playroom.entity.LaserProjectileEntity;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -40,7 +41,7 @@ public class LaserProjectileRenderer extends ProjectileEntityRenderer<LaserProje
         if (Math.abs(u - 0.5) < 1e-8) u = TEXTURE_WIDTH / 32;
         if (Math.abs(v - 0.15625F) < 1e-8) v = TEXTURE_HEIGHT / 32;
         vertexConsumer.vertex(positionMatrix, x, y, z)
-          .color(255, 255, 255, 100)
+          .color(255, 255, 255, (PlayroomClient.isIrisInUse ? 128 : 255))
           .texture(u, v)
           .overlay(OverlayTexture.DEFAULT_UV)
           .light(LightmapTextureManager.MAX_LIGHT_COORDINATE)

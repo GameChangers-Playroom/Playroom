@@ -1,12 +1,11 @@
 package io.github.flameyheart.playroom.render.item;
 
 import io.github.flameyheart.playroom.PlayroomClient;
-import io.github.flameyheart.playroom.compat.ModOptional;
 import io.github.flameyheart.playroom.config.ClientConfig;
+import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.item.LaserGun;
 import io.github.flameyheart.playroom.mixin.compat.geo.AnimationControllerAccessor;
 import io.github.flameyheart.playroom.render.hud.HudRenderer;
-import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.model.ModelTransform;
@@ -39,10 +38,9 @@ import java.util.Objects;
 
 public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
 
-    private static final boolean IS_IRIS_PRESENT = ModOptional.isPresent("iris");
-
     private final LaserGunModel model;
     private final MinecraftClient client = MinecraftClient.getInstance();
+    private final ServerConfig serverConfig = ServerConfig.instance();
 
     private int animFrameTick;
     private int chargeLevel;
@@ -66,9 +64,6 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
         return animatable == null ? LaserGunModel.ENABLED_RANGEMODE : animatable.isRapidFire(getCurrentItemStack()) ? LaserGunModel.ENABLED_RAPIDFIREMODE : LaserGunModel.ENABLED_RANGEMODE;
     }
 
-    /**
-     * TODO: Add animation callback
-     */
     @Override
     public void render(ItemStack stack, ModelTransformationMode transformType, MatrixStack poseStack, VertexConsumerProvider bufferSource, int packedLight, int packedOverlay) {
         this.bufferSource = bufferSource;
@@ -77,7 +72,7 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
 
         currentItemStack = stack;
         animatable = (LaserGun) stack.getItem();
-        alphaMulti = isFirstPerson ? (IS_IRIS_PRESENT && IrisApi.getInstance().isShaderPackInUse() ? .3f : 1f) : 1;
+        alphaMulti = isFirstPerson ? (PlayroomClient.isIrisInUse ? .3f : 1f) : 1;
 
         if (animatable.isRapidFire(stack)) {
 
@@ -89,7 +84,12 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
         }
 
         chargeLevel = animatable.getPlayroomTag(stack).getInt("Charge");
-
+        
+        if (ClientConfig.instance().reducedMotion.isEnabled("laser_power_strip")) {
+            animFrameTick = (int) RenderUtils.getCurrentTick() - PlayroomClient.ANIMATION_START_TICK.getOrDefault(GeoItem.getId(getCurrentItemStack()), 0);
+            AnimatableTexture.setAndUpdate(model.getLayerTextureResource(animatable, getLayerNameByState()), animFrameTick);
+        }
+        
         super.render(stack, transformType, poseStack, bufferSource, transformType == ModelTransformationMode.GUI ? LightmapTextureManager.MAX_LIGHT_COORDINATE : packedLight, 0);
 
         if (!isFirstPerson) return;
@@ -101,54 +101,57 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
 
         PlayerEntityRenderer playerEntityRenderer = (PlayerEntityRenderer) client.getEntityRenderDispatcher().getRenderer(player);
         PlayerEntityModel<AbstractClientPlayerEntity> playerEntityModel = playerEntityRenderer.getModel();
-        float scale = .6666f;
-
-        if (ClientConfig.instance().laserGunHandRender == ClientConfig.LaserGunHandRender.MAC) {
-
-            ModelTransform leftSleeveTransform = playerEntityModel.leftSleeve.getTransform();
-            ModelTransform rightSleeveTransform = playerEntityModel.rightSleeve.getTransform();
+        ModelPart playerLeftArm = playerEntityModel.leftArm;
+        ModelPart playerLeftSleeve = playerEntityModel.leftSleeve;
+        ModelPart playerRightArm = playerEntityModel.rightArm;
+        ModelPart playerRightSleeve = playerEntityModel.rightSleeve;
+        
+        // TODO: Fix freeze model grabbing the wrong positions when holding gun
+        if(ClientConfig.instance().laserGunHandRender == ClientConfig.LaserGunHandRender.MAC) {
+            
+            float scale = .6666f;
 
             poseStack.push();
             poseStack.scale(scale, scale, scale);
 
             if (player.getModel().equals("default")) {
                 if (player.getMainArm() == Arm.RIGHT) {
-                    playerEntityModel.leftArm.setPivot(2.2512f, 11.5f, 24.251f);
-                    playerEntityModel.leftArm.setAngles(1.6707f, 2.356f, 0);
-                    playerEntityModel.rightArm.setPivot(12.2512f, 11.5f, 24.251f);
-                    playerEntityModel.rightArm.setAngles(1.5707f, 3.142f, 0);
+                    playerLeftArm.setPivot(2.2512f, 11.5f, 24.251f);
+                    playerLeftArm.setAngles(1.6707f, 2.356f, 0);
+                    playerRightArm.setPivot(12.2512f, 11.5f, 24.251f);
+                    playerRightArm.setAngles(1.5707f, 3.142f, 0);
                 } else if (player.getMainArm() == Arm.LEFT) {
-                    playerEntityModel.leftArm.setPivot(10.2512f, 11.5f, 24.251f);
-                    playerEntityModel.leftArm.setAngles(1.5707f, 3.142f, 0);
-                    playerEntityModel.rightArm.setPivot(20.1952f, 11.5f, 23.261f);
-                    playerEntityModel.rightArm.setAngles(1.5707f, 3.741f, 0);
+                    playerLeftArm.setPivot(10.2512f, 11.5f, 24.251f);
+                    playerLeftArm.setAngles(1.5707f, 3.142f, 0);
+                    playerRightArm.setPivot(20.1952f, 11.5f, 23.261f);
+                    playerRightArm.setAngles(1.5707f, 3.741f, 0);
                 }
             } else if (player.getModel().equals("slim")) {
                 if (player.getMainArm() == Arm.RIGHT) {
-                    playerEntityModel.leftArm.setPivot(2.7512f, 11.5f, 24.251f);
-                    playerEntityModel.leftArm.setAngles(1.6707f, 2.356f, 0);
-                    playerEntityModel.rightArm.setPivot(12.7512f, 11.5f, 24.251f);
-                    playerEntityModel.rightArm.setAngles(1.5707f, 3.142f, 0);
+                    playerLeftArm.setPivot(2.7512f, 11.5f, 24.251f);
+                    playerLeftArm.setAngles(1.6707f, 2.356f, 0);
+                    playerRightArm.setPivot(12.7512f, 11.5f, 24.251f);
+                    playerRightArm.setAngles(1.5707f, 3.142f, 0);
                 } else if (player.getMainArm() == Arm.LEFT) {
-                    playerEntityModel.leftArm.setPivot(9.7512f, 11.5f, 24.301f);
-                    playerEntityModel.leftArm.setAngles(1.5707f, 3.142f, 0);
-                    playerEntityModel.rightArm.setPivot(19.6847f, 11.5f, 23.338f);
-                    playerEntityModel.rightArm.setAngles(1.5707f, 3.739f, 0);
+                    playerLeftArm.setPivot(9.7512f, 11.5f, 24.301f);
+                    playerLeftArm.setAngles(1.5707f, 3.142f, 0);
+                    playerRightArm.setPivot(19.6847f, 11.5f, 23.338f);
+                    playerRightArm.setAngles(1.5707f, 3.739f, 0);
                 }
             }
-
-            playerEntityModel.leftSleeve.copyTransform(playerEntityModel.leftArm);
-            playerEntityModel.rightSleeve.copyTransform(playerEntityModel.rightArm);
-
+            
+            playerLeftSleeve.copyTransform(playerLeftArm);
+            playerRightSleeve.copyTransform(playerRightArm);
+            
             int playerOverlay = LivingEntityRenderer.getOverlay(player, 0);
-
-            playerEntityModel.leftArm.render(poseStack, armTexture, packedLight, playerOverlay);
-            playerEntityModel.leftSleeve.render(poseStack, sleeveTexture, packedLight, playerOverlay);
-            playerEntityModel.rightArm.render(poseStack, armTexture, packedLight, playerOverlay);
-            playerEntityModel.rightSleeve.render(poseStack, sleeveTexture, packedLight, playerOverlay);
-
-            playerEntityModel.leftSleeve.setTransform(leftSleeveTransform);
-            playerEntityModel.rightSleeve.setTransform(rightSleeveTransform);
+            
+            playerLeftArm.render(poseStack, armTexture, packedLight, playerOverlay);
+            playerLeftSleeve.render(poseStack, sleeveTexture, packedLight, playerOverlay);
+            playerRightArm.render(poseStack, armTexture, packedLight, playerOverlay);
+            playerRightSleeve.render(poseStack, sleeveTexture, packedLight, playerOverlay);
+            
+            poseStack.pop();
+        
         }
     }
 
@@ -167,7 +170,7 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
         //Bones malone let's gooo
         switch (bone.getName()) {
             case "leftArm", "rightArm" -> {
-                bone.setHidden(true);
+//                bone.setHidden(true);
                 bone.setChildrenHidden(false);
                 renderArms = true;
             }
@@ -185,7 +188,7 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
                 leftHanded = false;
             }
 
-            if (renderArms /*&& this.transformType == hand*/) {
+            if (renderArms && this.transformType == hand) {
                 PlayerEntityRenderer playerEntityRenderer = (PlayerEntityRenderer) client.getEntityRenderDispatcher().getRenderer(client.player);
                 PlayerEntityModel<AbstractClientPlayerEntity> playerEntityModel = playerEntityRenderer.getModel();
 
@@ -294,8 +297,8 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
             layerAlphaMultiplier = alphaMulti;
 
             if (chargeLevel == 100
-              || (!item.isCooldownExpired(currentItemStack)
-              && item.getCooldownReason(currentItemStack) == LaserGun.CooldownReason.RELOAD)) return;
+             || (!item.isCooldownExpired(currentItemStack)
+             && item.getCooldownReason(currentItemStack) == LaserGun.CooldownReason.RELOAD)) return;
 
             if (chargeLevel > 0) {
                 layerAlpha = 1 - (chargeLevel / 100f);
@@ -341,11 +344,13 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
             }
 
             if (chargeLevel > 0) {
+                // Charge up
                 layerAlpha = chargeLevel / 100f;
             } else if (animFrameTick < sinTime) {
                 // This must start at full alpha since it is used to hide the animation resetting, if we fade it in the fame reset will be visible
                 layerAlpha = MathHelper.clamp(1 - (animFrameTick / (float) length), 0, 1);
             } else if (cooldown > 0) {
+                // Cooldown
                 layerAlpha = 1 - (cooldown / (float) item.getCooldownTime(currentItemStack));
             } else {
                 return;

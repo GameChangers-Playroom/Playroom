@@ -3,7 +3,7 @@ package io.github.flameyheart.playroom.mixin.client.freeze.render;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.duck.FreezeOverlay;
-import io.github.flameyheart.playroom.render.entity.feature.IceFeatureRenderer;
+import io.github.flameyheart.playroom.render.entity.feature.old.OldIceFeatureRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
@@ -27,10 +27,10 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
     @SuppressWarnings("unchecked")
     @Inject(method = "<init>", at = @At("TAIL"))
     private void addIceFeatures(EntityRendererFactory.Context ctx, EntityModel<T> model, float shadowRadius, CallbackInfo ci) {
-        addFeature(new IceFeatureRenderer<>((LivingEntityRenderer<T, M>) (Object) this));
+        addFeature(new OldIceFeatureRenderer<>((LivingEntityRenderer<T, M>) (Object) this));
     }
 
-    @ModifyVariable(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At("HEAD"), argsOnly = true)
+    @ModifyVariable(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At("TAIL"), argsOnly = true)
     private LivingEntity captureEntity(LivingEntity entity) {
         playroom$entity = entity;
         return entity;

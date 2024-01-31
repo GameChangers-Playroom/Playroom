@@ -1,7 +1,7 @@
 {
 	"format_version": "1.8.0",
 	"animations": {
-		"animation.model.range": {
+		"animation.laser_gun.range": {
 			"loop": "hold_on_last_frame",
 			"animation_length": 0.33333,
 			"bones": {
@@ -105,7 +105,7 @@
 				}
 			}
 		},
-		"animation.model.rapidfire.fire": {
+		"animation.laser_gun.rapidfire.fire": {
 			"loop": true,
 			"animation_length": 0.5,
 			"bones": {
@@ -348,7 +348,7 @@
 				}
 			}
 		},
-		"animation.model.rapidfire": {
+		"animation.laser_gun.rapidfire": {
 			"loop": "hold_on_last_frame",
 			"animation_length": 0.33333,
 			"bones": {

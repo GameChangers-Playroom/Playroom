@@ -44,6 +44,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
@@ -62,12 +63,8 @@ import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.bernie.geckolib.animatable.client.RenderProvider;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
+
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class PlayroomClient implements ClientModInitializer {
@@ -83,6 +80,7 @@ public class PlayroomClient implements ClientModInitializer {
     public static final Map<FreezableEntity, Map<String, ModelPosition>> FROZEN_MODEL = new HashMap<>();
 
     public static boolean orbitCameraEnabled = false;
+    public static boolean isIrisInUse = false;
 
     private static boolean aimZoom = false;
     private static boolean unfreezeZoom = false;
@@ -160,6 +158,7 @@ public class PlayroomClient implements ClientModInitializer {
 
                 CameraEntity.movementTick();
             }
+            isIrisInUse = ModOptional.isPresent("iris") && IrisApi.getInstance().isShaderPackInUse();
         });
         LivingEntityEvents.END_TRAVEL.register(baseEntity -> {
             if (baseEntity instanceof PlayerEntity player) {
