@@ -185,7 +185,7 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
                 leftHanded = false;
             }
 
-            if (renderArms && this.transformType == hand) {
+            if (renderArms /*&& this.transformType == hand*/) {
                 PlayerEntityRenderer playerEntityRenderer = (PlayerEntityRenderer) client.getEntityRenderDispatcher().getRenderer(client.player);
                 PlayerEntityModel<AbstractClientPlayerEntity> playerEntityModel = playerEntityRenderer.getModel();
 
@@ -210,13 +210,13 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
                 if (bone.getName().equals("leftArm")) {
                     matrixStack.scale(scale, scale, scale);
                     if (leftHanded) {
-                        matrixStack.translate(-0.14f, -0.03, 0.765);
-                        armPart = playerEntityModel.rightArm;
-                        sleevePart = playerEntityModel.rightSleeve;
-                    } else {
-                        matrixStack.translate(0.015, -0.03, 0.765);
+                        matrixStack.translate(-0.23f, -0.03, 0.765);
                         armPart = playerEntityModel.leftArm;
                         sleevePart = playerEntityModel.leftSleeve;
+                    } else {
+                        matrixStack.translate(0.110, -0.03, 0.765);
+                        armPart = playerEntityModel.rightArm;
+                        sleevePart = playerEntityModel.rightSleeve;
                     }
 
                     matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-90));
@@ -231,17 +231,17 @@ public class LaserGunRenderer extends GeoItemRenderer<LaserGun> {
                 } else if (bone.getName().equals("rightArm")) {
                     matrixStack.scale(scale, scale, scale);
                     if (leftHanded) {
-                        armPart = playerEntityModel.leftArm;
-                        sleevePart = playerEntityModel.leftSleeve;
-                        matrixStack.translate(0.285f, -0.03, 0.56);
+                        armPart = playerEntityModel.rightArm;
+                        sleevePart = playerEntityModel.rightSleeve;
+                        matrixStack.translate(0.41f, -0.03, 0.56);
 
                         matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-94.3f));
                         matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-7f));
                         matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(31f));
                     } else {
-                        armPart = playerEntityModel.rightArm;
-                        sleevePart = playerEntityModel.rightSleeve;
-                        matrixStack.translate(-0.41f, -0.03, 0.56);
+                        armPart = playerEntityModel.leftArm;
+                        sleevePart = playerEntityModel.leftSleeve;
+                        matrixStack.translate(-0.5f, -0.03, 0.56);
 
                         matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-94.3f));
                         matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(7f));
