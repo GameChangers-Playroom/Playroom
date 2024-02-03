@@ -40,6 +40,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -163,11 +164,6 @@ public class Playroom implements ModInitializer {
 			PacketByteBuf buf = PacketByteBufs.create();
 			buf.writeLong(server.getOverworld().getTime());
 			ServerPlayNetworking.send(player, id("time_sync"), buf);
-		});
-		ServerEntityEvents.ENTITY_UNLOAD.register((entity, world) -> {
-			if (entity instanceof LaserProjectileEntity projectile && projectile.getRemovalReason() == Entity.RemovalReason.UNLOADED_TO_CHUNK) {
-				projectile.remove(Entity.RemovalReason.DISCARDED);
-			}
 		});
 		ServerPlayerEvents.COPY_FROM.register((oldPlayer, newPlayer, alive) -> {
 			if (!alive) {
