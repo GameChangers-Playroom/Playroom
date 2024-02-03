@@ -17,6 +17,7 @@ import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
 import net.minecraft.particle.ParticleTypes;
@@ -37,6 +38,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends PlayroomEntity implements FreezableEntity, FreezeOverlay {
+    @Shadow protected ItemStack activeItemStack;
+    @Shadow protected int itemUseTimeLeft;
+
     @Shadow
     public abstract void stopRiding();
 

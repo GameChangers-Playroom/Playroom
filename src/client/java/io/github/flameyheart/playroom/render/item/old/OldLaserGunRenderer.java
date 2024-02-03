@@ -415,7 +415,6 @@ public class OldLaserGunRenderer extends AlternativeGeoItemRenderer<OldLaserGun>
             } else {
                 alpha = 0;
             }
-            HudRenderer.chargeLayerAlpha = alpha;
 
 
             getRenderer().reRender(bakedModel, poseStack, bufferSource, animatable, emissiveRenderType,
@@ -470,7 +469,7 @@ public class OldLaserGunRenderer extends AlternativeGeoItemRenderer<OldLaserGun>
 
             getRenderer().reRender(bakedModel, poseStack, bufferSource, animatable, renderLayer,
               bufferSource.getBuffer(renderLayer), partialTick, 0xF0_00_00, OverlayTexture.DEFAULT_UV,
-              1, 1, 1, HudRenderer.chargeLayerAlpha = alpha);
+              1, 1, 1, alpha);
         }
     }
 }

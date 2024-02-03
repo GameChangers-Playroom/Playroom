@@ -76,8 +76,8 @@ public class ClientConfig {
     public enum ReducedMotion {
         FULL_MOTION("laser_charge", "laser_power_strip", "freeze_zoom"),
         REDUCED_MOTION("laser_charge", "laser_power_strip"),
-        SIMPLE_MOTION("laser_strip"),
-        NO_MOTION;
+        SIMPLE_MOTION("laser_power_strip"),
+        DISABLED;
 
         private final List<String> enabledModules;
 

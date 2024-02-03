@@ -5,6 +5,7 @@ import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.duck.AimingEntity;
 import io.github.flameyheart.playroom.duck.InventoryDuck;
+import io.github.flameyheart.playroom.duck.PlayerReleaseUse;
 import io.github.flameyheart.playroom.item.LaserGun;
 import io.github.flameyheart.playroom.item.OldLaserGun;
 import io.github.flameyheart.playroom.registry.Items;
@@ -27,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PlayerEntity.class)
-public abstract class PlayerEntityMixin extends LivingEntityMixin implements AimingEntity {
+public abstract class PlayerEntityMixin extends LivingEntityMixin implements AimingEntity, PlayerReleaseUse {
     @Shadow private ItemStack selectedItem;
     @Shadow public abstract void stopFallFlying();
     @Shadow protected abstract void dropShoulderEntities();
@@ -114,4 +115,11 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin implements Aim
             }
         }
     }
+
+    @Override
+    public void playroom$setActiveItemOnly(ItemStack stack) {
+        activeItemStack = stack;
+        itemUseTimeLeft = stack.getMaxUseTime();
+    }
+
 }

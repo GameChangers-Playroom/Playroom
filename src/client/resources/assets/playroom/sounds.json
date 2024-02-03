@@ -29,6 +29,12 @@
     ],
     "subtitle": "playroom.subtitles.laser_gun.charge"
   },
+  "laser_gun.failed": {
+    "sounds": [
+      "playroom:laser_gun/failed"
+    ],
+    "subtitle": "playroom.subtitles.laser_gun.failed"
+  },
   "generic.freeze": {
     "sounds": [
       "playroom:freeze"

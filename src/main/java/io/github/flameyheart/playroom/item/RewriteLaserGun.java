@@ -17,6 +17,7 @@ import software.bernie.geckolib.core.animation.AnimatableManager;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@Deprecated
 public class RewriteLaserGun extends Item implements Aimable, FabricItem, GeoItem {
 
 	private final Supplier<Object> renderProvider = GeoItem.makeRenderer(this);

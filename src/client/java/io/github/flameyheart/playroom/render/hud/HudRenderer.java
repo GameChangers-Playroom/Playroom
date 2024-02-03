@@ -14,9 +14,6 @@ import software.bernie.geckolib.util.RenderUtils;
 
 public class HudRenderer {
 
-    public static float animFrameTick;
-    public static float chargeLayerAlpha;
-    public static String chargeLayerInfo;
     private static int y = 5;
 
     public static void renderDebugInfo(DrawContext drawContext) {
@@ -29,10 +26,6 @@ public class HudRenderer {
         drawContext.drawText(client.textRenderer, "Unfreeze zoom: " + PlayroomClient.hasUnfreezeZoom(), 5, getY(), 0xFFFFFF, true);
         drawContext.drawText(client.textRenderer, "Aim zoom divisor: " + PlayroomClient.getPreviousAimZoomDivisor(), 5, getY(), 0xFFFFFF, true);
         drawContext.drawText(client.textRenderer, "Unfreeze zoom divisor: " + PlayroomClient.getPreviousUnfreezeZoomDivisor(), 5, getY(), 0xFFFFFF, true);
-        drawContext.drawText(client.textRenderer, "Render Frame Tick (RFT): " + (int) RenderUtils.getCurrentTick(), 5, getY(), 0xFFFFFF, true);
-        drawContext.drawText(client.textRenderer, "Animation Frame Tick (AFT): " + animFrameTick, 5, getY(), 0xFFFFFF, true);
-        drawContext.drawText(client.textRenderer, "Alpha (Layer: EnergyLayer): " + chargeLayerAlpha, 5, getY(), 0xFFFFFF, true);
-        drawContext.drawText(client.textRenderer, "Animation Frame Info: " + chargeLayerInfo, 5, getY(), 0xFFFFFF, true);
         Entity target = client.targetedEntity;
         String content;
         if (target instanceof PlayerEntity targetPlayer) {

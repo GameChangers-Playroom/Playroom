@@ -4,6 +4,7 @@ import io.github.flameyheart.playroom.Constants;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.duck.AimingEntity;
+import io.github.flameyheart.playroom.duck.PlayerReleaseUse;
 import io.github.flameyheart.playroom.entity.LaserProjectileEntity;
 import io.github.flameyheart.playroom.registry.Sounds;
 import net.fabricmc.fabric.api.item.v1.FabricItem;
@@ -27,6 +28,7 @@ import net.minecraft.util.UseAction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraft.world.event.GameEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoItem;
@@ -54,6 +56,7 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     private final List<TooltipProvider> tooltipProvider = new ArrayList<>();
     private Supplier<Boolean> showAdvancedTooltip = () -> false;
     private Object renderer = null;
+    private boolean onUse;
 
     public LaserGun(Settings settings) {
         super(settings);
@@ -122,10 +125,17 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
 
     @Override
     public void onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
+        if(stack.getItem() instanceof LaserGun && onUse) {
+            onUse = false;
+            return;
+        }
+        
         short chargeTime = ServerConfig.instance().laserRangeChargeTime;
         if (world instanceof ServerWorld serverWorld) {
             if (remainingUseTicks < 72000 - chargeTime && !isRapidFire(stack) && chargeTime > 0) {
                 handleRangedMode(stack, world, (PlayerEntity) user, Hand.MAIN_HAND);
+            }
+            else {
                 StopSoundS2CPacket stopSoundS2CPacket = new StopSoundS2CPacket(Sounds.LASER_GUN_CHARGE.getId(), Constants.PLAYROOM_SOUND_CATEGORY);
                 serverWorld.getPlayers(player -> player instanceof ServerPlayerEntity && player.distanceTo(user) < 64).forEach(player -> player.networkHandler.sendPacket(stopSoundS2CPacket));
             }
@@ -149,7 +159,7 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
 
     @Override
     public void usageTick(World world, LivingEntity user, ItemStack stack, int remainingUseTicks) {
-        if (user instanceof PlayerEntity player && canFire(stack, Hand.MAIN_HAND, player)) {
+        if (user instanceof PlayerEntity player && canUse(stack, Hand.MAIN_HAND)) {
             if (isRapidFire(stack)) {
                 long fireCooldown = getPlayroomTag(stack).getLong("FireCooldown");
                 if (fireCooldown-- <= 0) {
@@ -166,15 +176,14 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
                 }
             }
         }
-        super.usageTick(world, user, stack, remainingUseTicks);
     }
 
     @Override
     public TypedActionResult<ItemStack> use(World world, @NotNull PlayerEntity player, Hand hand) {
         ItemStack stack = player.getStackInHand(hand);
-        if (!canUse(stack, hand)) return TypedActionResult.fail(stack);
 
-        if (canFire(stack, hand, player)) {
+        if(canUse(stack, hand)) {
+            player.setCurrentHand(hand);
             if (isRapidFire(stack)) {
                 getPlayroomTag(stack).putLong("FireCooldown", ServerConfig.instance().laserRapidFireCooldown);
                 handleRapidFire(world, player, hand, stack);
@@ -183,18 +192,24 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
             } else {
                 handleRangedMode(stack, world, player, hand);
             }
+            return TypedActionResult.pass(stack);
+        }
+        else {
+            if(world instanceof ServerWorld && player instanceof PlayerReleaseUse playerRelease) {
+                if(!onUse) {
+                    playerRelease.playroom$setActiveItemOnly(stack);
+                    playSound(world, player, Sounds.LASER_GUN_FAILED);
+                }
+                
+                onUse = true;
+            }
+            return TypedActionResult.fail(stack);
         }
 
-        player.setCurrentHand(hand);
-        return TypedActionResult.pass(stack);
     }
 
     private boolean canUse(ItemStack stack, Hand hand) {
         return isCooldownExpired(stack) && hand == Hand.MAIN_HAND;
-    }
-
-    private boolean canFire(ItemStack stack, Hand hand, PlayerEntity player) {
-        return canUse(stack, hand);
     }
 
     public void swapMode(PlayerEntity player, Hand hand, ItemStack stack, World world) {
@@ -215,7 +230,7 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     }
 
     private void handleRangedMode(ItemStack stack, World world, PlayerEntity player, Hand hand) {
-        if (!canFire(stack, hand, player)) return;
+        if (!canUse(stack, hand)) return;
 
         if (world instanceof ServerWorld serverWorld) {
             setCooldown(stack, CooldownReason.RELOAD, ServerConfig.instance().laserFireReloadTime);
@@ -227,7 +242,7 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     }
 
     private void handleRapidFire(World world, @NotNull PlayerEntity player, Hand hand, ItemStack stack) {
-        if (!canFire(stack, hand, player)) return;
+        if (!canUse(stack, hand)) return;
 
         if (world instanceof ServerWorld serverWorld) {
             boolean rapidFire = getPlayroomTag(stack).getBoolean("RapidFire");

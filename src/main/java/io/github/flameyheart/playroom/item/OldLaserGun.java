@@ -45,9 +45,9 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class OldLaserGun extends Item implements Vanishable, FabricItem, GeoItem, PlayroomItem, Aimable {
-    public static final RawAnimation RAPIDFIRE_MODE_ANIMATION = RawAnimation.begin().thenPlayAndHold("animation.model.rapidfire");
-    public static final RawAnimation RANGE_MODE_ANIMATION = RawAnimation.begin().thenPlayAndHold("animation.model.range");
-    public static final RawAnimation RAPIDFIRE_CHARGE_ANIMATION = RawAnimation.begin().thenPlay("animation.model.rapidfire.fire");
+    public static final RawAnimation RAPIDFIRE_MODE_ANIMATION = RawAnimation.begin().thenPlayAndHold("animation.laser_gun.rapidfire");
+    public static final RawAnimation RANGE_MODE_ANIMATION = RawAnimation.begin().thenPlayAndHold("animation.laser_gun.range");
+    public static final RawAnimation RAPIDFIRE_CHARGE_ANIMATION = RawAnimation.begin().thenPlay("animation.laser_gun.rapidfire.fire");
     private final AnimatableInstanceCache animationCache = GeckoLibUtil.createInstanceCache(this);
     private final Supplier<Object> renderProvider = GeoItem.makeRenderer(this);
     private final List<TooltipProvider> tooltipProvider = new ArrayList<>();

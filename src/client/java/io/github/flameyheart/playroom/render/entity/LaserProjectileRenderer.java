@@ -11,6 +11,7 @@ import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.ProjectileEntityRenderer;
+import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.util.Identifier;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -28,6 +29,11 @@ public class LaserProjectileRenderer extends ProjectileEntityRenderer<LaserProje
 
     @Override
     public boolean shouldRender(LaserProjectileEntity entity, Frustum frustum, double x, double y, double z) {
+//        boolean render = entity.shouldRender(x, y, z);
+//        if(!render)
+//            entity.discard();
+//        
+//        return render;
         return true;
     }
 
@@ -41,6 +47,7 @@ public class LaserProjectileRenderer extends ProjectileEntityRenderer<LaserProje
         if (Math.abs(u - 0.5) < 1e-8) u = TEXTURE_WIDTH / 32;
         if (Math.abs(v - 0.15625F) < 1e-8) v = TEXTURE_HEIGHT / 32;
         vertexConsumer.vertex(positionMatrix, x, y, z)
+                // 222 is value
           .color(255, 255, 255, (PlayroomClient.isIrisInUse ? 128 : 255))
           .texture(u, v)
           .overlay(OverlayTexture.DEFAULT_UV)
