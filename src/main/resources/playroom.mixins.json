@@ -1,28 +1,28 @@
 {
-	"required": true,
-	"package": "io.github.flameyheart.playroom.mixin",
-	"compatibilityLevel": "JAVA_17",
-	"mixins": [
-		"EntityAccessor",
-		"FluidBlockAccessor",
-		"GsonConfigSerializerAccessor",
-		"HungerManagerMixin",
-		"ItemMixin",
-		"LivingEntityMixin",
-		"PersistentProjectileEntityMixin",
-		"PlayerEntityAccessor",
-		"PlayerEntityMixin",
-		"PlayerInventoryMixin",
-		"PlayroomEntity",
-		"ServerLoginNetworkHandlerAccessor",
-		"ServerLoginNetworkHandlerMixin",
-		"ServerPlayerEntityMixin",
-		"SnowballEntityMixin",
-		"compat.geo.AnimationControllerAccessor",
-		"compat.owo.EnumArgumentTypeMixin",
-		"network.PlayerListS2CPacketMixin"
-	],
-	"injectors": {
-		"defaultRequire": 1
+    "required": true,
+    "package": "io.github.flameyheart.playroom.mixin",
+    "compatibilityLevel": "JAVA_17",
+    "mixins": [
+        "EntityAccessor",
+        "FluidBlockAccessor",
+        "GsonConfigSerializerAccessor",
+        "HungerManagerMixin",
+        "ItemMixin",
+        "LivingEntityMixin",
+        "PersistentProjectileEntityMixin",
+        "PlayerEntityAccessor",
+        "PlayerEntityMixin",
+        "PlayerInventoryMixin",
+        "PlayroomEntity",
+        "ServerLoginNetworkHandlerAccessor",
+        "ServerLoginNetworkHandlerMixin",
+        "ServerPlayerEntityMixin",
+        "SnowballEntityMixin",
+        "compat.geo.AnimationControllerAccessor",
+        "compat.owo.EnumArgumentTypeMixin",
+        "network.PlayerListS2CPacketMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
 	}
 }

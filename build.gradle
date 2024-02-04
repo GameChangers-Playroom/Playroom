@@ -120,7 +120,7 @@ dependencies {
 	modClientCompileOnly("dev.lambdaurora:lambdynamiclights:2.3.2+1.20.1-local")
 
 	//DevLogin
-	modRuntimeOnly("com.ptsmods:devlogin:3.5")
+	//modRuntimeOnly("com.ptsmods:devlogin:3.5")
 }
 
 processResources {

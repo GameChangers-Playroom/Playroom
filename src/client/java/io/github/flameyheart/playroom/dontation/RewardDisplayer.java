@@ -23,7 +23,7 @@ public class RewardDisplayer {
     private static final List<DonationDisplay> donations = new ArrayList<>() {
         @Override
         public boolean add(DonationDisplay donationDisplay) {
-            if(size() >= ClientConfig.instance().donationDisplayLimit) {
+            if (size() >= ClientConfig.instance().donationDisplayLimit) {
                 remove(0);
             }
             return super.add(donationDisplay);
@@ -33,7 +33,7 @@ public class RewardDisplayer {
     static {
         HudRenderCallback.EVENT.register((context, delta) -> {
             int offset = donations.size();
-            for(DonationDisplay donationDisplay: donations) {
+            for (DonationDisplay donationDisplay : donations) {
                 donationDisplay.render(context, --offset);
             }
         });
@@ -54,7 +54,7 @@ public class RewardDisplayer {
         List<Donation.Reward> rewards = donation.rewards().stream().filter(reward -> !reward.status().error)
           .filter(reward -> reward.targetId().equals(client.player.getUuid()) || reward.target() == null)
           .toList();
-        if(rewards.isEmpty()) {
+        if (rewards.isEmpty()) {
             messages.add(Text.translatable("playroom.donation.receive.none", name, amount));
         } else if (rewards.size() == 1) {
             Donation.Reward reward = rewards.get(0);
@@ -67,15 +67,15 @@ public class RewardDisplayer {
                 Automation.Task<?> task = Automation.get(reward.rewardId());
                 multiple.add(Text.of(" - " + capitalize(task.onDisplay())));
             });
-            if(ClientConfig.instance().donationLocation != DonationLocation.CHAT) {
+            if (ClientConfig.instance().donationLocation != DonationLocation.CHAT) {
                 Collections.reverse(multiple);
             }
             messages.addAll(multiple);
         }
-        if(ClientConfig.instance().donationLocation == DonationLocation.CHAT) {
+        if (ClientConfig.instance().donationLocation == DonationLocation.CHAT) {
             messages.forEach(chatHud::addMessage);
         } else {
-            if(ClientConfig.instance().donationLocation == DonationLocation.BOTTOM_RIGHT) {
+            if (ClientConfig.instance().donationLocation == DonationLocation.BOTTOM_RIGHT) {
                 Collections.reverse(messages);
             }
             for (Text message : messages) {
@@ -103,15 +103,15 @@ public class RewardDisplayer {
             TextRenderer textRenderer = client.textRenderer;
             offset *= textRenderer.fontHeight;
             int colour = 0xBBFFFFFF;
-            switch(ClientConfig.instance().donationLocation) {
+            switch (ClientConfig.instance().donationLocation) {
                 case TOP_LEFT -> context.drawText(textRenderer, message, 4, 4 + offset, colour, true);
                 case TOP_RIGHT -> {
                     offset += ((ToastManagerAccessor) client.getToastManager())
-                            .getVisibleEntries()
-                            .stream()
-                            .map(ToastManager.Entry::getInstance)
-                            .mapToInt(Toast::getHeight)
-                            .sum();
+                      .getVisibleEntries()
+                      .stream()
+                      .map(ToastManager.Entry::getInstance)
+                      .mapToInt(Toast::getHeight)
+                      .sum();
                     context.drawText(textRenderer, message, client.getWindow().getScaledWidth() - textRenderer.getWidth(message) - 4, 4 + offset, colour, true);
                 }
                 case BOTTOM_RIGHT -> context.drawText(textRenderer, message, client.getWindow().getScaledWidth() - textRenderer.getWidth(message) - 4, client.getWindow().getScaledHeight() - 40 - offset, colour, true);
