@@ -54,14 +54,6 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
     }
 
     @Override
-    public void tick() {
-        if (!getWorld().isInBuildLimit(getBlockPos())) {
-            discard();
-        }
-        super.tick();
-    }
-
-    @Override
     public void checkDespawn() {
         PlayerEntity entity = this.getWorld().getClosestPlayer(this, -1.0);
         if (entity != null) {

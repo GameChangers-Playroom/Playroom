@@ -34,6 +34,9 @@
 		],
 		"mm:early_risers": [
 			"io.github.flameyheart.playroom.asm.AsmController"
+		],
+		"dynamiclights": [
+			"io.github.flameyheart.playroom.compat.LambDynamicLights"
 		]
 	},
 	"mixins": [

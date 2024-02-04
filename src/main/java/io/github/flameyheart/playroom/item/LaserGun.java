@@ -198,7 +198,10 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
     }
 
     public void swapMode(PlayerEntity player, Hand hand, ItemStack stack, World world) {
-        if (!canUse(stack, hand)) return;
+        if (!canUse(stack, hand)) {
+            playSound(world, player, Sounds.LASER_GUN_FAILED);
+            return;
+        }
         if (world instanceof ServerWorld serverWorld) {
             boolean rapidFire = getPlayroomTag(stack).getBoolean("RapidFire");
 

@@ -64,6 +64,7 @@ repositories {
 	maven { url "https://maven.quiltmc.org/repository/release" }
 	maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
 	maven { url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/' }
+	maven { url 'https://maven.gegy.dev/releases/' }
 	maven {
 		url "https://cursemaven.com"
 		content {
@@ -116,9 +117,10 @@ dependencies {
 	modCompileOnly("curse.maven:project-297344:4623488") //Tweakeroo 0.17.1
 	modCompileOnly("fi.dy.masa.malilib:malilib-fabric-${project.minecraft_version}:0.16.0")
 	modCompileOnly("maven.modrinth:iris:1.6.8+1.20.1")
+	modClientCompileOnly("dev.lambdaurora:lambdynamiclights:2.3.2+1.20.1-local")
 
 	//DevLogin
-	modImplementation "com.ptsmods:devlogin:3.5"
+	modRuntimeOnly("com.ptsmods:devlogin:3.5")
 }
 
 processResources {
