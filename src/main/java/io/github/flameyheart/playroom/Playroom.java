@@ -23,7 +23,6 @@ import io.github.flameyheart.playroom.item.LaserGun;
 import io.github.flameyheart.playroom.mixin.GsonConfigSerializerAccessor;
 import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Items;
-import io.github.flameyheart.playroom.registry.Particles;
 import io.github.flameyheart.playroom.registry.Sounds;
 import io.github.flameyheart.playroom.tiltify.Automation;
 import io.github.flameyheart.playroom.tiltify.Donation;
@@ -40,7 +39,6 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -106,7 +104,6 @@ public class Playroom implements ModInitializer {
 	public void onInitialize() {
 		ServerConfig.INSTANCE.serializer().load();
 		FieldRegistrationHandler.register(Items.class, MOD_ID, false);
-		FieldRegistrationHandler.register(Particles.class, MOD_ID, false);
 		FieldRegistrationHandler.register(Entities.class, MOD_ID, false);
 		FieldRegistrationHandler.register(Sounds.class, MOD_ID, false);
 		Items.ITEM_GROUP.initialize();

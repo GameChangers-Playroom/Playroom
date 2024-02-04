@@ -1,6 +1,7 @@
 package io.github.flameyheart.playroom.mixin.client.freeze.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.sugar.Local;
 import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.duck.FreezeOverlay;
 import io.github.flameyheart.playroom.render.entity.feature.old.OldIceFeatureRenderer;
@@ -22,7 +23,6 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 @Mixin(LivingEntityRenderer.class)
 public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extends EntityModel<T>> {
     @Shadow protected abstract boolean addFeature(FeatureRenderer<T, M> feature);
-    @Unique private LivingEntity playroom$entity;
 
     @SuppressWarnings("unchecked")
     @Inject(method = "<init>", at = @At("TAIL"))
@@ -30,18 +30,12 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
         addFeature(new OldIceFeatureRenderer<>((LivingEntityRenderer<T, M>) (Object) this));
     }
 
-    @ModifyVariable(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At("TAIL"), argsOnly = true)
-    private LivingEntity captureEntity(LivingEntity entity) {
-        playroom$entity = entity;
-        return entity;
-    }
-
     @ModifyArgs(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/model/EntityModel;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;IIFFFF)V"))
-    private void setColour(Args args) {
-        if(playroom$entity instanceof FreezeOverlay overlay) {
-            if (overlay.playroom$getOverlayTime() > 0) {
+    private void setColour(Args args, @Local(argsOnly = true) LivingEntity entity) {
+        if (entity instanceof FreezeOverlay freezable) {
+            if (freezable.playroom$showOverlay()) {
                 //Fade from blue to white as the frozen ticks go down
-                float colour = Math.max(1 - overlay.playroom$getOverlayProgress() * 2, 0.35f);
+                float colour = Math.max(1 - freezable.playroom$getOverlayProgress() * 2, 0.35f);
                 args.set(4, colour);
                 args.set(5, colour);
             }
@@ -49,9 +43,9 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
     }
 
     @ModifyExpressionValue(method = "setupTransforms", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;deathTime:I"))
-    private int disableDeathTilt(int original) {
-        if(playroom$entity instanceof FreezableEntity entity) {
-            if (entity.playroom$isFrozen() && original > 0) {
+    private int disableDeathTilt(int original, @Local(argsOnly = true) LivingEntity entity) {
+        if(entity instanceof FreezableEntity freezable) {
+            if (freezable.playroom$isFrozen() && original > 0) {
                 return 0;
             }
         }

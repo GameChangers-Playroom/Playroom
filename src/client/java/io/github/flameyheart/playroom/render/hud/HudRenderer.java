@@ -15,10 +15,9 @@ import net.minecraft.predicate.NbtPredicate;
 import software.bernie.geckolib.util.RenderUtils;
 
 public class HudRenderer {
-
     private static int y = 5;
 
-    public static void renderDebugInfo(DrawContext drawContext) {
+    public static void renderDebugInfo(DrawContext drawContext, float tickDelta) {
         y = 5;
         MinecraftClient client = MinecraftClient.getInstance();
         if (!ClientConfig.instance().debugInfo || client.options.debugEnabled || client.player == null) return;

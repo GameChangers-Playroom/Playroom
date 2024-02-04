@@ -95,11 +95,6 @@ dependencies {
 	include modImplementation("me.lucko:fabric-permissions-api:${project.permissions_api_version}")
 
 	include modImplementation("eu.pb4:placeholder-api:${project.placeholder_api_version}")
-	include modImplementation("com.github.0x3C50:Renderer:${project.renderer_version}") {
-		exclude group: "xml-apis", module: "xml-apis"
-		exclude group: "commons-io", module: "commons-io"
-		exclude group: "io.github.ladysnake", module: "satin"
-	}
 
 	//Local bundled jars
 	include modImplementation(fileTree(dir: "libs", include: ["*.jar"]))
@@ -121,7 +116,7 @@ dependencies {
 	modCompileOnly("curse.maven:project-297344:4623488") //Tweakeroo 0.17.1
 	modCompileOnly("fi.dy.masa.malilib:malilib-fabric-${project.minecraft_version}:0.16.0")
 	modCompileOnly("maven.modrinth:iris:1.6.8+1.20.1")
-	
+
 	//DevLogin
 	modImplementation "com.ptsmods:devlogin:3.5"
 }

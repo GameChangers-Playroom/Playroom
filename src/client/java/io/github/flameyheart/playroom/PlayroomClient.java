@@ -19,30 +19,26 @@ import io.github.flameyheart.playroom.item.Aimable;
 import io.github.flameyheart.playroom.mixin.EntityAccessor;
 import io.github.flameyheart.playroom.registry.Entities;
 import io.github.flameyheart.playroom.registry.Items;
-import io.github.flameyheart.playroom.registry.Particles;
 import io.github.flameyheart.playroom.render.entity.LaserProjectileRenderer;
 import io.github.flameyheart.playroom.render.entity.ModelPosition;
 import io.github.flameyheart.playroom.render.hud.HudRenderer;
 import io.github.flameyheart.playroom.render.item.LaserGunRenderer;
 import io.github.flameyheart.playroom.render.item.old.OldLaserGunRenderer;
-import io.github.flameyheart.playroom.render.particle.TestParticle;
 import io.github.flameyheart.playroom.render.screen.DonationListScreen;
-import io.github.flameyheart.playroom.render.world.WorldRenderer;
 import io.github.flameyheart.playroom.tiltify.Donation;
 import io.github.flameyheart.playroom.toast.WarningToast;
 import io.github.flameyheart.playroom.util.ClientUtils;
 import io.github.flameyheart.playroom.zoom.TransitionType;
 import io.github.flameyheart.playroom.zoom.ZoomHelper;
 import io.github.flameyheart.playroom.zoom.interpolate.TransitionInterpolator;
-import me.x150.renderer.event.RenderEvents;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientLoginNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.irisshaders.iris.api.v0.IrisApi;
 import net.minecraft.block.Block;
@@ -111,7 +107,6 @@ public class PlayroomClient implements ClientModInitializer {
     public void onInitializeClient() {
         ClientConfig.INSTANCE.load();
 
-        ParticleFactoryRegistry.getInstance().register(Particles.TEST_PARTICLE, TestParticle.Factory::new);
         EntityRendererRegistry.register(Entities.LASER_SHOT, LaserProjectileRenderer::new);
 
         registerEventListeners();
@@ -141,8 +136,7 @@ public class PlayroomClient implements ClientModInitializer {
 
         });
 
-        RenderEvents.WORLD.register(WorldRenderer::render);
-        RenderEvents.HUD.register(HudRenderer::renderDebugInfo);
+        HudRenderCallback.EVENT.register(HudRenderer::renderDebugInfo);
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             AIM_ZOOM.tick(hasAimZoom());
             UNFREEZE_ZOOM.tick(hasUnfreezeZoom());

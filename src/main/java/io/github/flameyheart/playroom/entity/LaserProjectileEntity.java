@@ -1,9 +1,7 @@
 package io.github.flameyheart.playroom.entity;
 
 import io.github.flameyheart.playroom.Constants;
-import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ServerConfig;
-import io.github.flameyheart.playroom.duck.Client2ServerPlayerSettings;
 import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.mixin.FluidBlockAccessor;
 import io.github.flameyheart.playroom.registry.Damage;
@@ -24,11 +22,8 @@ import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket;
-import net.minecraft.network.packet.s2c.play.ProfilelessChatMessageS2CPacket;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.text.Text;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.MathHelper;
@@ -57,10 +52,22 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
 
     @Override
     public void tick() {
-        if(!getWorld().isInBuildLimit(getBlockPos()))
+        if (!getWorld().isInBuildLimit(getBlockPos())) {
             discard();
-
+        }
         super.tick();
+    }
+
+    @Override
+    public void checkDespawn() {
+        PlayerEntity entity = this.getWorld().getClosestPlayer(this, -1.0);
+        if (entity != null) {
+            int despawnRange = this.getType().getSpawnGroup().getImmediateDespawnRange();
+            double distanceToPlayer = entity.squaredDistanceTo(this);
+            if (distanceToPlayer > (double) (despawnRange * despawnRange)) {
+                this.discard();
+            }
+        }
     }
 
     @Override
@@ -79,11 +86,11 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
 
 //    @Override
 //    public boolean shouldRender(double distance) {
-//        double d = this.getBoundingBox().getAverageSideLength() * 10.0;
-//        if (Double.isNaN(d)) {
-//            d = 1.0;
+//        double distanceToPlayer = this.getBoundingBox().getAverageSideLength() * 10.0;
+//        if (Double.isNaN(distanceToPlayer)) {
+//            distanceToPlayer = 1.0;
 //        }
-//        return distance < (d *= 64.0 * getRenderDistanceMultiplier()) * d;
+//        return distance < (distanceToPlayer *= 64.0 * getRenderDistanceMultiplier()) * distanceToPlayer;
 //    }
 
     @Override

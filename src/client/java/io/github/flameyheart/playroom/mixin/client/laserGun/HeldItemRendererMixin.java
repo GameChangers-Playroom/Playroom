@@ -23,7 +23,7 @@ public abstract class HeldItemRendererMixin {
     @Inject(method = "renderFirstPersonItem", at = @At("HEAD"), cancellable = true)
     private void cancelFirstPersonRender(AbstractClientPlayerEntity player, float tickDelta, float pitch, Hand hand, float swingProgress, ItemStack item, float equipProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         //Cancel item offhand render in first person
-        if (hand == Hand.OFF_HAND && item.getItem() instanceof Aimable) {
+        if (hand == Hand.OFF_HAND && player.getMainHandStack().getItem() instanceof Aimable) {
             ci.cancel();
         }
     }

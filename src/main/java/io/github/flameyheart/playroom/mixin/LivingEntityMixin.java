@@ -150,7 +150,7 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
                 }
             }
         }
-        if (!playroom$isAffected() && playroom$getOverlayTime() > 0) {
+        if (!playroom$isAffected() && playroom$showOverlay()) {
             playroom$addOverlayTime(-1);
         }
     }

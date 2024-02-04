@@ -6,6 +6,9 @@ public interface FreezeOverlay {
         playroom$setOverlayTime(playroom$getOverlayTime() + ticks);
     }
     int playroom$getOverlayTime();
+    default boolean playroom$showOverlay() {
+        return playroom$getOverlayTime() > 0;
+    }
     default int playroom$getMaxOverlayTime() {
         return 15;
     }

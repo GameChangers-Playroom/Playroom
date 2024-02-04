@@ -24,7 +24,7 @@ public abstract class InGameHudMixin {
         if (this.client.player == null) return;
         FreezeOverlay entity = (FreezeOverlay) this.client.player;
 
-        if (entity.playroom$getOverlayTime() > 0) {
+        if (entity.playroom$showOverlay()) {
             this.renderOverlay(context, POWDER_SNOW_OUTLINE, entity.playroom$getOverlayProgress());
         }
     }
