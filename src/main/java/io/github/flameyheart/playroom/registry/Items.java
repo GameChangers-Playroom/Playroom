@@ -20,7 +20,7 @@ public class Items implements ItemRegistryContainer {
 
     @IterationIgnored
     public static final OwoItemGroup ITEM_GROUP = OwoItemGroup.builder(Playroom.id("items"), () -> Icon.of(ICE_BLOCKS))
-        .initializer(itemGroup -> itemGroup.tabs.add(new ItemGroupTab(Icon.of(ICE_BLOCKS), Text.translatable("itemGroup.playroom.items"), (context, entries) -> {
+        .initializer(itemGroup -> itemGroup.tabs.add(new ItemGroupTab(Icon.of(LASER_GUN), Text.translatable("itemGroup.playroom.items"), (context, entries) -> {
             entries.add(LASER_GUN);
             entries.add(LASER_GUN_OLD);
             entries.add(ICE_BLOCKS);
