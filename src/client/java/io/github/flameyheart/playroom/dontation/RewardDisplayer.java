@@ -51,7 +51,9 @@ public class RewardDisplayer {
         InGameHud hud = client.inGameHud;
         ChatHud chatHud = hud.getChatHud();
         List<Text> messages = new ArrayList<>();
-        List<Donation.Reward> rewards = donation.rewards().stream().filter(reward -> !reward.status().error).filter(reward -> reward.targetId().equals(client.player.getUuid())).toList();
+        List<Donation.Reward> rewards = donation.rewards().stream().filter(reward -> !reward.status().error)
+          .filter(reward -> reward.targetId().equals(client.player.getUuid()) || reward.target() == null)
+          .toList();
         if(rewards.isEmpty()) {
             messages.add(Text.translatable("playroom.donation.receive.none", name, amount));
         } else if (rewards.size() == 1) {
