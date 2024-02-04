@@ -3,8 +3,11 @@ package io.github.flameyheart.playroom.mixin.client.freeze.model;
 import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.duck.client.FreezableModel;
 import net.minecraft.client.model.ModelPart;
+import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Coerce;
@@ -12,9 +15,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PlayerEntityModel.class)
-public abstract class PlayerEntityModelMixin implements FreezableModel {
+public abstract class PlayerEntityModelMixin extends BipedEntityModel implements FreezableModel {
+    @Shadow @Final public ModelPart leftPants;
+    @Shadow @Final public ModelPart rightPants;
+    @Shadow @Final public ModelPart leftSleeve;
+    @Shadow @Final public ModelPart rightSleeve;
     @Unique
     protected ModelPart playroom$root;
+
+    public PlayerEntityModelMixin(ModelPart root) {
+        super(root);
+    }
 
     @Inject(method = "<init>(Lnet/minecraft/client/model/ModelPart;Z)V", at = @At("TAIL"))
     private void storeRoot(ModelPart root, boolean thinArms, CallbackInfo ci) {
@@ -36,6 +47,13 @@ public abstract class PlayerEntityModelMixin implements FreezableModel {
     private void stopAnimations(@Coerce Object entity, float f, float g, float h, float i, float j, CallbackInfo ci) {
         if (entity instanceof FreezableEntity eEntity) {
             playroom$stopAnimation(eEntity);
+
+            if (eEntity.playroom$isFrozen()) {
+                this.leftPants.copyTransform(this.leftLeg);
+                this.rightPants.copyTransform(this.rightLeg);
+                this.leftSleeve.copyTransform(this.leftArm);
+                this.rightSleeve.copyTransform(this.rightArm);
+            }
         }
     }
 }

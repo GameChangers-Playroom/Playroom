@@ -59,7 +59,7 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
     public void tick() {
         if(!getWorld().isInBuildLimit(getBlockPos()))
             discard();
-        
+
         super.tick();
     }
 
@@ -96,7 +96,7 @@ public class LaserProjectileEntity extends PersistentProjectileEntity {
     @Override
     protected void onEntityHit(@NotNull EntityHitResult entityHitResult) {
         Entity entity = entityHitResult.getEntity();
-        if (entity == null && entity.getWorld().isClient()) return;
+        if (entity == null || getWorld().isClient()) return;
         this.discard();
         if (getOwner() == null || entity.getUuid().equals(getOwner().getUuid()) || !(entity instanceof FreezableEntity freezableEntity) || !(entity instanceof LivingEntity living)) {
             return;

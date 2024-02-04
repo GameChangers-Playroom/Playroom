@@ -2,6 +2,7 @@ package io.github.flameyheart.playroom.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.duck.FreezeOverlay;
@@ -58,7 +59,6 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
     private static final @Unique TrackedData<Integer> playroom$FREEZE = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private static final @Unique TrackedData<Integer> playroom$SLOWDOWN = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private static final @Unique TrackedData<Integer> playroom$SNOW_OVERLAY = DataTracker.registerData(LivingEntity.class, TrackedDataHandlerRegistry.INTEGER);
-
 
     @Inject(method = "initDataTracker", at = @At("HEAD"))
     private void trackGunFreezeTicks(CallbackInfo ci) {
@@ -157,7 +157,7 @@ public abstract class LivingEntityMixin extends PlayroomEntity implements Freeza
 
     @Override
     public void playroom$setOverlayTime(int ticks) {
-        this.dataTracker.set(playroom$SNOW_OVERLAY, ticks);
+        this.dataTracker.set(playroom$SNOW_OVERLAY, Math.max(0, ticks));
     }
 
     @Override
