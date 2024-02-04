@@ -31,11 +31,14 @@ public class Constants {
       .put("thespryte", "the_spryte")
       .put("Chai", "ChaitheChuu")
       .put("debbie", "debbiemorales")
-      .put("morales", "debbiemorales")
       .put("sophie", "sophietexas")
       .put("Kyle", "KyleEff")
       .put("Piggles", "ItzIgglesPiggles")
       .put("Sanz", "AwesomeSanz")
+      .put("honk", "honkshroom")
+      .put("shroom", "honkshroom")
+      .put("prime", "PrimeGreen")
+      .put("green", "PrimeGreen")
       .immutable();
     public static final List<String> POSSIBLE_NAMES;
 
