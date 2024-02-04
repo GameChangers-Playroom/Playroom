@@ -18,7 +18,7 @@ public class ProjectileEntityRendererMixin {
     @WrapOperation(method = "render(Lnet/minecraft/entity/projectile/PersistentProjectileEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/RenderLayer;getEntityCutout(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;"))
     private RenderLayer changeRenderLayer(Identifier texture, Operation<RenderLayer> original) {
         if (((ProjectileEntityRenderer) (Object) this) instanceof LaserProjectileRenderer && PlayroomClient.isIrisInUse) {
-            return CustomRenderLayer.getEntityGlowing(texture);
+            return RenderLayer.getEyes(texture);
         } else {
             return original.call(texture);
         }
