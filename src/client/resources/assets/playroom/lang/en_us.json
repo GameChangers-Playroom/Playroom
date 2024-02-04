@@ -335,7 +335,7 @@
 
     "config.playroom.option.freeze_client.freezeZoomTarget": "Zoom Scale",
     "config.playroom.option.freeze_client.freezeZoomTarget.description": "The target FOV for the zoom effect",
-    
+
     "config.playroom.option.freeze_client.freezeZoomTransition": "Zoom out Transition",
     "config.playroom.option.freeze_client.freezeZoomTransition.description": "The zoom in transition when frozen",
 
