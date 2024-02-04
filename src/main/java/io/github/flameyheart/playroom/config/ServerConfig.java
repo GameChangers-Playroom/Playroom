@@ -7,10 +7,6 @@ import dev.isxander.yacl3.platform.YACLPlatform;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.annotations.SendToClient;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 public class ServerConfig {
     public static final ConfigClassHandler<ServerConfig> INSTANCE = ConfigClassHandler.createBuilder(ServerConfig.class)
         .id(Playroom.id("config"))

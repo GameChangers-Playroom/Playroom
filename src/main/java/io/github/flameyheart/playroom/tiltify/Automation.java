@@ -3,7 +3,6 @@ package io.github.flameyheart.playroom.tiltify;
 import io.github.flameyheart.playroom.tiltify.action.GivePotionAction;
 import io.github.flameyheart.playroom.util.ItemStackBuilder;
 import io.github.flameyheart.playroom.util.PredicateUtils;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentLevelEntry;
 import net.minecraft.enchantment.Enchantments;

@@ -6,7 +6,6 @@ import net.minecraft.entity.Entity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
 import java.util.function.Predicate;
 
 public class PredicateUtils {

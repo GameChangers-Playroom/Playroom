@@ -3,7 +3,6 @@ package io.github.flameyheart.playroom.mixin.client;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.github.flameyheart.playroom.PlayroomClient;
-import io.github.flameyheart.playroom.render.CustomRenderLayer;
 import io.github.flameyheart.playroom.render.entity.LaserProjectileRenderer;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.entity.ProjectileEntityRenderer;

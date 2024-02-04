@@ -2,7 +2,6 @@ package io.github.flameyheart.playroom.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
-import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.config.ServerConfig;
 import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.duck.FreezeOverlay;

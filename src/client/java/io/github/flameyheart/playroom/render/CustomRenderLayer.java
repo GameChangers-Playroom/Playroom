@@ -1,7 +1,5 @@
 package io.github.flameyheart.playroom.render;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderPhase;
 import net.minecraft.client.render.VertexFormat;
@@ -13,7 +11,7 @@ import java.util.function.Function;
 
 public class CustomRenderLayer {
 
-	private static final Function<Identifier, RenderLayer> ENTITY_GLOWING = Util.memoize(texture -> 
+	private static final Function<Identifier, RenderLayer> ENTITY_GLOWING = Util.memoize(texture ->
 		RenderLayer.of("entity_glowing", VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL, VertexFormat.DrawMode.QUADS,
 					256, false, true, RenderLayer.MultiPhaseParameters.builder()
 																											.program(RenderLayer.ENTITY_ALPHA_PROGRAM)
@@ -23,7 +21,7 @@ public class CustomRenderLayer {
 																											.build(false))
 	);
 
-	private static final Function<Identifier, RenderLayer> ITEM_GLOWING = Util.memoize(textureId -> 
+	private static final Function<Identifier, RenderLayer> ITEM_GLOWING = Util.memoize(textureId ->
 		RenderLayer.of("item_glowing", VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL, VertexFormat.DrawMode.QUADS,
 					256, false, true, RenderLayer.MultiPhaseParameters.builder()
 																											.program(RenderLayer.EYES_PROGRAM)

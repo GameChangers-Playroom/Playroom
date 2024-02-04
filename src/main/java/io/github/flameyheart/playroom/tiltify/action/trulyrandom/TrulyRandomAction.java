@@ -8,7 +8,6 @@ import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.tiltify.Action;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;

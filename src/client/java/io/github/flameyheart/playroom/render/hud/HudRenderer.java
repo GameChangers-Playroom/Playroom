@@ -3,16 +3,13 @@ package io.github.flameyheart.playroom.render.hud;
 import io.github.flameyheart.playroom.Playroom;
 import io.github.flameyheart.playroom.PlayroomClient;
 import io.github.flameyheart.playroom.config.ClientConfig;
-import io.github.flameyheart.playroom.duck.FreezableEntity;
 import io.github.flameyheart.playroom.util.PredicateUtils;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.predicate.NbtPredicate;
-import software.bernie.geckolib.util.RenderUtils;
 
 public class HudRenderer {
     private static int y = 5;

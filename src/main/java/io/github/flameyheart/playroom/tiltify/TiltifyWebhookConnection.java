@@ -14,7 +14,6 @@ import io.github.flameyheart.playroom.tiltify.webhook.WebhookStructure;
 import io.github.flameyheart.playroom.util.ClassUtils;
 import io.github.flameyheart.playroom.util.LinedStringBuilder;
 import io.github.flameyheart.playroom.util.PredicateUtils;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.ClickEvent;

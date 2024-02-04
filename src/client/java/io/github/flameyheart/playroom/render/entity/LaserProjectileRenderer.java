@@ -11,7 +11,6 @@ import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.ProjectileEntityRenderer;
-import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.util.Identifier;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -32,7 +31,7 @@ public class LaserProjectileRenderer extends ProjectileEntityRenderer<LaserProje
 //        boolean render = entity.shouldRender(x, y, z);
 //        if(!render)
 //            entity.discard();
-//        
+//
 //        return render;
         return true;
     }

@@ -1,7 +1,9 @@
 package io.github.flameyheart.playroom.render.item;
 
 import io.github.flameyheart.playroom.render.CustomRenderLayer;
-import net.minecraft.client.render.*;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
 import software.bernie.geckolib.animatable.GeoItem;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
@@ -22,13 +24,13 @@ public class GlowingGeoLayer<T extends GeoItem> extends GeoRenderLayer<T> {
 	}
 
 	public void render(MatrixStack poseStack, T animatable, BakedGeoModel bakedModel, VertexConsumerProvider bufferSource, float partialTick) {
-		
+
 		if(layerAlpha == 0)
 			return;
-		
+
 		RenderLayer emissiveRenderType = getRenderType(animatable);
 		getRenderer().reRender(bakedModel, poseStack, bufferSource, animatable, emissiveRenderType, bufferSource.getBuffer(emissiveRenderType), partialTick, 0xF0, 0xA0000, 1, 1, 1, layerAlpha * layerAlphaMultiplier);
-	
+
 	}
 
 	@Override

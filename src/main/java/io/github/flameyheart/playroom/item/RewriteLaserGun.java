@@ -9,7 +9,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.UseAction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import org.apache.logging.log4j.core.jmx.Server;
 import software.bernie.geckolib.animatable.GeoItem;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.AnimatableManager;
@@ -70,7 +69,7 @@ public class RewriteLaserGun extends Item implements Aimable, FabricItem, GeoIte
 
 	@Override
 	public void registerControllers(AnimatableManager.ControllerRegistrar controllerRegistrar) {
-		
+
 	}
 
 }

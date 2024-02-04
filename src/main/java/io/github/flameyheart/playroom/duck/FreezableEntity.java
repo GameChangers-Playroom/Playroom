@@ -1,7 +1,6 @@
 package io.github.flameyheart.playroom.duck;
 
 import io.github.flameyheart.playroom.config.ServerConfig;
-import net.minecraft.entity.data.TrackedData;
 
 public interface FreezableEntity {
     void playroom$setSlowdownTime(int ticks);
