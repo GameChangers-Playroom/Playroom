@@ -39,6 +39,8 @@ public class Constants {
       .put("shroom", "honkshroom")
       .put("prime", "PrimeGreen")
       .put("green", "PrimeGreen")
+      .put("zodi", "zodiacsiren")
+      .put("zodiac", "zodiacsiren")
       .immutable();
     public static final List<String> POSSIBLE_NAMES;
 
