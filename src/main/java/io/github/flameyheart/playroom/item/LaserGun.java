@@ -121,8 +121,8 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
 
     @Override
     public void onStoppedUsing(ItemStack stack, World world, LivingEntity user, int remainingUseTicks) {
-        short chargeTime = ServerConfig.instance().laserRangeChargeTime;
         if (world instanceof ServerWorld serverWorld) {
+            short chargeTime = ServerConfig.instance().laserRangeChargeTime;
             if (remainingUseTicks < 72000 - chargeTime && !isRapidFire(stack) && chargeTime > 0) {
                 handleRangedMode(stack, world, (PlayerEntity) user, Hand.MAIN_HAND);
             } else {
@@ -184,10 +184,7 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
             }
             return TypedActionResult.pass(stack);
         } else {
-            if (world instanceof ServerWorld && player instanceof PlayerReleaseUse playerRelease) {
-                playerRelease.playroom$setActiveItemOnly(stack);
-                playSound(world, player, Sounds.LASER_GUN_FAILED);
-            }
+            playSound(world, player, Sounds.LASER_GUN_FAILED);
             return TypedActionResult.fail(stack);
         }
 
@@ -360,10 +357,6 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
             getCooldownTag(stack).putString("Reason", reason.name());
             getCooldownTag(stack).putLong("ExpireTick", Playroom.serverTime + time);
         }
-    }
-
-    public int getCooldownTime(ItemStack stack) {
-        return getCooldownTag(stack).getInt("Duration");
     }
 
     public boolean isCooldownExpired(ItemStack stack) {

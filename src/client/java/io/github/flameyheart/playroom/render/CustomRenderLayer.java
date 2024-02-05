@@ -14,7 +14,7 @@ public class CustomRenderLayer {
 	private static final Function<Identifier, RenderLayer> ENTITY_GLOWING = Util.memoize(texture ->
 		RenderLayer.of("entity_glowing", VertexFormats.POSITION_COLOR_TEXTURE_LIGHT_NORMAL, VertexFormat.DrawMode.QUADS,
 					256, false, true, RenderLayer.MultiPhaseParameters.builder()
-																											.program(RenderLayer.ENTITY_ALPHA_PROGRAM)
+																											.program(RenderLayer.EYES_PROGRAM)
 																											.texture(new RenderPhase.Texture(texture, false, false))
 																											.transparency(RenderLayer.TRANSLUCENT_TRANSPARENCY)
 																											.writeMaskState(RenderPhase.COLOR_MASK)

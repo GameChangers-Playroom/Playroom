@@ -34,55 +34,58 @@ public class YACLScreen {
         ConfigCategory.Builder general = ConfigCategory.createBuilder()
           .name(Text.translatable("config.playroom.category.general"));
 
-        general.option(
-          Option.<ClientConfig.ReducedMotion>createBuilder()
-            .name(Text.translatable("config.playroom.option.general.reducedMotion"))
-            .description(OptionDescription.of(Text.translatable("config.playroom.option.general.reducedMotion.description")))
-            .binding(clientDefaults.reducedMotion, () -> clientConfig.reducedMotion, newVal -> clientConfig.reducedMotion = newVal)
-            .controller(option -> EnumControllerBuilder.create(option).enumClass(ClientConfig.ReducedMotion.class).formatValue(value -> Text.translatable(value.translationKey())))
-            .build()
-        );
-
-        general.option(
-          Option.<DonationLocation>createBuilder()
-            .name(Text.translatable("config.playroom.option.general.donationLocation"))
-            .description(OptionDescription.of(Text.translatable("config.playroom.option.general.donationLocation.description")))
-            .binding(clientDefaults.donationLocation, () -> clientConfig.donationLocation, newVal -> clientConfig.donationLocation = newVal)
-            .controller(option -> EnumControllerBuilder.create(option).enumClass(DonationLocation.class).formatValue(value -> Text.translatable(value.translationKey())))
-            .build()
-        );
-
-        general.option(
-          Option.<Integer>createBuilder()
-            .name(Text.translatable("config.playroom.option.general.donationExpiryTime"))
-            .description(OptionDescription.of(Text.translatable("config.playroom.option.general.donationExpiryTime.description")))
-            .binding(clientDefaults.donationExpiryTime, () -> clientConfig.donationExpiryTime, newVal -> clientConfig.donationExpiryTime = newVal.shortValue())
-            .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 3600).step(20))
-            .build()
-        );
-
-        general.option(
-          Option.<Integer>createBuilder()
-            .name(Text.translatable("config.playroom.option.general.donationDisplayLimit"))
-            .description(OptionDescription.of(Text.translatable("config.playroom.option.general.donationDisplayLimit.description")))
-            .binding(clientDefaults.donationDisplayLimit, () -> clientConfig.donationDisplayLimit, newVal -> clientConfig.donationDisplayLimit = newVal.shortValue())
-            .controller(option -> IntegerSliderControllerBuilder.create(option).range(1, 20).step(1))
-            .build()
-        );
-
-        var debug = Option.<Boolean>createBuilder()
-          .name(Text.translatable("config.playroom.option.general.debugInfo"))
-          .description(OptionDescription.of(Text.translatable("config.playroom.option.general.debugInfo.description")))
-          .binding(clientDefaults.debugInfo, () -> clientConfig.debugInfo, newVal -> clientConfig.debugInfo = newVal)
-          .controller(TickBoxControllerBuilder::create)
-          .build();
-
-        general.option(debug);
-
-        if (!PredicateUtils.checkUnlessDev(MinecraftClient.getInstance().player, "playroom.debug", 4, true)) {
-            debug.setAvailable(false);
+        if (PredicateUtils.checkUnlessDev(MinecraftClient.getInstance().player, "playroom.debug", 4, true)) {
+            general.option(
+                Option.<Boolean>createBuilder()
+                    .name(Text.translatable("config.playroom.option.general.debugInfo"))
+                    .description(OptionDescription.of(Text.translatable("config.playroom.option.general.debugInfo.description")))
+                    .binding(clientDefaults.debugInfo, () -> clientConfig.debugInfo, newVal -> clientConfig.debugInfo = newVal)
+                    .controller(TickBoxControllerBuilder::create)
+                    .build()
+            );
         }
-
+        
+        general.option(
+            Option.<ClientConfig.ReducedMotion>createBuilder()
+                .name(Text.translatable("config.playroom.option.general.reducedMotion"))
+                .description(OptionDescription.of(Text.translatable("config.playroom.option.general.reducedMotion.description")))
+                .binding(clientDefaults.reducedMotion, () -> clientConfig.reducedMotion, newVal -> clientConfig.reducedMotion = newVal)
+                .controller(option -> EnumControllerBuilder.create(option).enumClass(ClientConfig.ReducedMotion.class).formatValue(value -> Text.translatable(value.translationKey())))
+                .build()
+        );
+        
+        OptionGroup.Builder donation = OptionGroup.createBuilder().name(Text.translatable("config.playroom.option_group.donation"));
+        donation.description(OptionDescription.of(Text.translatable("config.playroom.option_group.donation.description")));
+        donation.collapsed(true);
+        
+        donation.option(
+                Option.<DonationLocation>createBuilder()
+                        .name(Text.translatable("config.playroom.option.general.donationLocation"))
+                        .description(OptionDescription.of(Text.translatable("config.playroom.option.general.donationLocation.description")))
+                        .binding(clientDefaults.donationLocation, () -> clientConfig.donationLocation, newVal -> clientConfig.donationLocation = newVal)
+                        .controller(option -> EnumControllerBuilder.create(option).enumClass(DonationLocation.class).formatValue(value -> Text.translatable(value.translationKey())))
+                        .build()
+        );
+        
+        donation.option(
+                Option.<Integer>createBuilder()
+                        .name(Text.translatable("config.playroom.option.general.donationExpiryTime"))
+                        .description(OptionDescription.of(Text.translatable("config.playroom.option.general.donationExpiryTime.description")))
+                        .binding(clientDefaults.donationExpiryTime, () -> clientConfig.donationExpiryTime, newVal -> clientConfig.donationExpiryTime = newVal.shortValue())
+                        .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 3600).step(20))
+                        .build()
+        );
+        
+        donation.option(
+                Option.<Integer>createBuilder()
+                        .name(Text.translatable("config.playroom.option.general.donationDisplayLimit"))
+                        .description(OptionDescription.of(Text.translatable("config.playroom.option.general.donationDisplayLimit.description")))
+                        .binding(clientDefaults.donationDisplayLimit, () -> clientConfig.donationDisplayLimit, newVal -> clientConfig.donationDisplayLimit = newVal.shortValue())
+                        .controller(option -> IntegerSliderControllerBuilder.create(option).range(1, 20).step(1))
+                        .build()
+        );
+        
+        general.group(donation.build());
         OptionGroup.Builder laserGunClient = OptionGroup.createBuilder().name(Text.translatable("config.playroom.option_group.laser_gun"));
         laserGunClient.collapsed(true);
 
@@ -232,7 +235,88 @@ public class YACLScreen {
             //region Laser Gun
             OptionGroup.Builder laserGun = OptionGroup.createBuilder().name(Text.translatable("config.playroom.option_group.laser_gun"));
             laserGun.collapsed(true);
-
+            
+            laserGun.option(
+                    Option.<Float>createBuilder()
+                            .name(Text.translatable("config.playroom.option.laser_gun.laserAimSlowdown"))
+                            .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserAimSlowdown.description")))
+                            .binding(serverDefaults.laserAimSlowdown, () -> serverConfig.laserAimSlowdown, newVal -> serverConfig.laserAimSlowdown = newVal)
+                            .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 1f).step(0.05f).formatValue(DECIMAL_2_FORMATTER))
+                            .build()
+            );
+            
+            laserGun.option(
+                    Option.<Integer>createBuilder()
+                            .name(Text.translatable("config.playroom.option.laser_gun.laserAimZoom"))
+                            .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserAimZoom.description")))
+                            .binding(serverDefaults.laserAimZoom, () -> serverConfig.laserAimZoom, newVal -> serverConfig.laserAimZoom = newVal)
+                            .controller(option -> IntegerSliderControllerBuilder.create(option).range(1, 10).formatValue(value -> Text.literal("%dx".formatted(value))).step(1))
+                            .build()
+            );
+            
+            laserGun.option(
+                    Option.<Integer>createBuilder()
+                            .name(Text.translatable("config.playroom.option.laser_gun.laserFireReloadTime"))
+                            .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserFireReloadTime.description")))
+                            .binding((int) serverDefaults.laserFireReloadTime, () -> (int) serverConfig.laserFireReloadTime, newVal -> serverConfig.laserFireReloadTime = newVal.shortValue())
+                            .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 3600).step(20))
+                            .build()
+            );
+            
+            laserGun.option(
+                    Option.<Boolean>createBuilder()
+                            .name(Text.translatable("config.playroom.option.laser_gun.laserFreezeWater"))
+                            .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserFreezeWater.description")))
+                            .binding(serverDefaults.laserFreezeWater, () -> serverConfig.laserFreezeWater, newVal -> serverConfig.laserFreezeWater = newVal)
+                            .controller(TickBoxControllerBuilder::create)
+                            .build()
+            );
+            
+            laserGun.option(
+                    Option.<Integer>createBuilder()
+                            .name(Text.translatable("config.playroom.option.laser_gun.laserSwapModeCooldown"))
+                            .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserSwapModeCooldown.description")))
+                            .binding((int) serverDefaults.laserSwapModeCooldown, () -> (int) serverConfig.laserSwapModeCooldown, newVal -> serverConfig.laserSwapModeCooldown = (short) newVal.intValue())
+                            .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 2400).step(20))
+                            .build()
+            );
+            
+            laserGun.option(
+                    Option.<Integer>createBuilder()
+                            .name(Text.translatable("config.playroom.option.laser_gun.laserRangeChargeTime"))
+                            .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRangeChargeTime.description")))
+                            .binding((int) serverDefaults.laserRangeChargeTime, () -> (int) serverConfig.laserRangeChargeTime, newVal -> serverConfig.laserRangeChargeTime = newVal.shortValue())
+                            .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 20).step(1))
+                            .build()
+            );
+            
+            laserGun.option(
+                    Option.<Float>createBuilder()
+                            .name(Text.translatable("config.playroom.option.laser_gun.laserRangeDamage"))
+                            .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRangeDamage.description")))
+                            .binding(serverDefaults.laserRangeDamage, () -> serverConfig.laserRangeDamage, newVal -> serverConfig.laserRangeDamage = newVal)
+                            .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 5f).formatValue(HEALTH_FORMATTER).step(0.01f))
+                            .build()
+            );
+            
+            laserGun.option(
+                    Option.<Float>createBuilder()
+                            .name(Text.translatable("config.playroom.option.laser_gun.laserRangedBulletSpeed"))
+                            .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRangedBulletSpeed.description")))
+                            .binding(serverDefaults.laserRangedBulletSpeed, () -> serverConfig.laserRangedBulletSpeed, newVal -> serverConfig.laserRangedBulletSpeed = newVal)
+                            .controller(option -> FloatSliderControllerBuilder.create(option).range(0.1f, 30f).step(0.1f))
+                            .build()
+            );
+            
+            laserGun.option(
+                    Option.<Float>createBuilder()
+                            .name(Text.translatable("config.playroom.option.laser_gun.laserRangedDivergence"))
+                            .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRangedDivergence.description")))
+                            .binding(serverDefaults.laserRangedDivergence, () -> serverConfig.laserRangedDivergence, newVal -> serverConfig.laserRangedDivergence = newVal)
+                            .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 10f).step(0.02f).formatValue(DECIMAL_2_FORMATTER))
+                            .build()
+            );
+            
             laserGun.option(
               Option.<Integer>createBuilder()
                 .name(Text.translatable("config.playroom.option.laser_gun.laserRapidFireAmo"))
@@ -244,56 +328,29 @@ public class YACLScreen {
 
             laserGun.option(
               Option.<Integer>createBuilder()
-                .name(Text.translatable("config.playroom.option.laser_gun.laserFireReloadTime"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserFireReloadTime.description")))
-                .binding((int) serverDefaults.laserFireReloadTime, () -> (int) serverConfig.laserFireReloadTime, newVal -> serverConfig.laserFireReloadTime = newVal.shortValue())
-                .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 3600).step(20))
-                .build()
-            );
-
-            laserGun.option(
-              Option.<Integer>createBuilder()
-                .name(Text.translatable("config.playroom.option.laser_gun.laserRangeChargeTime"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRangeChargeTime.description")))
-                .binding((int) serverDefaults.laserRangeChargeTime, () -> (int) serverConfig.laserRangeChargeTime, newVal -> serverConfig.laserRangeChargeTime = newVal.shortValue())
-                .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 20).step(1))
-                .build()
-            );
-
-            laserGun.option(
-              Option.<Integer>createBuilder()
                 .name(Text.translatable("config.playroom.option.laser_gun.laserRapidFireCooldown"))
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRapidFireCooldown.description")))
                 .binding((int) serverDefaults.laserRapidFireCooldown, () -> (int) serverConfig.laserRapidFireCooldown, newVal -> serverConfig.laserRapidFireCooldown = newVal.shortValue())
                 .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 20).step(1))
                 .build()
             );
-
+            
             laserGun.option(
-              Option.<Integer>createBuilder()
-                .name(Text.translatable("config.playroom.option.laser_gun.laserSwapModeCooldown"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserSwapModeCooldown.description")))
-                .binding((int) serverDefaults.laserSwapModeCooldown, () -> (int) serverConfig.laserSwapModeCooldown, newVal -> serverConfig.laserSwapModeCooldown = (short) newVal.intValue())
-                .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 2400).step(20))
-                .build()
+                    Option.<Integer>createBuilder()
+                            .name(Text.translatable("config.playroom.option.laser_gun.laserRapidFreezeAmount"))
+                            .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRapidFreezeAmount.description")))
+                            .binding((int) serverDefaults.laserRapidFreezeAmount, () -> (int) serverConfig.laserRapidFreezeAmount, newVal -> serverConfig.laserRapidFreezeAmount = newVal.shortValue())
+                            .controller(option -> IntegerSliderControllerBuilder.create(option).range(1, 500).step(1))
+                            .build()
             );
-
+            
             laserGun.option(
-              Option.<Float>createBuilder()
-                .name(Text.translatable("config.playroom.option.laser_gun.laserRangedBulletSpeed"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRangedBulletSpeed.description")))
-                .binding(serverDefaults.laserRangedBulletSpeed, () -> serverConfig.laserRangedBulletSpeed, newVal -> serverConfig.laserRangedBulletSpeed = newVal)
-                .controller(option -> FloatSliderControllerBuilder.create(option).range(0.1f, 30f).step(0.1f))
-                .build()
-            );
-
-            laserGun.option(
-              Option.<Float>createBuilder()
-                .name(Text.translatable("config.playroom.option.laser_gun.laserRangedDivergence"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRangedDivergence.description")))
-                .binding(serverDefaults.laserRangedDivergence, () -> serverConfig.laserRangedDivergence, newVal -> serverConfig.laserRangedDivergence = newVal)
-                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 10f).step(0.02f).formatValue(DECIMAL_2_FORMATTER))
-                .build()
+                    Option.<Float>createBuilder()
+                            .name(Text.translatable("config.playroom.option.laser_gun.laserRapidDamage"))
+                            .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRapidDamage.description")))
+                            .binding(serverDefaults.laserRapidDamage, () -> serverConfig.laserRapidDamage, newVal -> serverConfig.laserRapidDamage = newVal)
+                            .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 5f).formatValue(HEALTH_FORMATTER).step(0.01f))
+                            .build()
             );
 
             laserGun.option(
@@ -314,66 +371,39 @@ public class YACLScreen {
                 .build()
             );
 
-            laserGun.option(
-              Option.<Integer>createBuilder()
-                .name(Text.translatable("config.playroom.option.laser_gun.laserRapidFreezeAmount"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRapidFreezeAmount.description")))
-                .binding((int) serverDefaults.laserRapidFreezeAmount, () -> (int) serverConfig.laserRapidFreezeAmount, newVal -> serverConfig.laserRapidFreezeAmount = newVal.shortValue())
-                .controller(option -> IntegerSliderControllerBuilder.create(option).range(1, 500).step(1))
-                .build()
-            );
-
-            laserGun.option(
-              Option.<Float>createBuilder()
-                .name(Text.translatable("config.playroom.option.laser_gun.laserAimSlowdown"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserAimSlowdown.description")))
-                .binding(serverDefaults.laserAimSlowdown, () -> serverConfig.laserAimSlowdown, newVal -> serverConfig.laserAimSlowdown = newVal)
-                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 1f).step(0.05f).formatValue(DECIMAL_2_FORMATTER))
-                .build()
-            );
-
-            laserGun.option(
-              Option.<Integer>createBuilder()
-                .name(Text.translatable("config.playroom.option.laser_gun.laserAimZoom"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserAimZoom.description")))
-                .binding(serverDefaults.laserAimZoom, () -> serverConfig.laserAimZoom, newVal -> serverConfig.laserAimZoom = newVal)
-                .controller(option -> IntegerSliderControllerBuilder.create(option).range(1, 10).formatValue(value -> Text.literal("%dx".formatted(value))).step(1))
-                .build()
-            );
-
-            laserGun.option(
-              Option.<Float>createBuilder()
-                .name(Text.translatable("config.playroom.option.laser_gun.laserRangeDamage"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRangeDamage.description")))
-                .binding(serverDefaults.laserRangeDamage, () -> serverConfig.laserRangeDamage, newVal -> serverConfig.laserRangeDamage = newVal)
-                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 5f).formatValue(HEALTH_FORMATTER).step(0.01f))
-                .build()
-            );
-
-            laserGun.option(
-              Option.<Float>createBuilder()
-                .name(Text.translatable("config.playroom.option.laser_gun.laserRapidDamage"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserRapidDamage.description")))
-                .binding(serverDefaults.laserRapidDamage, () -> serverConfig.laserRapidDamage, newVal -> serverConfig.laserRapidDamage = newVal)
-                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 5f).formatValue(HEALTH_FORMATTER).step(0.01f))
-                .build()
-            );
-
-            laserGun.option(
-              Option.<Boolean>createBuilder()
-                .name(Text.translatable("config.playroom.option.laser_gun.laserFreezeWater"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.laser_gun.laserFreezeWater.description")))
-                .binding(serverDefaults.laserFreezeWater, () -> serverConfig.laserFreezeWater, newVal -> serverConfig.laserFreezeWater = newVal)
-                .controller(TickBoxControllerBuilder::create)
-                .build()
-            );
-
             server.group(laserGun.build());
             //endregion
             //region Player Freeze
             OptionGroup.Builder playerFreeze = OptionGroup.createBuilder().name(Text.translatable("config.playroom.option_group.player_freeze"));
             playerFreeze.collapsed(true);
-
+            
+            playerFreeze.option(
+                    Option.<Integer>createBuilder()
+                            .name(Text.translatable("config.playroom.option.player_freeze.freezeIceTime"))
+                            .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeIceTime.description")))
+                            .binding(serverDefaults.freezeIceTime, () -> serverConfig.freezeIceTime, newVal -> serverConfig.freezeIceTime = newVal)
+                            .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 2400).step(10))
+                            .build()
+            );
+            
+            playerFreeze.option(
+                    Option.<Float>createBuilder()
+                            .name(Text.translatable("config.playroom.option.player_freeze.freezeSlowdown"))
+                            .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeSlowdown.description")))
+                            .binding(serverDefaults.freezeSlowdown, () -> serverConfig.freezeSlowdown, newVal -> serverConfig.freezeSlowdown = newVal)
+                            .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 1f).step(0.01f))
+                            .build()
+            );
+            
+            playerFreeze.option(
+                    Option.<Integer>createBuilder()
+                            .name(Text.translatable("config.playroom.option.player_freeze.freezeSlowdownTime"))
+                            .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeSlowdownTime.description")))
+                            .binding(serverDefaults.freezeSlowdownTime, () -> serverConfig.freezeSlowdownTime, newVal -> serverConfig.freezeSlowdownTime = newVal)
+                            .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 2400).step(10))
+                            .build()
+            );
+            
             playerFreeze.option(
               Option.<Float>createBuilder()
                 .name(Text.translatable("config.playroom.option.player_freeze.freezeFallDamageReduction"))
@@ -389,33 +419,6 @@ public class YACLScreen {
                 .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeFallIceDamage.description")))
                 .binding(serverDefaults.freezeFallIceDamage, () -> serverConfig.freezeFallIceDamage, newVal -> serverConfig.freezeFallIceDamage = newVal)
                 .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 1f).step(0.01f))
-                .build()
-            );
-
-            playerFreeze.option(
-              Option.<Integer>createBuilder()
-                .name(Text.translatable("config.playroom.option.player_freeze.freezeSlowdownTime"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeSlowdownTime.description")))
-                .binding(serverDefaults.freezeSlowdownTime, () -> serverConfig.freezeSlowdownTime, newVal -> serverConfig.freezeSlowdownTime = newVal)
-                .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 2400).step(10))
-                .build()
-            );
-
-            playerFreeze.option(
-              Option.<Float>createBuilder()
-                .name(Text.translatable("config.playroom.option.player_freeze.freezeSlowdown"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeSlowdown.description")))
-                .binding(serverDefaults.freezeSlowdown, () -> serverConfig.freezeSlowdown, newVal -> serverConfig.freezeSlowdown = newVal)
-                .controller(option -> FloatSliderControllerBuilder.create(option).range(0f, 1f).step(0.01f))
-                .build()
-            );
-
-            playerFreeze.option(
-              Option.<Integer>createBuilder()
-                .name(Text.translatable("config.playroom.option.player_freeze.freezeIceTime"))
-                .description(OptionDescription.of(Text.translatable("config.playroom.option.player_freeze.freezeIceTime.description")))
-                .binding(serverDefaults.freezeIceTime, () -> serverConfig.freezeIceTime, newVal -> serverConfig.freezeIceTime = newVal)
-                .controller(option -> IntegerSliderControllerBuilder.create(option).range(0, 2400).step(10))
                 .build()
             );
 

@@ -217,23 +217,39 @@
 
     "config.playroom.category.general": "General",
     "config.playroom.category.server": "Server",
+    "config.playroom.option_group.donation": "Donation",
+    "config.playroom.option_group.donation.description": "Donation",
     "config.playroom.option_group.networking": "Networking",
+    "config.playroom.option_group.networking.description": "Donation",
     "config.playroom.option_group.laser_gun": "Laser Gun",
+    "config.playroom.option_group.laser_gun.description": "Donation",
     "config.playroom.option_group.player_freeze": "Frozen State",
+    "config.playroom.option_group.player_freeze.description": "Donation",
 
-    "config.playroom.option.general.reducedMotion": "Reduced Motion",
+
+    "config.playroom.option.general.debugInfo": "Debug Info",
+    "config.playroom.option.general.debugInfo.description": "Shows a debug info in the top left corner",
+
+    "config.playroom.option.general.reducedMotion": "Gameplay - Reduced Motion",
     "config.playroom.option.general.reducedMotion.description": [
         "Disables some or all animation effects\n\n",
         "The options are:\n",
-        " - Full Motion\n",
-        " - Reduced Motion (Zoom when Frozen)\n",
-        " - Simple Motion (Zoom when Frozen and Laser Gun Charging)\n",
-        " - Disabled\n"
+        " + Full Motion\n",
+        " + Reduced Motion\n",
+        "    - Zoom when Frozen\n",
+        " + Simple Motion\n",
+        "    - Zoom when Frozen\n",
+        "    - Laser Gun Charging\n",
+        " + Disabled\n",
+        "    - Zoom when Frozen\n",
+        "    - Laser Gun Charging\n",
+        "    - Laser Gun Idle"
     ],
     "config.playroom.option.general.reducedMotion.full_motion": "Full Motion",
     "config.playroom.option.general.reducedMotion.reduced_motion": "Reduced Motion",
     "config.playroom.option.general.reducedMotion.simple_motion": "Simple Motion",
     "config.playroom.option.general.reducedMotion.no_motion": "Disabled",
+
 
     "config.playroom.option.general.donationLocation": "Donation Location",
     "config.playroom.option.general.donationLocation.description": "The location on screen where the donations should appear",
@@ -244,8 +260,6 @@
     "config.playroom.option.general.donationDisplayLimit": "Donation Display Limit",
     "config.playroom.option.general.donationDisplayLimit.description": "The maximum amount of donations to display on screen",
 
-    "config.playroom.option.general.debugInfo": "Debug Info",
-    "config.playroom.option.general.debugInfo.description": "Shows a debug info in the top left corner",
 
     "config.playroom.option.laser_client.laserAimHandFov": "Aiming - Affect hand FOV",
     "config.playroom.option.laser_client.laserAimHandFov.description": "Changes the hand FOV when aiming",
@@ -265,10 +279,20 @@
     "config.playroom.option.laser_client.laserAimZoomOutTransition": "Aiming - Zoom out transition",
     "config.playroom.option.laser_client.laserAimZoomOutTransition.description": "The transition function for zooming out",
 
-    "config.playroom.option.laser_client.laserGunHandRender": "Hand rendering",
-    "config.playroom.option.laser_client.laserGunHandRender.description": "The rendering of the hand while holding the Laser Gun",
-    "config.playroom.option.laser_client.laserGunHandRender.faia": "Blaze Faia's style",
-    "config.playroom.option.laser_client.laserGunHandRender.mac": "Model Accurate rendering",
+    "config.playroom.option.laser_client.laserGunHandRender": "Gameplay - Arm Rendering",
+    "config.playroom.option.laser_client.laserGunHandRender.description": "The rendering of the arm while holding the Laser Gun",
+    "config.playroom.option.laser_client.laserGunHandRender.faia": "Logically Accurate",
+    "config.playroom.option.laser_client.laserGunHandRender.mac": "In-Game Model Accurate",
+
+
+    "config.playroom.option.freeze_client.freezeZoomDuration": "Gameplay - Zoom Duration",
+    "config.playroom.option.freeze_client.freezeZoomDuration.description": "The duration of the zoom effect while frozen",
+
+    "config.playroom.option.freeze_client.freezeZoomTarget": "Gameplay - Zoom Scale",
+    "config.playroom.option.freeze_client.freezeZoomTarget.description": "The target FOV for the zoom effect",
+
+    "config.playroom.option.freeze_client.freezeZoomTransition": "Gameplay - Zoom Out Transition",
+    "config.playroom.option.freeze_client.freezeZoomTransition.description": "The zoom in transition when frozen",
 
 
     "config.playroom.option.networking.allowVanillaPlayers": "Allow Vanilla Players",
@@ -284,78 +308,70 @@
     "config.playroom.option.networking.tiltifyWebhookPort.description": "The port to use for the Tiltify webhook server",
 
 
-    "config.playroom.option.laser_gun.laserRapidFireAmo": "Rapid Mode - Ammo",
-    "config.playroom.option.laser_gun.laserRapidFireAmo.description": "How much ammo the rapid mode has",
-
-    "config.playroom.option.laser_gun.laserFireReloadTime": "Fire Reload Time",
-    "config.playroom.option.laser_gun.laserFireReloadTime.description": "The laser gun reload time for the cooldown",
-
-    "config.playroom.option.laser_gun.laserRangeChargeTime": "Ranged Mode - Charge Time",
-    "config.playroom.option.laser_gun.laserRangeChargeTime.description": "The laser gun charge time for the ranged mode",
-
-    "config.playroom.option.laser_gun.laserRapidFireCooldown": "Rapid Mode - Fire Rate",
-    "config.playroom.option.laser_gun.laserRapidFireCooldown.description": "The cooldown between rapid automatic shots (in ticks)",
-
-    "config.playroom.option.laser_gun.laserSwapModeCooldown": "Mode - Swap Cooldown",
-    "config.playroom.option.laser_gun.laserSwapModeCooldown.description": "The cooldown applied to when the player swaps the gun mode",
-
-    "config.playroom.option.laser_gun.laserRangedBulletSpeed": "Ranged Mode - Shot Speed",
-    "config.playroom.option.laser_gun.laserRangedBulletSpeed.description": "The speed of the shot in ranged mode",
-
-    "config.playroom.option.laser_gun.laserRangedDivergence": "Ranged Mode - Shot divergence",
-    "config.playroom.option.laser_gun.laserRangedDivergence.description": "The divergence of the shot in ranged mode",
-
-    "config.playroom.option.laser_gun.laserRapidBulletSpeed": "Rapid Mode - Shot Speed",
-    "config.playroom.option.laser_gun.laserRapidBulletSpeed.description": "The speed of the shot in rapid mode",
-
-    "config.playroom.option.laser_gun.laserRapidDivergence": "Rapid Mode - Shot Divergence",
-    "config.playroom.option.laser_gun.laserRapidDivergence.description": "The divergence of the shot in rapid mode",
-
-    "config.playroom.option.laser_gun.laserRapidFreezeAmount": "Rapid Mode - Freeze Time",
-    "config.playroom.option.laser_gun.laserRapidFreezeAmount.description": "The amount of frozen time added per rapid shot",
-
     "config.playroom.option.laser_gun.laserAimSlowdown": "Aiming - Slowdown",
     "config.playroom.option.laser_gun.laserAimSlowdown.description": "The player mouse speed multiplier when aiming",
 
     "config.playroom.option.laser_gun.laserAimZoom": "Aiming - Zoom",
     "config.playroom.option.laser_gun.laserAimZoom.description": "The zoom amount for when aiming with the gun",
 
-    "config.playroom.option.laser_gun.laserRangeDamage": "Ranged Mode - Shot Damage",
+    "config.playroom.option.laser_gun.laserFireReloadTime": "Gameplay - Fire Reload Time",
+    "config.playroom.option.laser_gun.laserFireReloadTime.description": "The laser gun reload time for the cooldown",
+
+    "config.playroom.option.laser_gun.laserFreezeWater": "Gameplay - Freezing Water",
+    "config.playroom.option.laser_gun.laserFreezeWater.description": "Makes the laser gun projectiles freeze water",
+
+    "config.playroom.option.laser_gun.laserSwapModeCooldown": "Gameplay - Swap Cooldown",
+    "config.playroom.option.laser_gun.laserSwapModeCooldown.description": "The cooldown applied to when the player swaps the gun mode",
+    
+    "config.playroom.option.laser_gun.laserRangeChargeTime": "Ranged Mode - Charge Time",
+    "config.playroom.option.laser_gun.laserRangeChargeTime.description": "The laser gun charge time for the ranged mode",
+
+    "config.playroom.option.laser_gun.laserRangeDamage": "Ranged Mode - Projectile Damage",
     "config.playroom.option.laser_gun.laserRangeDamage.description": "The amount of damage a ranged shot does",
 
-    "config.playroom.option.laser_gun.laserRapidDamage": "Rapid Mode - Shot Damage",
+    "config.playroom.option.laser_gun.laserRangedBulletSpeed": "Ranged Mode - Projectile Speed",
+    "config.playroom.option.laser_gun.laserRangedBulletSpeed.description": "The speed of the projectile in ranged mode",
+
+    "config.playroom.option.laser_gun.laserRangedDivergence": "Ranged Mode - Shot divergence",
+    "config.playroom.option.laser_gun.laserRangedDivergence.description": "The shot divergence of the projectile in ranged mode",
+
+    "config.playroom.option.laser_gun.laserRapidFireAmo": "Rapid Mode - Ammo",
+    "config.playroom.option.laser_gun.laserRapidFireAmo.description": "How much ammo the rapid mode has",
+
+    "config.playroom.option.laser_gun.laserRapidFireCooldown": "Rapid Mode - Fire Rate Cooldown",
+    "config.playroom.option.laser_gun.laserRapidFireCooldown.description": "The cooldown between rapid automatic shots (in ticks)",
+
+    "config.playroom.option.laser_gun.laserRapidFreezeAmount": "Rapid Mode - Freeze Time",
+    "config.playroom.option.laser_gun.laserRapidFreezeAmount.description": "The amount of frozen time added per rapid hit",
+
+    "config.playroom.option.laser_gun.laserRapidDamage": "Rapid Mode - Projectile Damage",
     "config.playroom.option.laser_gun.laserRapidDamage.description": "The amount of damage a rapid fire shot does",
 
-    "config.playroom.option.laser_gun.laserFreezeWater": "Freezing Water",
-    "config.playroom.option.laser_gun.laserFreezeWater.description": "Makes laser shots freeze water",
+    "config.playroom.option.laser_gun.laserRapidBulletSpeed": "Rapid Mode - Projectile Speed",
+    "config.playroom.option.laser_gun.laserRapidBulletSpeed.description": "The speed of the projectile in rapid mode",
+
+    "config.playroom.option.laser_gun.laserRapidDivergence": "Rapid Mode - Shot Divergence",
+    "config.playroom.option.laser_gun.laserRapidDivergence.description": "The shot divergence of the projectile in rapid mode",
 
 
-    "config.playroom.option.freeze_client.freezeZoomDuration": "Zoom Duration",
-    "config.playroom.option.freeze_client.freezeZoomDuration.description": "The duration of the zoom effect while frozen",
-
-    "config.playroom.option.freeze_client.freezeZoomTarget": "Zoom Scale",
-    "config.playroom.option.freeze_client.freezeZoomTarget.description": "The target FOV for the zoom effect",
-
-    "config.playroom.option.freeze_client.freezeZoomTransition": "Zoom out Transition",
-    "config.playroom.option.freeze_client.freezeZoomTransition.description": "The zoom in transition when frozen",
-
-    "config.playroom.option.player_freeze.freezeZoomOffset": "Zoom Offset",
-    "config.playroom.option.player_freeze.freezeZoomOffset.description": "An offset to fine tune the zoom animation",
-
-    "config.playroom.option.player_freeze.freezeSlowdownTime": "Slowdown Time",
-    "config.playroom.option.player_freeze.freezeSlowdownTime.description": "The duration of the slowdown effect while frozen",
-
-    "config.playroom.option.player_freeze.freezeIceTime": "Frozen Time",
+    "config.playroom.option.player_freeze.freezeIceTime": "Gameplay - Frozen Time",
     "config.playroom.option.player_freeze.freezeIceTime.description": "The duration of the time the ice melts",
 
-    "config.playroom.option.player_freeze.freezeSlowdown": "Player Speed Slowdown",
+    "config.playroom.option.player_freeze.freezeSlowdown": "Gameplay - Player Speed Slowdown",
     "config.playroom.option.player_freeze.freezeSlowdown.description": "The maximum player speed slowdown\nThe slowdown is linearly interpolated between 0 and the maximum value between 0 and \"Freeze State - Frozen time\"",
+
+    "config.playroom.option.player_freeze.freezeSlowdownTime": "Gameplay - Slowdown Time",
+    "config.playroom.option.player_freeze.freezeSlowdownTime.description": "The duration of the slowdown effect while frozen",
+
+    "config.playroom.option.player_freeze.freezeZoomOffset": "Gameplay - Zoom Offset",
+    "config.playroom.option.player_freeze.freezeZoomOffset.description": "An offset to fine tune the zoom animation",
 
     "config.playroom.option.player_freeze.freezeFallDamageReduction": "Falling - Damage Reduction",
     "config.playroom.option.player_freeze.freezeFallDamageReduction.description": "The reduction of the fall damage when a player is frozen",
 
     "config.playroom.option.player_freeze.freezeFallIceDamage": "Falling - Ice Damage",
     "config.playroom.option.player_freeze.freezeFallIceDamage.description": "The multiplier of the damage applied to the ice based on the fall damage",
+
 
     "config.playroom.option.server.commands": "Editing the commands in game is not supported yet, please edit the config file",
 

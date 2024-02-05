@@ -28,11 +28,6 @@ public class LaserProjectileRenderer extends ProjectileEntityRenderer<LaserProje
 
     @Override
     public boolean shouldRender(LaserProjectileEntity entity, Frustum frustum, double x, double y, double z) {
-//        boolean render = entity.shouldRender(x, y, z);
-//        if(!render)
-//            entity.discard();
-//
-//        return render;
         return true;
     }
 
