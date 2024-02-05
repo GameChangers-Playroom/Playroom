@@ -351,10 +351,6 @@ public class LaserGun extends Item implements Vanishable, FabricItem, GeoItem, P
         return getAnimatableInstanceCache().getManagerForId(GeoItem.getId(stack)).getAnimationControllers().get("controller");
     }
 
-    public int getCooldownTime(ItemStack stack) {
-        return getCooldownTag(stack).getInt("Duration");
-    }
-
     public void setCooldown(ItemStack stack, CooldownReason reason, int time) {
         if (time > 0) {
             getCooldownTag(stack).putInt("Duration", time);
