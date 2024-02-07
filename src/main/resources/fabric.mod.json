@@ -2,8 +2,8 @@
 	"schemaVersion": 1,
 	"id": "playroom",
 	"version": "${version}",
-	"name": "Playroom",
-	"description": "The ultimate mod that does things",
+	"name": "Playroom (2024)",
+	"description": "The official mod for the Playroom 2024 charity event!",
 	"authors": [
 		"FlameyHeart (Organizer)",
 		"Awakened Redstone (Developer)",
@@ -12,10 +12,6 @@
 		"BlazeFaia (Artist)",
 		"NBeeMC (Artist)"
 	],
-	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
-	},
 	"license": "MIT",
 	"icon": "assets/playroom/icon.png",
 	"environment": "*",
