@@ -330,6 +330,9 @@ public class TiltifyWebhookConnection extends Thread {
 
                 if (task.requiresPlayer()) {
                     targetName = findPlayerName(claim.customQuestion);
+                    if (targetName.equalsIgnoreCase("null")) {
+                        LOGGER.info("Haha, very funny \"" + event.data.donorName + "\", that isn't going to work, nice try");
+                    }
                     target = Playroom.getServer().getPlayerManager().getPlayer(targetName);
                     if (target != null) {
                         targetName = target.getEntityName();
