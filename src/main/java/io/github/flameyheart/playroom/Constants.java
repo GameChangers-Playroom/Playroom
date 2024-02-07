@@ -41,6 +41,7 @@ public class Constants {
       .put("green", "PrimeGreen")
       .put("zodi", "zodiacsiren")
       .put("zodiac", "zodiacsiren")
+      .put("rin", "rinthehecker")
       .immutable();
     public static final List<String> POSSIBLE_NAMES;
 
